@@ -30,7 +30,11 @@ class GudangController extends Controller
         $data['jumlahproduk'] = ProduksiModel::count();
         $data['totalstokopname'] = StokOpnameModel::count();
         $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
-        $data['poBaru'] = Po::where('status', 'Pending')
+        $data['poBaru'] = Po::whereIn('status', [
+                'Pending',
+                'Diproses',
+                'Disetujui'
+            ])
             ->latest()
             ->limit(10)
             ->get();
@@ -747,19 +751,81 @@ public function exportExcelStokOpname()
         $request->validate([
             'estimasi_akhir' => 'nullable|date',
             'keterangan'     => 'nullable|string',
-            'status' => 'required|in:Pending,Disetujui,Diproses,Selesai,Dibatalkan'
+            'status'         => 'nullable|in:Pending,Diproses,Selesai'
         ]);
 
         $po = Po::findOrFail($id);
 
-        $po->update([
-            'estimasi_akhir' => $request->estimasi_akhir,
-            'keterangan'     => $request->keterangan,
-            'status'         => $request->status
-        ]);
+        // LOCK jika selesai
+        if ($po->status == 'Selesai') {
+            return redirect('gudang/po')->with(
+                'error',
+                'PO sudah selesai dan tidak dapat diedit.'
+            );
+        }
 
-        return redirect('gudang/po')
-            ->with('success', 'Progress PO berhasil diperbarui');
+        // Pending → hanya estimasi & keterangan
+        if ($po->status == 'Pending') {
+
+            $po->update([
+                'estimasi_akhir' => $request->estimasi_akhir,
+                'keterangan'     => $request->keterangan,
+            ]);
+
+            return redirect('gudang/po')->with(
+                'success',
+                'Estimasi akhir dan keterangan berhasil disimpan.'
+            );
+        }
+
+        // Disetujui → hanya bisa Diproses
+        if ($po->status == 'Disetujui') {
+
+            if ($request->status != 'Diproses') {
+                return redirect('gudang/po')->with(
+                    'error',
+                    'PO harus diproses terlebih dahulu.'
+                );
+            }
+
+            $po->update([
+                'estimasi_akhir' => $request->estimasi_akhir,
+                'keterangan'     => $request->keterangan,
+                'status'         => 'Diproses'
+            ]);
+
+            return redirect('gudang/po')->with(
+                'success',
+                'PO berhasil diproses.'
+            );
+        }
+
+        // Diproses → hanya bisa Selesai
+        if ($po->status == 'Diproses') {
+
+            if ($request->status != 'Selesai') {
+                return redirect('gudang/po')->with(
+                    'error',
+                    'PO diproses hanya bisa diubah menjadi selesai.'
+                );
+            }
+
+            $po->update([
+                'estimasi_akhir' => $request->estimasi_akhir,
+                'keterangan'     => $request->keterangan,
+                'status'         => 'Selesai'
+            ]);
+
+            return redirect('gudang/po')->with(
+                'success',
+                'PO berhasil diselesaikan.'
+            );
+        }
+
+        return redirect('gudang/po')->with(
+            'error',
+            'Status tidak valid.'
+        );
     }
 
     public function poDetail($id)
@@ -790,9 +856,15 @@ public function exportExcelStokOpname()
 
     public function poDaftar()
     {
-        $po = Po::with('detail')
-            ->latest()
-            ->get();
+      $po = Po::with('detail')
+            ->whereIn('status', [
+                'Pending',
+                'Disetujui',
+                'Diproses',
+                'Selesai'
+        ])
+        ->latest()
+        ->get();
 
         return view('gudang.po_daftar', compact('po'));
     }

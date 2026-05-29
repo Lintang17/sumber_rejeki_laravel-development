@@ -19,6 +19,7 @@
                     <select id="filterStatus" class="form-control filter-input">
                         <option value="">Semua Status</option>
                         <option value="Pending">Pending</option>
+                        <option value="Disetujui">Disetujui</option>
                         <option value="Diproses">Diproses</option>
                         <option value="Selesai">Selesai</option>
                         <option value="Dibatalkan">Dibatalkan</option>
@@ -151,10 +152,16 @@
                             </td>
 
                             <td>
-                                <a href="{{ url('gudang/po/'.$item->id.'/detail') }}"
-                                   class="btn btn-sm btn-warning">
-                                    Edit
-                                </a>
+                                @if($item->status != 'Selesai')
+                                    <a href="{{ url('gudang/po/'.$item->id.'/detail') }}"
+                                        class="btn btn-sm btn-warning">
+                                        Edit
+                                    </a>
+                                @else
+                                    <button class="btn btn-sm btn-secondary" disabled>
+                                        Locked
+                                    </button>
+                                @endif
                             </td>
 
                         </tr>

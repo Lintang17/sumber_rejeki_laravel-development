@@ -28,10 +28,14 @@ class AdminController extends Controller
         $data['jumlahbarangshowroom'] = ShowroomModel::count();
         $data['jumlahproduk'] = ProduksiModel::count();
         $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
-        $data['poBaru'] = Po::where('status', 'Pending')
-        ->latest()
-        ->take(5)
-        ->get();
+        $data['poBaru'] = Po::whereIn('status', [
+                'Pending',
+                'Diproses',
+                'Disetujui'
+            ])
+            ->latest()
+            ->limit(10)
+            ->get();
         
         //$bulanIni = date('m');
         //$tahunIni = date('Y');
@@ -1300,7 +1304,7 @@ public function barangmasukupdate(Request $request, $id)
     {
         $po = Po::with('detail')->findOrFail($id);
 
-        if ($po->status != 'Selesai') {
+        if (strtolower(trim($po->status)) != 'selesai') {
             return redirect('admin/po')
                 ->with('error', 'PO belum bisa dicetak');
         }

@@ -142,6 +142,7 @@
                                 </label>
 
                                 <input type="date"
+                                       {{ $po->status == 'Selesai' ? 'disabled' : '' }}
                                        name="estimasi_akhir"
                                        class="form-control"
                                        value="{{ $po->estimasi_akhir }}">
@@ -151,25 +152,66 @@
                                 <label class="fw-semibold">
                                     Status PO
                                 </label>
-                                <select name="status"
-                                        class="form-control">
 
-                                    <option value="Pending"
-                                        {{ $po->status == 'Pending' ? 'selected' : '' }}>
-                                        Pending
-                                    </option>
+                                @if($po->status == 'Pending')
+                                    <div class="alert alert-warning py-2 px-3 mb-2">
+                                        Menunggu approval owner.
+                                        Gudang hanya dapat mengisi estimasi akhir dan keterangan.
+                                    </div>
 
-                                    <option value="Disetujui" {{ $po->status == 'Disetujui' ? 'selected' : '' }}>
-                                        Disetujui (Owner)
-                                    </option>
+                                @elseif($po->status == 'Disetujui')
+                                    <div class="alert alert-info py-2 px-3 mb-2">
+                                        Owner telah menyetujui PO.
+                                        Gudang dapat memulai proses PO.
+                                    </div>
 
-                                    <option value="Diproses" {{ $po->status == 'Diproses' ? 'selected' : '' }}>
-                                        Diproses (Gudang)
-                                    </option>
+                                @elseif($po->status == 'Diproses')
+                                    <div class="alert alert-primary py-2 px-3 mb-2">
+                                        PO sedang diproses gudang.
+                                    </div>
 
-                                    <option value="Selesai" {{ $po->status == 'Selesai' ? 'selected' : '' }}>Selesai</option>
+                                @elseif($po->status == 'Selesai')
+                                    <div class="alert alert-success py-2 px-3 mb-2">
+                                        PO telah selesai.
+                                    </div>
+                                @endif
 
-                                    <option value="Dibatalkan" {{ $po->status == 'Dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
+                               <select name="status"
+                                        class="form-control"
+                                        {{ $po->status == 'Pending' || $po->status == 'Selesai' ? 'disabled' : '' }}>
+
+                                    {{-- Pending --}}
+                                    @if($po->status == 'Pending')
+                                        <option selected>
+                                            Menunggu Approval Owner
+                                        </option>
+                                    @endif
+
+                                    {{-- Owner approve --}}
+                                    @if($po->status == 'Disetujui')
+                                        <option value="Diproses">
+                                            Diproses
+                                        </option>
+                                    @endif
+
+                                    {{-- Sedang diproses --}}
+                                    @if($po->status == 'Diproses')
+                                        <option value="Diproses" selected>
+                                            Diproses
+                                        </option>
+
+                                        <option value="Selesai">
+                                            Selesai
+                                        </option>
+                                    @endif
+
+                                    {{-- Sudah selesai --}}
+                                    @if($po->status == 'Selesai')
+                                        <option selected>
+                                            Selesai
+                                        </option>
+                                    @endif
+
                                 </select>
                             </div>
 
@@ -179,6 +221,7 @@
                                 </label>
 
                                 <textarea name="keterangan"
+                                          {{ $po->status == 'Selesai' ? 'disabled' : '' }}
                                           class="form-control"
                                           rows="4"
                                           placeholder="Masukkan keterangan progress PO">{{ $po->keterangan }}</textarea>
@@ -189,12 +232,13 @@
 
                 <div class="mt-3 d-flex gap-2">
 
+                    @if($po->status != 'Selesai')
                     <button type="submit"
                             class="btn btn-primary px-4">
-
                         <i class="mdi mdi-content-save"></i>
                         Simpan
                     </button>
+                    @endif
 
                     <a href="{{ url('gudang/po') }}"
                        class="btn btn-secondary px-4">
@@ -330,6 +374,11 @@
 .status-badge.success{
     background:#ecfdf5;
     color:#059669;
+}
+
+.status-badge.approved{
+    background:#ecfeff;
+    color:#0891b2;
 }
 
 .form-control{

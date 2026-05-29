@@ -72,13 +72,23 @@
                                 </div>
 
                                 <span style="
-                                    background:#facc15;
-                                    color:#111827;
+                                    @if($po->status == 'Pending')
+                                        background:#facc15;color:#111827;
+                                    @elseif($po->status == 'Disetujui')
+                                        background:#3b82f6;color:#ffffff;
+                                    @elseif($po->status == 'Diproses')
+                                        background:#06b6d4;color:#ffffff;
+                                    @elseif($po->status == 'Selesai')
+                                        background:#22c55e;color:#ffffff;
+                                    @else
+                                        background:#ef4444;color:#ffffff;
+                                    @endif
                                     font-weight:900;
                                     padding:6px 14px;
                                     border-radius:8px;
                                     font-size:12px;">
-                                    PENDING
+    
+                                    {{ strtoupper($po->status) }}
                                 </span>
                             </a>
                         @endforeach

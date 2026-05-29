@@ -77,11 +77,23 @@
                                     </div>
                                 </div>
 
-                                <span style="background:#facc15;color:#111827;
-                                            font-weight:900;
-                                            padding:6px 12px;
-                                            border-radius:8px;">
-                                    PENDING
+                                @php
+                                    $bgColor = '#facc15';
+                                    $textColor = '#111827';
+
+                                    if($po->status == 'Diproses'){
+                                        $bgColor = '#3b82f6';
+                                        $textColor = '#ffffff';
+                                    }
+                                @endphp
+
+                                <span style="
+                                    background:{{ $bgColor }};
+                                    color:{{ $textColor }};
+                                    font-weight:900;
+                                    padding:6px 12px;
+                                    border-radius:8px;">
+                                    {{ strtoupper($po->status) }}
                                 </span>
                             </a>
                         @endforeach

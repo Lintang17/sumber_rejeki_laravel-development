@@ -23,6 +23,7 @@
                 <select id="filterStatus" class="form-control filter-input status-filter">
                     <option value="">Semua Status</option>
                     <option value="Pending">Pending</option>
+                    <option value="Disetujui">Disetujui</option>
                     <option value="Diproses">Diproses</option>
                     <option value="Selesai">Selesai</option>
                     <option value="Dibatalkan">Dibatalkan</option>
@@ -137,42 +138,75 @@
 
                     <td>
                         @if($item->status == 'Pending')
-                            <span class="badge bg-warning text-dark">Pending</span>
+                            <span class="badge bg-warning text-dark">
+                                Pending
+                            </span>
+
+                        @elseif($item->status == 'Disetujui')
+                            <span class="badge bg-primary">
+                                Disetujui
+                            </span>
+
                         @elseif($item->status == 'Diproses')
-                            <span class="badge bg-info">Diproses</span>
+                            <span class="badge bg-info text-white">
+                                Diproses
+                            </span>
+
                         @elseif($item->status == 'Selesai')
-                            <span class="badge bg-success">Selesai</span>
-                        @else
-                            <span class="badge bg-danger text-white">Dibatalkan</span>
+                            <span class="badge bg-success">
+                                Selesai
+                            </span>
+
+                        @elseif($item->status == 'Dibatalkan')
+                            <span class="badge bg-danger text-white">
+                                Dibatalkan
+                            </span>
                         @endif
                     </td>
 
-                    <td>
-                        <div class="d-flex gap-1">
+                    <td style="min-width:260px">
 
-                            @if($item->status == 'Pending')
-                                <a href="{{ url('admin/po/edit/'.$item->id) }}" class="btn btn-sm btn-warning">
+                        @php
+                            $status = trim($item->status);
+                        @endphp
+
+                        <div class="d-flex flex-nowrap gap-1">
+
+                            {{-- Edit --}}
+                            @if($status == 'Pending')
+                                <a href="{{ url('admin/po/edit/'.$item->id) }}"
+                                    class="btn btn-warning btn-sm">
                                     Edit
                                 </a>
                             @else
-                                <button class="btn btn-sm btn-secondary" disabled>Lock</button>
+                                <button class="btn btn-secondary btn-sm" disabled>
+                                    Lock
+                                </button>
                             @endif
 
-                            @if($item->status == 'Selesai')
-                                <a href="{{ url('admin/po/print/'.$item->id) }}" class="btn btn-sm btn-primary">
+                            {{-- Print --}}
+                            @if($status == 'Selesai')
+                                <a href="{{ url('admin/po/print/'.$item->id) }}"
+                                    class="btn btn-primary btn-sm">
                                     Print
                                 </a>
                             @endif
 
-                            <form action="{{ url('admin/po/hapus/'.$item->id) }}" method="POST">
+                            {{-- Hapus --}}
+                            <form action="{{ url('admin/po/hapus/'.$item->id) }}"
+                                    method="POST"
+                                    style="display:inline">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-sm btn-danger" onclick="return confirm('Hapus data?')">
+
+                                <button type="submit"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Hapus data?')">
                                     Hapus
                                 </button>
                             </form>
                         </div>
-                    </td>
+                    </td>                
                 </tr>
 
                 @endforeach
@@ -228,12 +262,19 @@ $(document).ready(function () {
 
     let table = $('#table').DataTable({
         pageLength: 5,
-        responsive: true,
+        responsive: false,
+        scrollX: true,
+        autoWidth: false,
+        ordering: false,
+
         language: {
             search: "",
             lengthMenu: "_MENU_",
             info: "_START_ - _END_ / _TOTAL_",
-            paginate: { previous: "‹", next: "›" },
+            paginate: {
+                previous: "‹",
+                next: "›"
+            },
             zeroRecords: "Data tidak ditemukan",
             emptyTable: "Belum ada data purchase order"
         }
@@ -259,9 +300,7 @@ $(document).ready(function () {
             let show = true;
 
             if (status && rowStatus !== status) show = false;
-
             if (month && rowDate !== month) show = false;
-
             if (search && !rowSearch.includes(search)) show = false;
 
             if (show) row.show();
