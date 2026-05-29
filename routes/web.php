@@ -15,6 +15,7 @@ Route::get('login', [AuthController::class, 'login']);
 Route::post('loginproses', [AuthController::class, 'loginproses']);
 Route::get('logout', [AuthController::class, 'logout']);
 
+// -- ADMIN --//
 Route::middleware(['auth'])->controller(AdminController::class)->group(function () {
     Route::post('update-profile-image', 'updateProfileImage');
 
@@ -129,12 +130,23 @@ Route::middleware(['auth'])->controller(AdminController::class)->group(function 
     // profile
     Route::get('admin/profile', 'profile');
     Route::put('admin/profileupdate', 'profileupdate');
+
+    //Sistem PO
+    Route::get('admin/po', 'detailPo');
+    Route::get('admin/po/tambah', 'poTambah');
+    Route::post('admin/po/store', 'poStore');
+
+    Route::get('admin/po/edit/{id}', 'poEdit');
+    Route::put('admin/po/update/{id}', 'poUpdate');
+    Route::delete('admin/po/hapus/{id}', 'poHapus');
+    Route::get('admin/po/print/{id}', 'poPrint');
 });
 
 // Route::middleware(['auth'])->controller(OwnerController::class)->group(function () {
 //     Route::get('owner/stockopnamedaftar', 'stockopnamedaftar');
 // });
 
+// -- OWNER --//
 Route::middleware(['auth'])->controller(OwnerController::class)->group(function () {
     Route::get('owner', 'dashboard');
 
@@ -218,8 +230,14 @@ Route::middleware(['auth'])->controller(OwnerController::class)->group(function 
     // profile
     Route::get('owner/profile', 'profile');
     Route::put('owner/profileupdate', 'profileupdate');
+
+    // Sistem PO
+    Route::get('owner/po', 'poDaftar');
+    Route::get('owner/po/{id}/review', 'poReview');
+    Route::post('owner/po/{id}/approve', 'poApprove');
 });
 
+// -- KASIR --//
 Route::middleware(['auth'])->controller(KasirController::class)->group(function () {
     Route::get('kasir', 'dashboard');
 
@@ -271,6 +289,8 @@ Route::middleware(['auth'])->controller(KasirController::class)->group(function 
     Route::put('kasir/profileupdate', 'profileupdate');
 });
 
+
+// -- GUDANG --//
 Route::middleware(['auth'])->controller(GudangController::class)->group(function () {
     Route::get('gudang', 'dashboard');
 
@@ -343,4 +363,10 @@ Route::middleware(['auth'])->controller(GudangController::class)->group(function
     // profile
     Route::get('gudang/profile', 'profile');
     Route::put('gudang/profileupdate', 'profileupdate');
+
+    // Sistem PO 
+    Route::get('gudang/po', 'poDaftar');
+    Route::get('gudang/po/{id}/detail', 'poDetail');
+    Route::post('gudang/po/{id}/update', 'poUpdate');
+    Route::get('gudang/po/{id}/print', 'poPrint');
 });

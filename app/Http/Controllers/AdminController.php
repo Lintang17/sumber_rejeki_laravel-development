@@ -8,6 +8,8 @@ use App\Models\PenjualanModel;
 use App\Models\ShowroomModel;
 use App\Models\ProdukModel;
 use App\Models\User;
+use App\Models\Po;
+use App\Models\PoDetail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +28,11 @@ class AdminController extends Controller
         $data['jumlahbarangshowroom'] = ShowroomModel::count();
         $data['jumlahproduk'] = ProduksiModel::count();
         $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
-
+        $data['poBaru'] = Po::where('status', 'Pending')
+        ->latest()
+        ->take(5)
+        ->get();
+        
         //$bulanIni = date('m');
         //$tahunIni = date('Y');
         //$tanggalHariIni = date('Y-m-d');
@@ -175,13 +181,12 @@ public function showroomdaftar()
                 $item->save();
     
         }
-    }
+    } 
 }
 
     return view('admin.showroomdaftar', ['showroom' => $showrooms]);
     
 }
-
 
 public function penjualandaftar()
 {
@@ -1111,5 +1116,195 @@ public function barangmasukupdate(Request $request, $id)
         $user->save();
 
         return response()->json(['message' => 'Gambar berhasil diupdate', 'path' => $path]);
+    }
+
+    // Sistem PO 
+    public function detailPo()
+    {
+        $po = Po::with('detail')
+            ->latest()
+            ->get();
+
+        return view('admin.detail_po', compact('po'));
+    }
+
+    public function poTambah()
+    {
+        return view('admin.tambah_po'); 
+    }
+
+    public function poStore(Request $request)
+    {
+        $request->validate([
+            'customer' => 'required|string',
+            'produk' => 'required|array',
+            'produk.*' => 'required|string',
+            'deskripsi' => 'nullable|array',
+            'qty' => 'required|array',
+            'qty.*' => 'required|numeric|min:1',
+            'estimasi_awal' => 'nullable|date',
+            'estimasi_akhir' => 'nullable|date',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            $po = Po::create([
+                'kode_po' => 'PO-' . date('YmdHis'),
+                'tanggal' => now(),
+                'customer' => $request->customer,
+                'estimasi_awal' => $request->estimasi_awal,
+                'estimasi_akhir' => $request->estimasi_akhir,
+                'status' => 'Pending',
+                'total' => 0
+            ]);
+
+            $totalPO = 0;
+
+            foreach ($request->produk as $i => $produk) {
+
+                $qty = $request->qty[$i];
+                $hppEstimasi = $request->hpp_estimasi[$i] ?? 0;
+                $hargaJual = $request->harga_jual[$i] ?? 0;
+                $subtotal = $hargaJual * $qty;             
+                $totalPO += $subtotal;
+
+                PoDetail::create([
+                    'po_id' => $po->id,
+                    'produk' => $produk,
+                    'deskripsi' => $request->deskripsi[$i] ?? null,
+                    'qty' => $qty,
+                    'hpp_estimasi' => $hppEstimasi,
+                    'harga_jual' => $hargaJual,
+                    'subtotal' => $subtotal
+                ]);
+            }
+
+            $po->update([
+                'total' => $totalPO
+            ]);
+
+            DB::commit();
+
+            return redirect('admin/po')
+                ->with('success', 'PO berhasil dibuat');
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return back()->with(
+                'error',
+                'Gagal menyimpan PO: ' . $e->getMessage()
+            );
+        }
+    }
+
+    public function poEdit($id)
+    {
+        $po = Po::with('detail')->findOrFail($id);
+
+        if ($po->status != 'Pending') {
+            return back()->with(
+                'error',
+                'PO hanya bisa diedit saat status Pending'
+            );
+        }
+
+        return view('admin.edit_po', compact('po'));
+    }
+
+    public function poUpdate(Request $request, $id)
+    {
+        $po = Po::with('detail')->findOrFail($id);
+
+        // Admin hanya bisa edit saat status Pending
+        if ($po->status != 'Pending') {
+            return redirect('admin/po')
+                ->with('error', 'PO tidak bisa diedit karena status bukan Pending');
+        }
+
+        $request->validate([
+            'customer' => 'required|string',
+            'produk' => 'required|array',
+            'produk.*' => 'required|string',
+            'qty' => 'required|array',
+            'qty.*' => 'required|numeric|min:1',
+            'deskripsi' => 'nullable|array',
+            'estimasi_awal' => 'nullable|date',
+            'estimasi_akhir' => 'nullable|date',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            $po->update([
+                'customer' => $request->customer,
+                'estimasi_awal' => $request->estimasi_awal,
+                'estimasi_akhir' => $request->estimasi_akhir,
+            ]);
+
+            foreach ($po->detail as $index => $detail) {
+
+                $detail->update([
+                    'produk' => $request->produk[$index],
+                    'qty' => $request->qty[$index],
+                    'deskripsi' => $request->deskripsi[$index] ?? null,
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect('admin/po')
+                ->with('success', 'PO berhasil diupdate');
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return back()->with(
+                'error',
+                'Gagal update PO: ' . $e->getMessage()
+            );
+        }
+    }
+
+    public function poHapus($id)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $po = Po::findOrFail($id);
+
+            PoDetail::where('po_id', $po->id)->delete();
+
+            $po->delete();
+
+            DB::commit();
+
+            return redirect('admin/po')
+                ->with('success', 'PO berhasil dihapus');
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return back()->with('error', 'Gagal menghapus PO: ' . $e->getMessage());
+        }
+    }
+
+    public function poPrint($id)
+    {
+        $po = Po::with('detail')->findOrFail($id);
+
+        if ($po->status != 'Selesai') {
+            return redirect('admin/po')
+                ->with('error', 'PO belum bisa dicetak');
+        }
+
+        return view('admin.print_po', compact('po'));
     }
 }

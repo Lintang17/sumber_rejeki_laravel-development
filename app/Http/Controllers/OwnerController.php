@@ -11,6 +11,8 @@ use App\Models\StokOpnameModel;
 use App\Models\ProdukModel;
 use App\Models\StockopnameModel;
 use App\Models\User;
+use App\Models\Po;
+use App\Models\PoDetail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +30,9 @@ class OwnerController extends Controller
         $data['jumlahproduk'] = ProduksiModel::count();
         $data['totalstokopname'] = StokOpnameModel::count();
         $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
+        $data['poBaru'] = Po::where('status', 'Pending')
+            ->latest()
+            ->get();
 
         return view('owner.dashboard', $data);
     }
@@ -581,5 +586,93 @@ public function opnameriwayat()
         User::where('id', auth()->user()->id)->update($data);
 
         return redirect('owner/profile')->with('success', 'Profile berhasil diperbarui');
+    }
+
+    // Sistem PO
+
+    public function poDaftar()
+    {
+        $po = Po::with('detail')
+            ->latest()
+            ->get();
+
+        return view('owner.po_daftar', compact('po'));
+    }
+    
+    public function poReview($id)
+    {
+        $po = Po::with('detail')->findOrFail($id);
+
+        // Owner hanya bisa approve jika gudang isi keterangan
+        $bolehApprove = !empty($po->keterangan);
+
+        return view('owner.detail_po', compact('po', 'bolehApprove'));
+    }
+
+    public function poApprove(Request $request, $id)
+    {
+        $po = Po::with('detail')->findOrFail($id);
+
+        // Gudang wajib isi keterangan dulu
+        if (empty($po->keterangan)) {
+            return back()->with(
+                'error',
+                'PO belum bisa diapprove. Gudang harus mengisi keterangan terlebih dahulu.'
+            );
+        }
+
+        $request->validate([
+            'hpp_estimasi' => 'required|array',
+            'harga_jual' => 'required|array',
+            'status' => 'required'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            $total = 0;
+
+            foreach ($po->detail as $index => $detail) {
+
+                $hpp = str_replace('.', '', $request->hpp_estimasi[$index]);
+                $hargaJual = str_replace('.', '', $request->harga_jual[$index]);
+
+                $subtotal = $detail->qty * $hpp;
+
+                $detail->update([
+                    'hpp_estimasi' => $hpp,
+                    'harga_jual' => $hargaJual,
+                    'subtotal' => $subtotal
+                ]);
+
+                $total += $subtotal;
+            }
+
+            $status = $request->status;
+
+            // Jika approve
+           if ($status == 'Approve') {
+                $status = 'Disetujui';
+            } elseif ($status == 'Reject') {
+                $status = 'Dibatalkan';
+            }
+
+            $po->update([
+                'status' => $status,
+                'total' => $total
+            ]);
+
+            DB::commit();
+
+            return redirect('owner/po')
+                ->with('success', 'PO berhasil diproses');
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

@@ -7,11 +7,6 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-    }
-
     .card-body {
         padding-top: 3rem;
         padding-bottom: 3rem;
@@ -44,6 +39,59 @@
 
 <div class="main-panel">
     <div class="content-wrapper">
+
+        <div class="card border-0 shadow-sm mb-4" style="background:#1f2937;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0 fw-bold" style="color:#ffffff;">
+                        Notifikasi PO Terbaru
+                    </h5>
+
+                    <span class="px-3 py-2 fw-bold" style="background:#374151;color:#ffffff;border-radius:8px;">
+                        {{ $poBaru ? $poBaru->count() : 0 }} PO
+                    </span>
+                </div>
+
+                @if($poBaru && $poBaru->count() > 0)
+
+                    <div style="border:1px solid #374151;border-radius:10px;overflow:hidden;">
+                        @foreach($poBaru as $po)
+
+                            <a href="{{ url('admin/po') }}"
+                                class="d-flex justify-content-between align-items-center text-decoration-none"
+                                style="padding:14px 16px;border-bottom:1px solid #374151;background:#111827;">
+                                
+                                <div>
+                                    <div style="font-weight:800;color:#ffffff;font-size:15px;">
+                                        {{ $po->kode_po }} - {{ $po->customer }}
+                                    </div>
+
+                                    <div style="font-size:12px;color:#d1d5db;">
+                                        {{ $po->created_at->format('d M Y H:i') }}
+                                    </div>
+                                </div>
+
+                                <span style="
+                                    background:#facc15;
+                                    color:#111827;
+                                    font-weight:900;
+                                    padding:6px 14px;
+                                    border-radius:8px;
+                                    font-size:12px;">
+                                    PENDING
+                                </span>
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+
+                    <div style="text-align:center;padding:16px;color:#d1d5db;border:1px solid #374151;border-radius:10px;">
+                        Tidak ada data PO terbaru
+                    </div>
+                @endif
+            </div>
+        </div>
+
         <div class="row">
 
         <div class="col-md-4 grid-margin stretch-card">
@@ -65,7 +113,6 @@
                     </div>
                 </div>
             </div>
-
             
             <div class="col-md-4 grid-margin stretch-card">
                 <div class="card" style="background-color: #3E3232;">

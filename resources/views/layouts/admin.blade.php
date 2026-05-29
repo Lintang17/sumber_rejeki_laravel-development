@@ -315,6 +315,24 @@ if (auth()->user()->role == 'Admin') {
                     </div>
                 </li>
 
+                <li class="nav-item {{ Request::is('admin/po*') ? 'active' : '' }}">
+                    <a class="nav-link" data-toggle="collapse" href="#poMenu" aria-expanded="false" aria-controls="poMenu">
+                        <i class="mdi mdi-file-document-box menu-icon"></i>                        
+                        <span class="menu-title">Sistem PO</span>
+                        <i class="menu-arrow"></i>
+                    </a>
+                    <div class="collapse {{ Request::is('admin/po*') ? 'show' : '' }}" id="poMenu">
+                        <ul class="nav flex-column sub-menu">
+                            <li class="nav-item {{ Request::is('admin/po/tambah') ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ url('admin/po/tambah') }}">Tambah PO</a>
+                            </li>
+                            <li class="nav-item {{ Request::is('admin/po') ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ url('admin/po') }}">Detail PO</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                
                 <!-- OWNER -->
 
                 <?php } ?>
@@ -483,6 +501,25 @@ if (auth()->user()->role == 'Admin') {
                     </div>
                 </li>
 
+                <!-- SISTEM PO -->
+                <li class="nav-item {{ Request::is('owner/po*') ? 'active' : '' }}">
+                    <a class="nav-link" data-toggle="collapse" href="#poOwnerMenu" aria-expanded="false" aria-controls="poOwnerMenu">
+                        <i class="mdi mdi-file-document-box menu-icon"></i>
+                        <span class="menu-title">Sistem PO</span>
+                        <i class="menu-arrow"></i>
+                    </a>
+
+                    <div class="collapse {{ Request::is('owner/po*') ? 'show' : '' }}" id="poOwnerMenu">
+                        <ul class="nav flex-column sub-menu">
+                            <li class="nav-item {{ Request::is('owner/po') ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ url('owner/po') }}">
+                                    Detail PO
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
                 <!-- KASIR -->
 
                 <?php } ?>
@@ -619,6 +656,24 @@ if (auth()->user()->role == 'Admin') {
                                 </div>
                             </li>
 
+                            <!-- SISTEM PO  -->
+                            <li class="nav-item {{ Request::is('gudang/po*') ? 'active' : '' }}">
+                                <a class="nav-link" data-toggle="collapse" href="#poGudangMenu" aria-expanded="false" aria-controls="poGudangMenu">
+                                    <i class="mdi mdi-file-document-box menu-icon"></i>
+                                    <span class="menu-title">Sistem PO</span>
+                                    <i class="menu-arrow"></i>
+                                </a>
+
+                                <div class="collapse {{ Request::is('gudang/po*') ? 'show' : '' }}" id="poGudangMenu">
+                                    <ul class="nav flex-column sub-menu">
+                                        <li class="nav-item {{ Request::is('gudang/po') ? 'active' : '' }}">
+                                            <a class="nav-link" href="{{ url('gudang/po') }}">
+                                                Detail PO
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
 
 
                         {{-- <li class="nav-item {{ Request::is('gudang/stokopnamedaftar*') || Request::is('gudang/stokopnamedaftarhasil*') ? 'active' : '' }}">
@@ -794,10 +849,12 @@ if (auth()->user()->role == 'Admin') {
         @if (session('success'))
         <script>
             Swal.fire({
-                    title: "Sukses!",
-                    text: "{{ session('success') }}",
-                    icon: "success"
-                });
+                title: "Sukses!",
+                text: "{{ session('success') }}",
+                icon: "success",
+                timer: 3000,
+                showConfirmButton: false
+            });
         </script>
         @endif
         @if (session('error'))

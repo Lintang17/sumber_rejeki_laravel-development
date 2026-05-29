@@ -11,10 +11,13 @@ class AddDeletedAtToProdukTable extends Migration
      */
     public function up(): void
     {
-        Schema::table('produk', function (Blueprint $table) {
-            $table->softDeletes();
-            //
-        });
+        if (!Schema::hasColumn('produk', 'deleted_at')) {
+
+            Schema::table('produk', function (Blueprint $table) {
+                $table->softDeletes();
+            });
+
+        }
     }
 
     /**
@@ -22,9 +25,12 @@ class AddDeletedAtToProdukTable extends Migration
      */
     public function down(): void
     {
-        Schema::table('produk', function (Blueprint $table) {
-            $table->dropColumn('deleted_at');
-            //
-        });
+        if (Schema::hasColumn('produk', 'deleted_at')) {
+
+            Schema::table('produk', function (Blueprint $table) {
+                $table->dropSoftDeletes();
+            });
+
+        }
     }
 };

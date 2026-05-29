@@ -8,6 +8,8 @@ use App\Models\PenjualanModel;
 use App\Models\StokOpnameModel;
 use App\Models\PembelianModel;
 use App\Models\ProdukModel;
+use App\Models\Po;
+use App\Models\PoDetail;
 //use App\Models\StockopnameModel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -28,6 +30,10 @@ class GudangController extends Controller
         $data['jumlahproduk'] = ProduksiModel::count();
         $data['totalstokopname'] = StokOpnameModel::count();
         $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
+        $data['poBaru'] = Po::where('status', 'Pending')
+            ->latest()
+            ->limit(10)
+            ->get();
 
         return view('gudang.dashboard', $data);
     }
@@ -633,7 +639,7 @@ public function exportExcelStokOpname()
             ->first();
 
         if ($lastNota) {
-            return $tahun . ((int)substr($lastNota->kodenota, 4) + 1);
+            return $tahun . ((int)substr($lastNota->kodenota, 4) + 1); 
         }
 
         return $baseCode;
@@ -733,5 +739,61 @@ public function exportExcelStokOpname()
         PenjualanModel::where('notajual', $id)->delete();
 
         return back()->with('success', 'Barang Keluar Berhasil Dihapus');
+    }
+
+    // SISTEM PO
+    public function poUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'estimasi_akhir' => 'nullable|date',
+            'keterangan'     => 'nullable|string',
+            'status' => 'required|in:Pending,Disetujui,Diproses,Selesai,Dibatalkan'
+        ]);
+
+        $po = Po::findOrFail($id);
+
+        $po->update([
+            'estimasi_akhir' => $request->estimasi_akhir,
+            'keterangan'     => $request->keterangan,
+            'status'         => $request->status
+        ]);
+
+        return redirect('gudang/po')
+            ->with('success', 'Progress PO berhasil diperbarui');
+    }
+
+    public function poDetail($id)
+    {
+        $po = Po::with('detail')->findOrFail($id);
+
+        return view('gudang.detail_po', compact('po'));
+    }
+
+    public function poPrint($id)
+    {
+        $po = Po::with('detail')->findOrFail($id);
+
+        // hanya boleh print jika sudah diproses
+       if (!in_array($po->status, ['Disetujui', 'Diproses', 'Selesai'])) {
+        return back()->with('error', 'PO belum disetujui owner.');
+       }
+
+        $pdf = Pdf::loadView(
+            'gudang.po_print',
+            compact('po')
+        )->setPaper('A4', 'portrait');
+
+        return $pdf->stream(
+            'PO-' . $po->kode_po . '.pdf'
+        );
+    }
+
+    public function poDaftar()
+    {
+        $po = Po::with('detail')
+            ->latest()
+            ->get();
+
+        return view('gudang.po_daftar', compact('po'));
     }
 }
