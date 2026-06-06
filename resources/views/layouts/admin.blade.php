@@ -781,8 +781,7 @@ if (auth()->user()->role == 'Admin') {
                                     <i class="mdi mdi-settings text-primary"></i>
                                     Ubah Profil
                                 </a>
-                                <a class="dropdown-item" href="{{ url('logout') }}"
-                                    onclick="return confirm('Apakah Anda Yakin Ingin Keluar')">
+                                <a class="dropdown-item" href="javascript:void(0)" onclick="confirmLogout()">
                                     <i class="mdi mdi-logout text-primary"></i>
                                     Logout
                                 </a>
@@ -852,20 +851,42 @@ if (auth()->user()->role == 'Admin') {
                 title: "Sukses!",
                 text: "{{ session('success') }}",
                 icon: "success",
-                timer: 3000,
-                showConfirmButton: false
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                allowOutsideClick: false
             });
         </script>
         @endif
+
         @if (session('error'))
         <script>
             Swal.fire({
                     title: "Oops!",
                     text: "{{ session('error') }}",
-                    icon: "error"
+                    icon: "error",
+                    timer: 3000,
+                    showConfirmButton: false
                 });
         </script>
         @endif
+
+        <script>
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Logout?',
+                    text: 'Apakah Anda yakin ingin keluar?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Logout',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "{{ url('logout') }}";
+                    }
+                });
+            }
+        </script>
 
         <script>
             $(document).ready(function() {

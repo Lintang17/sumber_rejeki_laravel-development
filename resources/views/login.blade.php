@@ -19,7 +19,7 @@
                 <input type="text" name="email" required>
                 <label>Email</label>
             </div>
-            <div class="input-field">
+            <div class="input-field"> 
                 <input type="password" name="password" required>
                 <label>Password</label>
             </div>
@@ -36,21 +36,29 @@
     @if (session('success'))
     <script>
         Swal.fire({
-                title: "Sukses!",
-                text: "{{ session('success') }}",
-                icon: "success"
-            });
+            title: "Sukses!",
+            text: "{{ session('success') }}",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        });
     </script>
     @endif
+
     @if (session('error'))
     <script>
         Swal.fire({
-                title: "Oops!",
-                text: "{{ session('error') }}",
-                icon: "error"
-            });
+            title: "Oops!",
+            text: "{{ session('error') }}",
+            icon: "error",
+            timer: 2000,
+            showConfirmButton: false
+        });
     </script>
     @endif
+
 </body>
 
 </html>

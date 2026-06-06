@@ -120,19 +120,27 @@
     @if (session('success'))
     <script>
         Swal.fire({
-                title: "Sukses!",
-                text: "{{ session('success') }}",
-                icon: "success"
-            });
+            title: "Sukses!",
+            text: "{{ session('success') }}",
+            icon: "success",
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            allowOutsideClick: false
+        });
     </script>
     @endif
+
     @if (session('error'))
     <script>
         Swal.fire({
-                title: "Oops!",
-                text: "{{ session('error') }}",
-                icon: "error"
-            });
+            title: "Oops!",
+            text: "{{ session('error') }}",
+            icon: "error",
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false
+        });
     </script>
     @endif
 
