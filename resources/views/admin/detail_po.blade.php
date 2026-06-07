@@ -193,15 +193,17 @@
                             @endif
 
                             {{-- Hapus --}}
-                            <form action="{{ url('admin/po/hapus/'.$item->id) }}"
-                                    method="POST"
-                                    style="display:inline">
+                            <form id="delete-form-{{ $item->id }}"
+                                action="{{ url('admin/po/hapus/'.$item->id) }}"
+                                method="POST"
+                                style="display:inline">
+
                                 @csrf
                                 @method('DELETE')
 
-                                <button type="submit"
+                                <button type="button"
                                         class="btn btn-danger btn-sm"
-                                        onclick="return confirm('Hapus data?')">
+                                        onclick="hapusPo({{ $item->id }})">
                                     Hapus
                                 </button>
                             </form>
@@ -323,6 +325,28 @@ $(document).ready(function () {
     });
 
 });
+
+
+function hapusPo(id)
+{
+    Swal.fire({
+        title: 'Yakin hapus PO?',
+        text: 'Data yang dihapus tidak dapat dikembalikan',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + id).submit();
+        }
+
+    });
+}
 </script>
 
 @endsection

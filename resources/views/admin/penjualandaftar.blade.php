@@ -72,9 +72,17 @@
                                         <td class="text-center">{{ $item->metodepembayaran }}</td>
                                         <td class="text-center">{{ $item->statuspembayaran }}</td>
                                         <td class="text-center">
-                                            <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#statusModal{{ $item->idpenjualan }}">
-                                                {{ $item->statuspengiriman }}
-                                            </button>
+                                            @if($item->statuspengiriman == 'Selesai')
+                                                <button class="btn btn-success btn-sm" disabled>
+                                                    Selesai
+                                                </button>
+                                            @else
+                                                <button class="btn btn-warning btn-sm"
+                                                        data-toggle="modal"
+                                                        data-target="#statusModal{{ $item->idpenjualan }}">
+                                                    {{ $item->statuspengiriman }}
+                                                </button>
+                                            @endif
                                         </td>
                                         <td class="text-center">
                                             @if($item->statuspembayaran == 'DP' && $item->sisabayar > 0)
@@ -134,34 +142,74 @@
                         </div>
                         @endif
 
-                        {{-- Modal Ubah Status Pengiriman --}}
-                        <div class="modal fade" id="statusModal{{ $item->idpenjualan }}" tabindex="-1" role="dialog">
-                            <div class="modal-dialog" role="document">
-                                <form action="{{ url('admin/penjualanupdate/' . $item->idpenjualan) }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="statuspembayaran" value="{{ $item->statuspembayaran }}">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Ubah Status Pengiriman</h5>
-                                            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <select name="statuspengiriman" class="form-control" required>
-                                                <option value="Menunggu Konfirmasi" {{ $item->statuspengiriman == 'Menunggu Konfirmasi' ? 'selected' : '' }}>Menunggu Konfirmasi</option>
-                                                <option value="Dikirim" {{ $item->statuspengiriman == 'Dikirim' ? 'selected' : '' }}>Dikirim</option>
-                                                <option value="Selesai" {{ $item->statuspengiriman == 'Selesai' ? 'selected' : '' }}>Selesai</option>
-                                            </select>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="submit" class="btn btn-success">Simpan</button>
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    @endforeach
+                    {{-- Modal Ubah Status Pengiriman --}}
+                    @if($item->statuspengiriman != 'Selesai')
+                    <div class="modal fade"
+                         id="statusModal{{ $item->idpenjualan }}"
+                         tabindex="-1"
+                         role="dialog">
 
+                        <div class="modal-dialog" role="document">
+                            <form action="{{ url('admin/penjualanupdate/' . $item->idpenjualan) }}"
+                                    method="POST">
+                                @csrf
+
+                                <input type="hidden"
+                                        name="statuspembayaran"
+                                        value="{{ $item->statuspembayaran }}">
+                                <div class="modal-content">
+
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            Ubah Status Pengiriman
+                                        </h5>
+
+                                        <button type="button"
+                                                class="close"
+                                                data-dismiss="modal">
+                                            <span>&times;</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <select name="statuspengiriman"
+                                                class="form-control"
+                                                required>
+
+                                            <option value="Menunggu Konfirmasi"
+                                                {{ $item->statuspengiriman == 'Menunggu Konfirmasi' ? 'selected' : '' }}>
+                                                    Menunggu Konfirmasi
+                                            </option>
+
+                                            <option value="Dikirim"
+                                                {{ $item->statuspengiriman == 'Dikirim' ? 'selected' : '' }}>
+                                                Dikirim
+                                            </option>
+
+                                            <option value="Selesai">
+                                                Selesai
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button type="submit"
+                                                class="btn btn-success">
+                                            Simpan
+                                        </button>
+
+                                        <button type="button"
+                                                class="btn btn-secondary"
+                                                data-dismiss="modal">
+                                            Batal
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    @endif                 
+                    @endforeach
                 </div>
             </div>
         </div>

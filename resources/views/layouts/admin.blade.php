@@ -23,12 +23,102 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.17.2/dist/sweetalert2.min.css">
 
-    <!-- Tambahkan custom style di sini -->
-<style>
-    th {
-        font-weight: bold !important;
-    }
-</style>
+    <!-- custom style -->
+
+    <style>
+        th{
+            font-weight:bold !important;
+        }
+
+        .sidebar{
+            background:#A97474 !important;
+            position: fixed !important;
+            left: 0;
+            top: 0;
+            height: 100vh !important;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 999;
+            box-shadow: 2px 0 12px rgba(0,0,0,.08);
+        }
+
+        .sidebar::-webkit-scrollbar{
+            width:6px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb{
+            background:rgba(255,255,255,.25);
+            border-radius:10px;
+        }
+
+        .sidebar .nav-item{
+            margin:5px 12px;
+        }
+
+        .sidebar .nav-link{
+            display:flex !important;
+            align-items:center !important;
+            min-height:52px;
+            padding:14px 18px !important;
+            border-radius:14px;
+            transition:.2s ease;
+        }
+
+        .sidebar .nav-link:hover{
+            background:rgba(255,255,255,.12);
+        }
+
+        .sidebar .nav-item.active > .nav-link{
+            background:rgba(255,255,255,.18);
+        }
+
+        .sidebar .menu-icon{
+            width:26px !important;
+            min-width:26px !important;
+            margin-right:16px !important;
+            margin-left:0 !important;
+            text-align:center;
+            font-size:21px !important;
+            color:#fff !important;
+        }
+
+        .sidebar .menu-title{
+            flex:1;
+            font-size:14px !important;
+            font-weight:700 !important;
+            line-height:1.4;
+            letter-spacing:.2px;
+            color:#fff !important;
+        }
+
+        .sidebar .menu-arrow{
+            margin-left:auto !important;
+            font-size:18px !important;
+            color:#fff !important;
+        }
+
+        .sidebar .sub-menu{
+            padding-left:42px !important;
+            margin-top:5px;
+        }
+
+        .sidebar .sub-menu .nav-link{
+            min-height:42px;
+            padding:10px 14px !important;
+            font-size:13px !important;
+            font-weight:600;
+            border-radius:10px;
+            background:rgba(255,255,255,.06);
+        }
+
+        .sidebar .sub-menu .nav-link:hover{
+            background:rgba(255,255,255,.12);
+        }
+
+        .page-body-wrapper{
+            margin-left:250px !important;
+        }
+    </style>
 
 </head>
 <?php
@@ -43,17 +133,15 @@ if (auth()->user()->role == 'Admin') {
 }
 ?>
 
-
-
 <body>
     <div class="container-scroller d-flex">
         <!-- partial:./partials/_sidebar.html -->
-        <nav class="sidebar sidebar-offcanvas" id="sidebar" style="background-color:  #A97474; color: #2C2C2C;">
-            <ul class="nav">
-                <li class="nav-item sidebar-category">
+        <nav class="sidebar sidebar-offcanvas" id="sidebar" style="background-color: #A97474;">
+            <ul class="nav"></ul>
+                <!-- <li class="nav-item sidebar-category">
                     <p style="color: #F5F5F5; font-weight: bold;">Menu</p>
                     <span></span>
-                </li>
+                </li> -->
 
                 @php
                 if (auth()->user()->role == 'Admin') {
@@ -146,8 +234,6 @@ if (auth()->user()->role == 'Admin') {
                                     </ul>
                                 </div>
                             </li> --}}
-
-
 
                     {{-- <li class="nav-item {{ Request::is('admin/barangmasuktambah') || Request::is('admin/barangmasukdaftar') ? 'active' : '' }}">
                         <a class="nav-link" data-toggle="collapse" href="#barangMasuk" aria-expanded="false" aria-controls="barangMasuk">
@@ -412,8 +498,6 @@ if (auth()->user()->role == 'Admin') {
                                     </ul>
                                 </div>
                             </li>
-
-
                                     
                 <!-- <li class="nav-item">
             <a class="nav-link" href="pembelian.php">
@@ -559,7 +643,6 @@ if (auth()->user()->role == 'Admin') {
                         </li>
 
 
-
                 <!-- GUDANG -->
 
                 <?php } ?>
@@ -602,7 +685,7 @@ if (auth()->user()->role == 'Admin') {
                             <a class="nav-link" data-toggle="collapse" href="#penjualan" aria-expanded="false" aria-controls="penjualan">
                                 <i class="mdi mdi-cart menu-icon"></i>
                                 <span class="menu-title">Transaksi Penjualan</span>
-                                <i class="menu-arrow"></i>
+                                <i class="menu-arrow"></i> 
                             </a>
                             <div class="collapse" id="penjualan">
                                 <ul class="nav flex-column sub-menu">
@@ -656,7 +739,7 @@ if (auth()->user()->role == 'Admin') {
                                 </div>
                             </li>
 
-                            <!-- SISTEM PO  -->
+                            <!-- SISTEM PO -->
                             <li class="nav-item {{ Request::is('gudang/po*') ? 'active' : '' }}">
                                 <a class="nav-link" data-toggle="collapse" href="#poGudangMenu" aria-expanded="false" aria-controls="poGudangMenu">
                                     <i class="mdi mdi-file-document-box menu-icon"></i>
@@ -693,8 +776,6 @@ if (auth()->user()->role == 'Admin') {
                                 </ul>
                             </div>
                         </li> --}}
-
-
 
 
                 {{-- <li class="nav-item {{ Request::is('gudang/stockopnamedaftar') ? 'active' : '' }}">
@@ -955,7 +1036,6 @@ if (auth()->user()->role == 'Admin') {
                     });
             });
         </script>
-
 
         @yield('script')
 

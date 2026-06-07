@@ -202,6 +202,14 @@ public function penjualanupdate(Request $request, $id)
 {
     $penjualan = PenjualanModel::findOrFail($id);
 
+    // Jika status sudah selesai, tidak bisa diubah lagi
+    if ($penjualan->statuspengiriman == 'Selesai') {
+        return redirect()->back()->with(
+            'error',
+            'Transaksi yang sudah selesai tidak bisa diubah lagi.'
+        );
+    }
+    
     // Hanya proses pelunasan jika ada input uang pembeli
     if ($request->has('uangpembeli')) {
         $uangPembeli = (int) str_replace(['.', ',', 'Rp', ' '], '', $request->uangpembeli);
@@ -1300,7 +1308,7 @@ public function barangmasukupdate(Request $request, $id)
         }
     }
 
-    public function poPrint($id)
+  public function poPrint($id)
     {
         $po = Po::with('detail')->findOrFail($id);
 
@@ -1309,6 +1317,8 @@ public function barangmasukupdate(Request $request, $id)
                 ->with('error', 'PO belum bisa dicetak');
         }
 
-        return view('admin.print_po', compact('po'));
+        $redirectUrl = url('admin/po');
+
+        return view('admin.print_po', compact('po', 'redirectUrl'));
     }
 }
