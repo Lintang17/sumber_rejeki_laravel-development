@@ -13,11 +13,15 @@ class Po extends Model
         'kode_po',
         'tanggal',
         'customer',
+        'no_hp',
+        'alamat',
+        'foto',
         'estimasi_awal',
         'estimasi_akhir',
         'keterangan',
         'status',
-        'total'
+        'total',
+        'hpp_final'
 
     ];
 

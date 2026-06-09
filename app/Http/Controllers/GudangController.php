@@ -839,7 +839,7 @@ public function exportExcelStokOpname()
     {
         $po = Po::with('detail')->findOrFail($id);
 
-        // hanya boleh print jika sudah diproses
+      // hanya boleh print jika sudah diproses
        if (!in_array($po->status, ['Disetujui', 'Diproses', 'Selesai'])) {
         return back()->with('error', 'PO belum disetujui owner.');
        }
@@ -849,7 +849,7 @@ public function exportExcelStokOpname()
             compact('po')
         )->setPaper('A4', 'portrait');
 
-        return $pdf->stream(
+        return $pdf->stream( 
             'PO-' . $po->kode_po . '.pdf'
         );
     }

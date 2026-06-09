@@ -381,6 +381,25 @@ if (auth()->user()->role == 'Admin') {
               <span class="menu-title">Data Pengguna</span>
             </a>
           </li> -->
+
+                <li class="nav-item {{ Request::is('admin/po*') ? 'active' : '' }}">
+                    <a class="nav-link" data-toggle="collapse" href="#poMenu" aria-expanded="false" aria-controls="poMenu">
+                        <i class="mdi mdi-file-document-box menu-icon"></i>                        
+                        <span class="menu-title">Sistem PO</span>
+                        <i class="menu-arrow"></i>
+                    </a>
+                    <div class="collapse {{ Request::is('admin/po*') ? 'show' : '' }}" id="poMenu">
+                        <ul class="nav flex-column sub-menu">
+                            <li class="nav-item {{ Request::is('admin/po/tambah') ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ url('admin/po/tambah') }}">Tambah PO</a>
+                            </li>
+                            <li class="nav-item {{ Request::is('admin/po') ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ url('admin/po') }}">Daftar PO</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
                 <li
                     class="nav-item {{ Request::is('admin/internaltambah') || Request::is('admin/internaldaftar') ? 'active' : '' }}">
                     <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false" aria-controls="auth">
@@ -396,24 +415,6 @@ if (auth()->user()->role == 'Admin') {
                             </li>
                             <li class="nav-item {{ Request::is('admin/internaldaftar') ? 'active' : '' }}"> <a
                                     class="nav-link" href="{{ url('admin/internaldaftar') }}">Daftar Internal</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-
-                <li class="nav-item {{ Request::is('admin/po*') ? 'active' : '' }}">
-                    <a class="nav-link" data-toggle="collapse" href="#poMenu" aria-expanded="false" aria-controls="poMenu">
-                        <i class="mdi mdi-file-document-box menu-icon"></i>                        
-                        <span class="menu-title">Sistem PO</span>
-                        <i class="menu-arrow"></i>
-                    </a>
-                    <div class="collapse {{ Request::is('admin/po*') ? 'show' : '' }}" id="poMenu">
-                        <ul class="nav flex-column sub-menu">
-                            <li class="nav-item {{ Request::is('admin/po/tambah') ? 'active' : '' }}">
-                                <a class="nav-link" href="{{ url('admin/po/tambah') }}">Tambah PO</a>
-                            </li>
-                            <li class="nav-item {{ Request::is('admin/po') ? 'active' : '' }}">
-                                <a class="nav-link" href="{{ url('admin/po') }}">Detail PO</a>
                             </li>
                         </ul>
                     </div>
@@ -570,20 +571,6 @@ if (auth()->user()->role == 'Admin') {
               <span class="menu-title">Data Pengguna</span>
             </a>
           </li> -->
-                <li class="nav-item {{ Request::is('owner/internaldaftar') ? 'active' : '' }}">
-                    <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false" aria-controls="auth">
-                        <i class="mdi mdi-account menu-icon"></i>
-                        <span class="menu-title">Data Internal</span>
-                        <i class="menu-arrow"></i>
-                    </a>
-                    <div class="collapse" id="auth">
-                        <ul class="nav flex-column sub-menu">
-                            <li class="nav-item {{ Request::is('owner/internaldaftar') ? 'active' : '' }}"> <a
-                                    class="nav-link" href="{{ url('owner/internaldaftar') }}">Daftar Internal</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
 
                 <!-- SISTEM PO -->
                 <li class="nav-item {{ Request::is('owner/po*') ? 'active' : '' }}">
@@ -597,8 +584,23 @@ if (auth()->user()->role == 'Admin') {
                         <ul class="nav flex-column sub-menu">
                             <li class="nav-item {{ Request::is('owner/po') ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ url('owner/po') }}">
-                                    Detail PO
+                                    Daftar PO
                                 </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                 <li class="nav-item {{ Request::is('owner/internaldaftar') ? 'active' : '' }}">
+                    <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false" aria-controls="auth">
+                        <i class="mdi mdi-account menu-icon"></i>
+                        <span class="menu-title">Data Internal</span>
+                        <i class="menu-arrow"></i>
+                    </a>
+                    <div class="collapse" id="auth">
+                        <ul class="nav flex-column sub-menu">
+                            <li class="nav-item {{ Request::is('owner/internaldaftar') ? 'active' : '' }}"> <a
+                                    class="nav-link" href="{{ url('owner/internaldaftar') }}">Daftar Internal</a>
                             </li>
                         </ul>
                     </div>
@@ -751,7 +753,7 @@ if (auth()->user()->role == 'Admin') {
                                     <ul class="nav flex-column sub-menu">
                                         <li class="nav-item {{ Request::is('gudang/po') ? 'active' : '' }}">
                                             <a class="nav-link" href="{{ url('gudang/po') }}">
-                                                Detail PO
+                                                Daftar PO
                                             </a>
                                         </li>
                                     </ul>

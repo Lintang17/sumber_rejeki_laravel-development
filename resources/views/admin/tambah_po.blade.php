@@ -10,6 +10,29 @@ input[type=number]::-webkit-inner-spin-button{
 input[type=number]{
     -moz-appearance:textfield;
 }
+.foto-wrapper{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:12px;
+    background:#fafafa;
+}
+
+.preview-foto{
+    width:80px;
+    height:80px;
+    object-fit:cover;
+    border-radius:12px;
+    border:1px solid #ddd;
+    background:#fff;
+    flex-shrink:0;
+}
+
+.foto-input{
+    border-radius:12px !important;
+}
 </style>
 
 @php
@@ -32,7 +55,7 @@ input[type=number]{
         </button>
     </div>
 
-    <form action="{{ url('admin/po/store') }}" method="POST">
+    <form action="{{ url('admin/po/store') }}" method="POST" enctype="multipart/form-data"></form>
         @csrf
         <div class="row">
             <div class="col-lg-8">
@@ -51,7 +74,36 @@ input[type=number]{
                                 <input type="text"
                                         name="customer"
                                         class="form-control"
+                                        placeholder="Masukkan nama customer"
                                         required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label style="font-weight:600;">
+                                    No HP
+                                </label>
+
+                                <input type="text"
+                                        name="no_hp"
+                                        class="form-control"
+                                        placeholder="08xxxxxxxxxx"
+                                        inputmode="numeric"
+                                        pattern="[0-9]+"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                        maxlength="15"
+                                        required>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label style="font-weight:600;">
+                                    Alamat
+                                </label>
+
+                                <textarea name="alamat"
+                                        class="form-control"
+                                        rows="3"
+                                        placeholder="Masukkan alamat customer"
+                                        required></textarea>
                             </div>
 
                             <div class="col-md-3 mb-3">
@@ -99,6 +151,23 @@ input[type=number]{
                                         class="form-control"
                                         placeholder="Masukkan nama produk"
                                         required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label style="font-weight:600;">
+                                    Foto Produk
+                                </label>
+
+                                <div class="foto-wrapper">
+                                    <img src="https://via.placeholder.com/80"
+                                        class="preview-foto">
+
+                                    <input type="file"
+                                            name="foto[]"
+                                            class="form-control foto-input"
+                                            accept="image/*"
+                                            onchange="previewFoto(this)">
+                                </div>
                             </div>
 
                             <div class="col-md-3 mb-3">
@@ -238,6 +307,14 @@ function addProduk(){
                 <label style="font-weight:600;margin-bottom:8px;display:block;">Nama Produk</label>
                 <input type="text" name="produk[]" class="form-control" required style="border-radius:12px;min-height:48px;border:1px solid #dcdcdc;">
             </div>
+            <div class="col-md-6 mb-3">
+                <label style="font-weight:600;">Foto Produk</label>
+                <div class="foto-wrapper">
+                    <img src="https://via.placeholder.com/80"
+                        class="preview-foto">
+
+                    <input type="file" name="foto[]" class="form-control foto-input" accept="image/*" onchange="previewFoto(this)"></div>
+            </div>
             <div class="col-md-12 mb-3">
                 <label style="font-weight:600;margin-bottom:8px;display:block;">Deskripsi Produk</label>
                 <textarea name="deskripsi[]" class="form-control" rows="3" style="border-radius:12px;border:1px solid #dcdcdc;resize:none;"></textarea>
@@ -270,6 +347,22 @@ function removeProduk(button){
     }
     button.closest('.produk-card').remove();
     calculateTotal();
+}
+
+function previewFoto(input){
+    const file = input.files[0];
+
+    if(file){
+        const reader = new FileReader();
+
+        reader.onload = function(e){
+            input.closest('.foto-wrapper')
+                 .querySelector('.preview-foto')
+                 .src = e.target.result;
+        }
+
+        reader.readAsDataURL(file);
+    }
 }
 
 function calculateTotal(){

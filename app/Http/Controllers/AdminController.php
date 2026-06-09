@@ -1149,11 +1149,14 @@ public function barangmasukupdate(Request $request, $id)
     {
         $request->validate([
             'customer' => 'required|string',
+            'no_hp' => 'required|regex:/^[0-9]+$/|digits_between:10,15',
+            'alamat' => 'required|string',
             'produk' => 'required|array',
             'produk.*' => 'required|string',
             'deskripsi' => 'nullable|array',
             'qty' => 'required|array',
             'qty.*' => 'required|numeric|min:1',
+            'foto.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
             'estimasi_awal' => 'nullable|date',
             'estimasi_akhir' => 'nullable|date',
         ]);
@@ -1166,10 +1169,13 @@ public function barangmasukupdate(Request $request, $id)
                 'kode_po' => 'PO-' . date('YmdHis'),
                 'tanggal' => now(),
                 'customer' => $request->customer,
+                'no_hp' => $request->no_hp,
+                'alamat' => $request->alamat,
                 'estimasi_awal' => $request->estimasi_awal,
                 'estimasi_akhir' => $request->estimasi_akhir,
                 'status' => 'Pending',
-                'total' => 0
+                'total' => 0,
+                'hpp_final' => 0
             ]);
 
             $totalPO = 0;
@@ -1179,13 +1185,26 @@ public function barangmasukupdate(Request $request, $id)
                 $qty = $request->qty[$i];
                 $hppEstimasi = $request->hpp_estimasi[$i] ?? 0;
                 $hargaJual = $request->harga_jual[$i] ?? 0;
-                $subtotal = $hargaJual * $qty;             
+                $subtotal = $hargaJual * $qty;
                 $totalPO += $subtotal;
+                $namaFoto = null;
+
+                if ($request->hasFile('foto') && isset($request->file('foto')[$i])) {
+                    $file = $request->file('foto')[$i];
+                    $namaFoto = time() . '_' . $i . '.' .
+                        $file->getClientOriginalExtension();
+
+                    $file->move(
+                        public_path('assets/foto/po'),
+                        $namaFoto
+                    );
+                }
 
                 PoDetail::create([
                     'po_id' => $po->id,
                     'produk' => $produk,
                     'deskripsi' => $request->deskripsi[$i] ?? null,
+                    'foto' => $namaFoto,
                     'qty' => $qty,
                     'hpp_estimasi' => $hppEstimasi,
                     'harga_jual' => $hargaJual,
@@ -1239,6 +1258,8 @@ public function barangmasukupdate(Request $request, $id)
 
         $request->validate([
             'customer' => 'required|string',
+            'no_hp' => 'required|regex:/^[0-9]+$/|digits_between:10,15',
+            'alamat' => 'required|string',
             'produk' => 'required|array',
             'produk.*' => 'required|string',
             'qty' => 'required|array',
@@ -1254,17 +1275,22 @@ public function barangmasukupdate(Request $request, $id)
 
             $po->update([
                 'customer' => $request->customer,
+                'no_hp' => $request->no_hp,
+                'alamat' => $request->alamat,
                 'estimasi_awal' => $request->estimasi_awal,
                 'estimasi_akhir' => $request->estimasi_akhir,
             ]);
 
-            foreach ($po->detail as $index => $detail) {
+            foreach ($request->produk as $index => $produk) {
 
-                $detail->update([
-                    'produk' => $request->produk[$index],
-                    'qty' => $request->qty[$index],
-                    'deskripsi' => $request->deskripsi[$index] ?? null,
-                ]);
+                if (isset($po->detail[$index])) {
+
+                    $po->detail[$index]->update([
+                        'produk' => $produk,
+                        'qty' => $request->qty[$index],
+                        'deskripsi' => $request->deskripsi[$index] ?? null,
+                    ]);
+                }
             }
 
             DB::commit();
