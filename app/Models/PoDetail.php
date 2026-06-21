@@ -14,7 +14,8 @@ class PoDetail extends Model
         'produk',
         'deskripsi',
         'qty',
-        'hpp_estimasi',
+        'hpp_estimasi_admin',
+        'hpp_estimasi_gudang',
         'harga_jual',
         'subtotal'
 

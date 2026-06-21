@@ -32,11 +32,25 @@ class GudangController extends Controller
         $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
         $data['poBaru'] = Po::whereIn('status', [
                 'Pending',
+                'Disetujui',
                 'Diproses',
-                'Disetujui'
+                'Diambil',
+                'Dikirim',
+                'Selesai'
             ])
-            ->latest()
-            ->limit(10)
+            ->orderByRaw("
+                CASE
+                    WHEN status = 'Pending' THEN 1
+                    WHEN status = 'Disetujui' THEN 2
+                    WHEN status = 'Diproses' THEN 3
+                    WHEN status = 'Diambil' THEN 4
+                    WHEN status = 'Dikirim' THEN 5
+                    WHEN status = 'Selesai' THEN 6
+                    ELSE 7
+                END
+            ")
+            ->orderByDesc('created_at')
+            ->limit(7)
             ->get();
 
         return view('gudang.dashboard', $data);
@@ -751,81 +765,67 @@ public function exportExcelStokOpname()
         $request->validate([
             'estimasi_akhir' => 'nullable|date',
             'keterangan'     => 'nullable|string',
-            'status'         => 'nullable|in:Pending,Diproses,Selesai'
+            'status'         => 'nullable|in:Diproses,Diambil',
+            'hpp_estimasi_gudang.*' => 'nullable|numeric|min:0'
         ]);
 
-        $po = Po::findOrFail($id);
+        $po = Po::with('detail')->findOrFail($id);
 
-        // LOCK jika selesai
-        if ($po->status == 'Selesai') {
-            return redirect('gudang/po')->with(
-                'error',
-                'PO sudah selesai dan tidak dapat diedit.'
-            );
+        if (in_array($po->status, ['Diambil', 'Dikirim', 'Selesai'])) {
+            return back()->with('error', 'PO sudah selesai dan tidak dapat diubah.');
         }
 
-        // Pending → hanya estimasi & keterangan
         if ($po->status == 'Pending') {
 
-            $po->update([
-                'estimasi_akhir' => $request->estimasi_akhir,
-                'keterangan'     => $request->keterangan,
-            ]);
-
-            return redirect('gudang/po')->with(
-                'success',
-                'Estimasi akhir dan keterangan berhasil disimpan.'
-            );
-        }
-
-        // Disetujui → hanya bisa Diproses
-        if ($po->status == 'Disetujui') {
-
-            if ($request->status != 'Diproses') {
-                return redirect('gudang/po')->with(
-                    'error',
-                    'PO harus diproses terlebih dahulu.'
-                );
+            if ($request->hpp_estimasi_gudang) {
+                foreach ($request->hpp_estimasi_gudang as $detailId => $hpp) {
+                    PoDetail::where('id', $detailId)
+                        ->where('po_id', $po->id)
+                        ->update([
+                            'hpp_estimasi_gudang' => $hpp
+                        ]);
+                }
             }
 
             $po->update([
                 'estimasi_akhir' => $request->estimasi_akhir,
                 'keterangan'     => $request->keterangan,
-                'status'         => 'Diproses'
             ]);
 
-            return redirect('gudang/po')->with(
-                'success',
-                'PO berhasil diproses.'
-            );
+            return back()->with('success', 'Data gudang berhasil disimpan.');
         }
 
-        // Diproses → hanya bisa Selesai
+        if ($po->status == 'Disetujui') {
+    
+            if ($request->status != 'Diproses') {
+                return back()->with('error', 'PO harus diubah ke Diproses.');
+            }
+
+            $po->update([
+                'status'         => 'Diproses',
+                'estimasi_akhir' => $request->estimasi_akhir,
+                'keterangan'     => $request->keterangan,
+            ]);
+
+            return back()->with('success', 'PO berhasil diproses (Print Internal siap).');
+        }
+
         if ($po->status == 'Diproses') {
 
-            if ($request->status != 'Selesai') {
-                return redirect('gudang/po')->with(
-                    'error',
-                    'PO diproses hanya bisa diubah menjadi selesai.'
-                );
+            if ($request->status != 'Diambil') {
+                return back()->with('error', 'PO hanya bisa diubah ke Diambil.');
             }
 
             $po->update([
+                'status'         => 'Diambil',
                 'estimasi_akhir' => $request->estimasi_akhir,
                 'keterangan'     => $request->keterangan,
-                'status'         => 'Selesai'
             ]);
 
-            return redirect('gudang/po')->with(
-                'success',
-                'PO berhasil diselesaikan.'
-            );
+            return back()->with('success', 'PO sudah diambil (Surat pengambilan siap).');
         }
 
-        return redirect('gudang/po')->with(
-            'error',
-            'Status tidak valid.'
-        );
+        return back()->with('error', 'Status tidak valid.');
     }
 
     public function poDetail($id)
@@ -839,29 +839,41 @@ public function exportExcelStokOpname()
     {
         $po = Po::with('detail')->findOrFail($id);
 
-      // hanya boleh print jika sudah diproses
-       if (!in_array($po->status, ['Disetujui', 'Diproses', 'Selesai'])) {
-        return back()->with('error', 'PO belum disetujui owner.');
-       }
+        // hanya boleh print saat Diproses atau Diambil
+        if (!in_array($po->status, ['Diproses', 'Diambil'])) {
+            return back()->with('error', 'PO belum dapat dicetak.');
+        }
 
+        // PRINT INTERNAL GUDANG
+        if ($po->status == 'Diproses') {
+
+            $pdf = Pdf::loadView(
+                'gudang.po_print_internal',
+                compact('po')
+            )->setPaper('A4', 'portrait');
+
+            return $pdf->stream('PO-Internal-'.$po->kode_po.'.pdf');
+        }
+
+        // SURAT PENGAMBILAN
         $pdf = Pdf::loadView(
-            'gudang.po_print',
+            'gudang.po_print_pengambilan',
             compact('po')
         )->setPaper('A4', 'portrait');
 
-        return $pdf->stream( 
-            'PO-' . $po->kode_po . '.pdf'
-        );
+        return $pdf->stream('Surat-Pengambilan-'.$po->kode_po.'.pdf');
     }
 
     public function poDaftar()
     {
       $po = Po::with('detail')
-            ->whereIn('status', [
-                'Pending',
-                'Disetujui',
-                'Diproses',
-                'Selesai'
+        ->whereIn('status', [
+            'Pending',
+            'Disetujui',
+            'Diproses',
+            'Diambil',
+            'Dikirim',
+            'Selesai'
         ])
         ->latest()
         ->get();

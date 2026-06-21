@@ -30,13 +30,27 @@ class AdminController extends Controller
         $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
         $data['poBaru'] = Po::whereIn('status', [
                 'Pending',
+                'Disetujui',
                 'Diproses',
-                'Disetujui'
+                'Diambil',
+                'Dikirim',
+                'Selesai'
             ])
-            ->latest()
-            ->limit(10)
+            ->orderByRaw("
+                CASE
+                    WHEN status = 'Pending' THEN 1
+                    WHEN status = 'Disetujui' THEN 2
+                    WHEN status = 'Diproses' THEN 3
+                    WHEN status = 'Diambil' THEN 4
+                    WHEN status = 'Dikirim' THEN 5
+                    WHEN status = 'Selesai' THEN 6
+                    ELSE 7
+                END
+            ")
+            ->orderByDesc('created_at')
+            ->limit(7)
             ->get();
-        
+
         //$bulanIni = date('m');
         //$tahunIni = date('Y');
         //$tanggalHariIni = date('Y-m-d');
@@ -76,7 +90,6 @@ public function showroomtambah()
 {
     $produksi = ProduksiModel::whereNotNull('tanggalselesai')->get();
 
-    // Ambil daftar idproduk yang sudah masuk showroom
     $produkYangSudahMasuk = ShowroomModel::pluck('idproduk')->toArray();
 
     return view('admin.showroomtambah', compact('produksi', 'produkYangSudahMasuk'));
@@ -96,6 +109,12 @@ public function showroomsimpan(Request $request)
     $cekDuplikat = ShowroomModel::where('idproduk', $produksi->idproduksi)->first();
     if ($cekDuplikat) {
         return redirect()->back()->withErrors(['Produk ini sudah pernah ditambahkan ke showroom.']);
+    }
+
+    $cek = ShowroomModel::where('idproduk', $request->idproduksi)->exists();
+
+    if ($cek) {
+        return back()->withErrors(['Produk sudah ada di showroom']);
     }
 
     // ✅ Validasi bahwa tanggal masuk showroom tidak boleh sebelum tanggal selesai produksi
@@ -240,7 +259,7 @@ public function Nota($notajual)
 {
     $penjualan = PenjualanModel::with('penjualandetail')->where('notajual', $notajual)->firstOrFail();
     return view('admin.nota', compact('penjualan'));
-}
+} 
 
 public function Faktur($notajual)
 {
@@ -1157,6 +1176,12 @@ public function barangmasukupdate(Request $request, $id)
             'qty' => 'required|array',
             'qty.*' => 'required|numeric|min:1',
             'foto.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'dp' => 'nullable|numeric|min:0',
+            'metode_pembayaran' => 'nullable|string',
+            'hpp_estimasi_admin' => 'nullable|array',
+            'hpp_estimasi_admin.*' => 'nullable|numeric|min:0',
+            'hpp_estimasi_gudang' => 'nullable|array',
+            'hpp_estimasi_gudang.*' => 'nullable|numeric|min:0',
             'estimasi_awal' => 'nullable|date',
             'estimasi_akhir' => 'nullable|date',
         ]);
@@ -1165,6 +1190,7 @@ public function barangmasukupdate(Request $request, $id)
 
         try {
 
+            $dp = $request->dp ?? 0;
             $po = Po::create([
                 'kode_po' => 'PO-' . date('YmdHis'),
                 'tanggal' => now(),
@@ -1174,6 +1200,8 @@ public function barangmasukupdate(Request $request, $id)
                 'estimasi_awal' => $request->estimasi_awal,
                 'estimasi_akhir' => $request->estimasi_akhir,
                 'status' => 'Pending',
+                'dp' => $dp,
+                'metode_pembayaran' => $request->metode_pembayaran,
                 'total' => 0,
                 'hpp_final' => 0
             ]);
@@ -1183,10 +1211,22 @@ public function barangmasukupdate(Request $request, $id)
             foreach ($request->produk as $i => $produk) {
 
                 $qty = $request->qty[$i];
-                $hppEstimasi = $request->hpp_estimasi[$i] ?? 0;
+                $hppEstimasiAdmin =
+                    $request->hpp_estimasi_admin[$i] ?? 0;
+                $hppEstimasiGudang =
+                    $request->hpp_estimasi_gudang[$i] ?? 0;
                 $hargaJual = $request->harga_jual[$i] ?? 0;
                 $subtotal = $hargaJual * $qty;
                 $totalPO += $subtotal;
+                if ($dp > $totalPO) {
+                    DB::rollBack();
+
+                    return back()->with(
+                        'error',
+                        'DP tidak boleh melebihi total PO'
+                    );
+                }
+
                 $namaFoto = null;
 
                 if ($request->hasFile('foto') && isset($request->file('foto')[$i])) {
@@ -1206,14 +1246,27 @@ public function barangmasukupdate(Request $request, $id)
                     'deskripsi' => $request->deskripsi[$i] ?? null,
                     'foto' => $namaFoto,
                     'qty' => $qty,
-                    'hpp_estimasi' => $hppEstimasi,
+                    'hpp_estimasi_admin' =>
+                        $hppEstimasiAdmin,
+                    'hpp_estimasi_gudang' =>
+                        $hppEstimasiGudang,
                     'harga_jual' => $hargaJual,
                     'subtotal' => $subtotal
                 ]);
             }
 
+            $sisaBayar = $totalPO - $dp;
+            $statusPembayaran = 'Belum Bayar';
+            if ($dp > 0 && $dp < $totalPO) {
+                $statusPembayaran = 'DP';
+            } elseif ($dp >= $totalPO) {
+                $statusPembayaran = 'Lunas';
+            }
+
             $po->update([
-                'total' => $totalPO
+                'total' => $totalPO,
+                'sisa_pembayaran' => $sisaBayar,
+                'status_pembayaran' => $statusPembayaran
             ]);
 
             DB::commit();
@@ -1279,6 +1332,8 @@ public function barangmasukupdate(Request $request, $id)
                 'alamat' => $request->alamat,
                 'estimasi_awal' => $request->estimasi_awal,
                 'estimasi_akhir' => $request->estimasi_akhir,
+                'dp' => $request->dp ?? 0,
+                'metode_pembayaran' => $request->metode_pembayaran,
             ]);
 
             foreach ($request->produk as $index => $produk) {
@@ -1289,6 +1344,10 @@ public function barangmasukupdate(Request $request, $id)
                         'produk' => $produk,
                         'qty' => $request->qty[$index],
                         'deskripsi' => $request->deskripsi[$index] ?? null,
+                        'hpp_estimasi_admin' =>
+                            $request->hpp_estimasi_admin[$index] ?? 0,
+                        'hpp_estimasi_gudang' =>
+                            $request->hpp_estimasi_gudang[$index] ?? 0,
                     ]);
                 }
             }

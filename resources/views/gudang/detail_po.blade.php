@@ -18,17 +18,17 @@
 
                 <div>
                     @if($po->status == 'Pending')
-                        <span class="status-badge warning">
-                            Pending
-                        </span>
+                        <span class="status-badge warning">Pending</span>
+                    @elseif($po->status == 'Disetujui')
+                        <span class="status-badge info">Disetujui</span>
                     @elseif($po->status == 'Diproses')
-                        <span class="status-badge info">
-                            Diproses
-                        </span>
+                        <span class="status-badge info">Diproses</span>
+                    @elseif($po->status == 'Diambil')
+                        <span class="status-badge success">Diambil</span>
+                    @elseif($po->status == 'Dikirim')
+                        <span class="status-badge success">Dikirim</span>
                     @elseif($po->status == 'Selesai')
-                        <span class="status-badge success">
-                            Selesai
-                        </span>
+                        <span class="status-badge success">Selesai</span>
                     @endif
                 </div>
             </div>
@@ -118,8 +118,38 @@
                                 </td>
                                 @endif
 
-                                <td class="text-success fw-semibold">
-                                    Rp {{ number_format($detail->hpp_estimasi,0,',','.') }}
+                                <td>
+                                    @if($detail->hpp_estimasi_gudang > 0)
+                                        <div class="mb-1">
+                                            <small class="text-muted d-block">
+                                                HPP Gudang
+                                            </small>
+                                            <span class="text-success fw-semibold">
+                                                Rp {{ number_format($detail->hpp_estimasi_gudang,0,',','.') }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    @if($detail->hpp_estimasi_admin > 0)
+                                        <div>
+                                            <small class="text-muted d-block">
+                                                HPP Admin
+                                            </small>
+
+                                            <span class="text-primary fw-semibold">
+                                                Rp {{ number_format($detail->hpp_estimasi_admin,0,',','.') }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    @if(
+                                        ($detail->hpp_estimasi_gudang ?? 0) <= 0 &&
+                                        ($detail->hpp_estimasi_admin ?? 0) <= 0
+                                    )
+                                        <span class="text-muted">
+                                            -
+                                        </span>
+                                    @endif
                                 </td>
 
                                 <td class="text-primary fw-semibold">

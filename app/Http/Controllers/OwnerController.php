@@ -30,8 +30,27 @@ class OwnerController extends Controller
         $data['jumlahproduk'] = ProduksiModel::count();
         $data['totalstokopname'] = StokOpnameModel::count();
         $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
-        $data['poBaru'] = Po::where('status', 'Pending')
+        $data['poBaru'] = Po::whereIn('status', [
+                'Pending',
+                'Disetujui',
+                'Diproses',
+                'Diambil',
+                'Dikirim',
+                'Selesai'
+            ])
+            ->orderByRaw("
+                CASE
+                    WHEN status = 'Pending' THEN 1
+                    WHEN status = 'Disetujui' THEN 2
+                    WHEN status = 'Diproses' THEN 3
+                    WHEN status = 'Diambil' THEN 4
+                    WHEN status = 'Dikirim' THEN 5
+                    WHEN status = 'Selesai' THEN 6
+                    ELSE 7
+                END
+            ")
             ->latest()
+            ->limit(7)
             ->get();
 
         return view('owner.dashboard', $data);
@@ -61,7 +80,7 @@ public function produksireviewproses(Request $request, $id)
     $produksi = ProduksiModel::findOrFail($id);
 
     if ($produksi->status !== 'Menunggu') {
-        return redirect('owner/produksidaftar')->with('error', 'Status produksi tidak valid untuk diriview.');
+        return redirect('owner/produksidaftar')->with('error', 'Status produksi tidak valid untuk diriview.'); 
     }
 
     $request->validate([
@@ -104,15 +123,6 @@ public function opnameriwayat()
 }
 
 
-
-
-
-
-
-
-
-
-
 //public function produksireviewlist()
 //{
     //$produksi = ProduksiModel::where('status', 'Menunggu')->orderByDesc('tanggalproduksi')->get();
@@ -127,7 +137,6 @@ public function opnameriwayat()
 
         return view('owner.produkdaftar', $data);
     }
-
 
 
     // barang masuk
@@ -145,7 +154,6 @@ public function opnameriwayat()
         // return response()->Json($data);
         return view('owner.barangmasukdaftar', $data);
     }
-
 
 
     /*public function barangmasukhapus($id)
@@ -511,7 +519,6 @@ public function opnameriwayat()
         return $response;
     }
 
-
     // internal
     public function internaldaftar()
     {
@@ -519,7 +526,6 @@ public function opnameriwayat()
 
         return view('owner.internaldaftar', compact('users'));
     }
-
 
 
     public function internaledit($id)

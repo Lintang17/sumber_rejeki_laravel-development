@@ -44,6 +44,10 @@
 <div class="main-panel">
     <div class="content-wrapper">
 
+        @php
+            $poCount = $poBaru->count();    
+        @endphp
+
         <div class="card border-0 mb-4" style="background:#1f2937;border-radius:12px;">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -51,15 +55,51 @@
                         Notifikasi PO Terbaru
                     </h5>
 
-                    <span style="background:#374151;color:#fff;padding:6px 12px;border-radius:8px;font-weight:700;">
-                        {{ $poBaru->count() ?? 0 }} PO
-                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="
+                            background:#374151;
+                            color:#fff;
+                            padding:6px 12px;
+                            border-radius:8px;
+                            font-weight:700;">
+                            {{ $poCount }} PO
+                        </span>
+
+                        <a href="{{ url('owner/po') }}"
+                            class="btn btn-light btn-sm"
+                            style="border-radius:8px;font-weight:700;">
+                            Lihat Semua
+                        </a>
+                    </div>
                 </div>
 
-                @if($poBaru->count() > 0)
-
+                @if($poCount > 0)
                     <div style="border:1px solid #374151;border-radius:10px;overflow:hidden;">
-                        @foreach($poBaru as $po)
+                        @foreach($poBaru->take(7) as $po)
+                            @php
+                                $status = $po->status;
+                                $bg = '#facc15';
+                                $text = '#111827';
+                                if($status == 'Pending'){
+                                    $bg = '#facc15';
+                                } elseif($status == 'Disetujui'){
+                                    $bg = '#22c55e';
+                                    $text = '#fff';
+                                } elseif($status == 'Diproses'){
+                                    $bg = '#3b82f6';
+                                    $text = '#fff';
+                                } elseif($status == 'Diambil'){
+                                    $bg = '#6366f1';
+                                    $text = '#fff';
+                                } elseif($status == 'Dikirim'){
+                                    $bg = '#06b6d4';
+                                    $text = '#fff';
+                                } elseif($status == 'Selesai'){
+                                    $bg = '#10b981';
+                                    $text = '#fff';
+                                }
+                            @endphp
+
                             <a href="{{ url('owner/po') }}"
                                 style="display:flex;justify-content:space-between;align-items:center;
                                         padding:14px 16px;
@@ -70,22 +110,22 @@
                                     <div style="font-weight:800;color:#fff;">
                                         {{ $po->kode_po }} - {{ $po->customer }}
                                     </div>
-
                                     <div style="font-size:12px;color:#9ca3af;">
                                         {{ $po->created_at->format('d M Y H:i') }}
                                     </div>
                                 </div>
 
-                                <span style="background:#facc15;color:#111827;
-                                            font-weight:900;
-                                            padding:6px 12px;
-                                            border-radius:8px;">
-                                    PENDING
+                                <span style="
+                                    background:{{ $bg }};
+                                    color:{{ $text }};
+                                    font-weight:900;
+                                    padding:6px 12px;
+                                    border-radius:8px;">
+                                    {{ strtoupper($status) }}
                                 </span>
                             </a>
                         @endforeach
                     </div>
-
                 @else
                     <div style="padding:14px;text-align:center;color:#9ca3af;">
                         Tidak ada PO Terbaru
@@ -93,7 +133,6 @@
                 @endif
             </div>
         </div>
-
         <div class="row">
 
             <div class="col-md-4 grid-margin stretch-card">

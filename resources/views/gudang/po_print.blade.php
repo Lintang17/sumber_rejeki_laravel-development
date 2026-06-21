@@ -115,22 +115,5 @@
 <strong>Keterangan:</strong>
 <p>{{ $po->keterangan ?? '-' }}</p>
 
-<table class="ttd">
-    <tr>
-        <td>
-            Mengetahui,<br>
-            Owner
-            <br><br><br>
-            _____________
-        </td>
-
-        <td>
-            Gudang
-            <br><br><br>
-            _____________
-        </td>
-    </tr>
-</table>
-
 </body>
 </html>

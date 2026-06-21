@@ -50,11 +50,6 @@
                         <span class="status-badge done">
                             Selesai
                         </span>
-
-                    @elseif($po->status == 'Dibatalkan')
-                        <span class="status-badge danger">
-                            Dibatalkan
-                        </span>
                     @endif
                 </div>
             </div>
@@ -72,6 +67,20 @@
                     <div class="info-card">
                         <small>Customer</small>
                         <h6>{{ $po->customer }}</h6>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="info-card">
+                        <small>No. HP</small>
+                        <h6>{{ $po->no_hp ?? '-' }}</h6>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="info-card">
+                        <small>Alamat</small>
+                        <h6>{{ $po->alamat ?? '-' }}</h6>
                     </div>
                 </div>
 
@@ -342,11 +351,6 @@
 .done{
     background:#ecfccb;
     color:#4d7c0f;
-}
-
-.danger{
-    background:#fee2e2;
-    color:#dc2626;
 }
 
 </style>

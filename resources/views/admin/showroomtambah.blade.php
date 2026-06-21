@@ -23,14 +23,24 @@
 
                         <div class="form-group">
                             <label for="idproduksi">Pilih Produk Produksi</label>
-                            <select name="idproduksi" id="idproduksi" class="form-control" required>
-                                <option value="">-- Pilih Produk --</option>
-                                @foreach ($produksi as $item)
-                                <option value="{{ $item->idproduksi }}">
-                                    {{ $item->namaproduk }} | Stok: {{ $item->stok }} pcs | Selesai: {{ date('d-m-Y', strtotime($item->tanggalselesai)) }}
-                                </option>
-                                @endforeach
-                            </select>
+                                <select name="idproduksi" id="idproduksi" class="form-control" required>
+                                    <option value="">-- Pilih Produk Produksi --</option>
+                                    @foreach ($produksi as $item)
+                                        @php
+                                            $disabled = in_array($item->idproduksi, $produkYangSudahMasuk);
+                                        @endphp
+
+                                        <option value="{{ $item->idproduksi }}"
+                                            {{ $disabled ? 'disabled' : '' }}
+                                            style="{{ $disabled ? 'color:#999; background-color:#f2f2f2;' : '' }}">
+                                         {{ $item->namaproduk }}
+                                            | Stok: {{ $item->stok }} pcs
+                                            | Selesai: {{ date('d-m-Y', strtotime($item->tanggalselesai)) }}
+
+                                            {{ $disabled ? '(SUDAH DI SHOWROOM)' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             <small id="peringatan-duplicate" class="text-danger mt-2" style="display: none;">
                                 ⚠️ Produk ini sudah pernah ditambahkan ke showroom!
                             </small>

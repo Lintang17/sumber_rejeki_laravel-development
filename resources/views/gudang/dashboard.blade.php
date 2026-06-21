@@ -50,23 +50,34 @@
                     <h5 class="fw-bold text-white mb-0">
                         Notifikasi PO Terbaru
                     </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="
+                            background:#374151;
+                            color:#fff;
+                            padding:6px 12px;
+                            border-radius:8px;
+                            font-weight:700;
+                            font-size:12px;">
+                            {{ $poBaru->count() }} PO
+                        </span>
 
-                    <span style="background:#374151;color:#fff;padding:6px 12px;border-radius:8px;font-weight:700;">
-                        {{ isset($poBaru) ? $poBaru->count() : 0 }} PO
-                    </span>
+                        <a href="{{ url('gudang/po') }}"
+                            class="btn btn-sm btn-light"
+                            style="font-weight:600;border-radius:8px;">
+                            Lihat Semua
+                        </a>
+                    </div>
                 </div>
 
-                @if(isset($poBaru) && $poBaru->count() > 0)
-
+                @if($poBaru->count() > 0)
                     <div style="border:1px solid #374151;border-radius:10px;overflow:hidden;">
-
                         @foreach($poBaru as $po)
                             <a href="{{ url('gudang/po') }}"
                                 style="display:flex;justify-content:space-between;align-items:center;
-                                    padding:14px 16px;
-                                    border-bottom:1px solid #374151;
-                                    background:#111827;
-                                    text-decoration:none;">
+                                        padding:14px 16px;
+                                        border-bottom:1px solid #374151;
+                                        background:#111827;
+                                        text-decoration:none;">
                                 <div>
                                     <div style="font-weight:800;color:#fff;">
                                         {{ $po->kode_po }} - {{ $po->customer }}
@@ -78,34 +89,46 @@
                                 </div>
 
                                 @php
-                                    $bgColor = '#facc15';
-                                    $textColor = '#111827';
+                                    $bg = '#facc15';
+                                    $color = '#111827';
 
-                                    if($po->status == 'Diproses'){
-                                        $bgColor = '#3b82f6';
-                                        $textColor = '#ffffff';
+                                    if($po->status == 'Disetujui'){
+                                        $bg = '#3b82f6';
+                                        $color = '#fff';
+                                    } elseif($po->status == 'Diproses'){
+                                        $bg = '#06b6d4';
+                                        $color = '#fff';
+                                    } elseif($po->status == 'Diambil'){
+                                        $bg = '#8b5cf6';
+                                        $color = '#fff';
+                                    } elseif($po->status == 'Dikirim'){
+                                        $bg = '#f97316';
+                                        $color = '#fff';
+                                    } elseif($po->status == 'Selesai'){
+                                        $bg = '#22c55e';
+                                        $color = '#fff';
                                     }
                                 @endphp
 
                                 <span style="
-                                    background:{{ $bgColor }};
-                                    color:{{ $textColor }};
+                                    background:{{ $bg }};
+                                    color:{{ $color }};
                                     font-weight:900;
                                     padding:6px 12px;
-                                    border-radius:8px;">
+                                    border-radius:8px;
+                                    font-size:12px;">
                                     {{ strtoupper($po->status) }}
                                 </span>
                             </a>
                         @endforeach
                     </div>
-
                 @else
                     <div style="padding:14px;text-align:center;color:#9ca3af;">
                         Tidak ada PO Terbaru
                     </div>
                 @endif
             </div>
-        </div>
+        </div>   
 
         <div class="row">
 

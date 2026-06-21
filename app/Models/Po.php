@@ -21,6 +21,9 @@ class Po extends Model
         'keterangan',
         'status',
         'total',
+        'dp',
+        'sisa_pembayaran',
+        'metode_pembayaran',
         'hpp_final'
 
     ];

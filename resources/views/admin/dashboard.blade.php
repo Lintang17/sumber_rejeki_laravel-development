@@ -47,9 +47,18 @@
                         Notifikasi PO Terbaru
                     </h5>
 
-                    <span class="px-3 py-2 fw-bold" style="background:#374151;color:#ffffff;border-radius:8px;">
-                        {{ $poBaru ? $poBaru->count() : 0 }} PO
-                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="px-3 py-2 fw-bold"
+                                style="background:#374151;color:#ffffff;border-radius:8px;">
+                            {{ $poBaru->count() }} PO
+                        </span>
+
+                        <a href="{{ url('admin/po') }}"
+                            class="btn btn-sm btn-light"
+                            style="font-weight:600;">
+                            Lihat Semua
+                        </a>
+                    </div>
                 </div>
 
                 @if($poBaru && $poBaru->count() > 0)
