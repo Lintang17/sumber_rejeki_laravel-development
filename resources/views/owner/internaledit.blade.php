@@ -1,61 +1,132 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="content-wrapper">
-        <div class="row">
-            <div class="col-md-12 grid-margin stretch-card">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Edit Internal</h4>
-                        @if (session('error'))
-                            <div class="alert alert-danger">{{ session('error') }}</div>
-                        @endif
-                        <form class="forms-sample" method="POST" action="{{ url('owner/internalupdate', $user->id) }}">
-                            @csrf
-                            @method('PUT')
-                            <div class="form-group">
-                                <label for="name">Nama</label>
-                                <input type="text" class="form-control" name="name"
-                                    value="{{ old('name', $user->name) }}" required>
-                                @error('name')
-                                    <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email</label>
-                                <input type="email" class="form-control" name="email"
-                                    value="{{ old('email', $user->email) }}" required>
-                                @error('email')
-                                    <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="form-group">
-                                <label for="password">Password (Kosongkan jika tidak ingin mengubah)</label>
-                                <input type="password" class="form-control" name="password" placeholder="******">
-                                @error('password')
-                                    <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="form-group">
-                                <label for="role">Hak Akses / Level</label>
-                                <select class="form-control" name="role" required>
-                                    <option value="Admin" {{ $user->role == 'Admin' ? 'selected' : '' }}>Admin</option>
-                                    <option value="Admin 2" {{ $user->role == 'Admin 2' ? 'selected' : '' }}>Admin 2
-                                    </option>
-                                    <option value="Kasir" {{ $user->role == 'Kasir' ? 'selected' : '' }}>Kasir</option>
-                                    <option value="Owner" {{ $user->role == 'Owner' ? 'selected' : '' }}>Owner</option>
-                                </select>
-                                @error('role')
-                                    <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
+<div class="content-wrapper">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm" style="border-radius:10px;">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-account-edit"></i>
+                        Edit User
+                    </h5>
+
+                    <a href="{{ url('owner/internaldaftar') }}"
+                       class="btn btn-light btn-sm"
+                       style="border-radius:6px;">
+                        <i class="mdi mdi-arrow-left"></i>
+                        Back
+                    </a>
+                </div>
+
+                <div class="card-body">
+
+                    @if(session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
+                    @if(session('info'))
+                        <div class="alert alert-info">
+                            {{ session('info') }}
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ url('owner/internalupdate', $user->id) }}">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="form-group">
+                            <label>Nama</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="name"
+                                   value="{{ old('name', $user->name) }}"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email"
+                                   class="form-control"
+                                   name="email"
+                                   value="{{ old('email', $user->email) }}"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Role</label>
+
+                            <select name="role" class="form-control" required>
+                                <option value="Owner" {{ $user->role == 'Owner' ? 'selected' : '' }}>Owner</option>
+                                <option value="Admin" {{ $user->role == 'Admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="Gudang" {{ $user->role == 'Gudang' ? 'selected' : '' }}>Gudang</option>
+                                <option value="Kasir" {{ $user->role == 'Kasir' ? 'selected' : '' }}>Kasir</option>
+                            </select>
+
+                            <small class="text-muted">
+                                Hak akses dapat diubah oleh Owner.
+                            </small>
+                        </div>
+
+                        <!-- PASSWORD (CHECKBOX) -->
+                        <div class="form-group">
+                            <label>Password</label>
+                            <div class="custom-control custom-checkbox mb-2">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       id="change_password"
+                                       name="change_password">
+                                <label class="custom-control-label" for="change_password">
+                                    Ubah password
+                                </label>
                             </div>
 
-                            <button type="submit" class="btn btn-primary mr-2">Update</button>
-                            <a href="{{ url('owner/internaldaftar') }}" class="btn btn-secondary">Batal</a>
-                        </form>
-                    </div>
+                            <input type="password"
+                                   class="form-control"
+                                   id="password_field"
+                                   name="password"
+                                   placeholder="Masukkan password baru"
+                                   disabled>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+
+                            <a href="{{ url('owner/internaldaftar') }}"
+                               class="btn btn-secondary">
+                                <i class="mdi mdi-arrow-left"></i>
+                                Back
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-success">
+                                <i class="mdi mdi-content-save"></i>
+                                Update
+                            </button>
+
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const checkbox = document.getElementById('change_password');
+    const passwordField = document.getElementById('password_field');
+
+    checkbox.addEventListener('change', function () {
+        if (this.checked) {
+            passwordField.disabled = false;
+            passwordField.focus();
+        } else {
+            passwordField.disabled = true;
+            passwordField.value = '';
+        }
+    });
+});
+</script>
 @endsection

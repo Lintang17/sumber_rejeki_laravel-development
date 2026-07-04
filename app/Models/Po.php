@@ -15,17 +15,17 @@ class Po extends Model
         'customer',
         'no_hp',
         'alamat',
-        'foto',
         'estimasi_awal',
         'estimasi_akhir',
         'keterangan',
         'status',
+        'tanggal_dikirim',
+        'tanggal_selesai',
         'total',
         'dp',
         'sisa_pembayaran',
-        'metode_pembayaran',
-        'hpp_final'
-
+        'status_pembayaran',
+        'metode_pembayaran'
     ];
 
     public function detail()

@@ -13,11 +13,13 @@ class PoDetail extends Model
         'po_id',
         'produk',
         'deskripsi',
+        'foto',
         'qty',
         'hpp_estimasi_admin',
         'hpp_estimasi_gudang',
         'harga_jual',
-        'subtotal'
+        'subtotal',
+        'hpp_final'
 
     ];
 

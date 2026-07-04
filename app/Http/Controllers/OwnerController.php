@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Picqer\Barcode\BarcodeGeneratorPNG;
@@ -527,42 +528,91 @@ public function opnameriwayat()
         return view('owner.internaldaftar', compact('users'));
     }
 
-
     public function internaledit($id)
     {
-        $data['user'] = User::find($id);
+        $user = User::find($id);
 
-        return view('owner.internaledit', $data);
+        if (!$user) {
+            return redirect('owner/internaldaftar')
+                ->with('error', 'User tidak ditemukan');
+        }
+
+        return view('owner.internaledit', compact('user'));
     }
 
     public function internalupdate(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'role' => 'required',
-        ]);
+        $user = User::find($id);
 
-        $data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
-        ];
-
-        if (!empty($request->password)) {
-            $data['password'] = bcrypt($request->password);
+        if (!$user) {
+            return redirect('owner/internaldaftar')
+                ->with('error', 'User tidak ditemukan');
         }
 
-        User::where('id', $id)->update($data);
+        $request->validate([
+            'name'  => 'required',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'role'  => 'required|in:Owner,Admin,Gudang,Kasir',
+        ]);
 
-        return redirect('owner/internaldaftar')->with('success', 'User berhasil diperbarui');
+        $perubahan = [];
+
+        if ($user->name != $request->name) {
+            $perubahan[] = "• Nama telah diperbarui";
+        }
+
+        if ($user->email != $request->email) {
+            $perubahan[] = "• Email telah diperbarui";
+        }
+
+        if ($user->role != $request->role) {
+            $perubahan[] = "• Hak akses telah diperbarui";
+        }
+
+        $data = [
+            'name'  => $request->name,
+            'email' => $request->email,
+            'role'  => $request->role,
+        ];
+
+        if ($request->has('change_password') && !empty($request->password)) {
+            $data['password'] = bcrypt($request->password);
+            $perubahan[] = "• Password telah diperbarui";
+        }
+
+        $user->update($data);
+
+        if (count($perubahan) == 0) {
+            $perubahan[] = "Tidak ada data yang diubah.";
+        }
+
+        $info =
+            "Data diperbarui oleh: " . auth()->user()->name .
+            "\nWaktu: " . now()->timezone('Asia/Jakarta')->format('d-m-Y H:i') .
+            "\n\nPerubahan:\n" .
+            implode("\n", $perubahan);
+
+        return redirect('owner/internaldaftar')
+            ->with('info', $info);
     }
 
     public function internalhapus($id)
     {
-        User::where('id', $id)->delete();
+        $user = User::find($id);
 
-        return redirect('owner/internaldaftar')->with('success', 'User berhasil dihapus');
+        if (!$user) {
+            return redirect('owner/internaldaftar')
+                ->with('error', 'User tidak ditemukan');
+        }
+
+        if ($user->file) {
+            Storage::disk('public')->delete($user->file);
+        }
+
+        $user->delete();
+
+        return redirect('owner/internaldaftar')
+            ->with('success', 'User berhasil dihapus');
     }
 
     // profile
@@ -628,7 +678,7 @@ public function opnameriwayat()
         }
 
         $request->validate([
-            'hpp_estimasi' => 'required|array',
+            'hpp_final' => 'required|array',
             'harga_jual' => 'required|array',
             'status' => 'required'
         ]);
@@ -641,13 +691,14 @@ public function opnameriwayat()
 
             foreach ($po->detail as $index => $detail) {
 
-                $hpp = str_replace('.', '', $request->hpp_estimasi[$index]);
+                $hppFinal = str_replace('.', '', $request->hpp_final[$index]);
                 $hargaJual = str_replace('.', '', $request->harga_jual[$index]);
 
-                $subtotal = $detail->qty * $hpp;
+                // Total PO dihitung dari harga jual
+                $subtotal = $detail->qty * $hargaJual;
 
                 $detail->update([
-                    'hpp_estimasi' => $hpp,
+                    'hpp_final' => $hppFinal,
                     'harga_jual' => $hargaJual,
                     'subtotal' => $subtotal
                 ]);
@@ -664,9 +715,23 @@ public function opnameriwayat()
                 $status = 'Dibatalkan';
             }
 
+            $dp = $po->dp;
+            $sisaPembayaran = 0;
+
+            if ($po->status_pembayaran == 'DP') {
+                $sisaPembayaran = max(0, $total - $dp);
+            } else {
+                // Jika admin memilih Lunas,
+                // pembayaran dianggap penuh.
+                $dp = $total;
+                $sisaPembayaran = 0;
+            }
+
             $po->update([
                 'status' => $status,
-                'total' => $total
+                'total' => $total,
+                'dp' => $dp,
+                'sisa_pembayaran' => $sisaPembayaran,
             ]);
 
             DB::commit();

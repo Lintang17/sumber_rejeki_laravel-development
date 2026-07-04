@@ -914,17 +914,17 @@ if (auth()->user()->role == 'Admin') {
         <script src="{{ url('/') }}/assets/admin/assets_admin/js/hoverable-collapse.js"></script>
         <script src="{{ url('/') }}/assets/admin/assets_admin/js/template.js"></script>
         <script src="{{ url('/') }}/assets/admin/assets_admin/js/dashboard.js"></script>
-        <script src="{{ url('/') }}/assets/admin/assets/DataTables/DataTables-1.10.18/js/jquery.dataTables.min.js">
-        </script>
-        <script src="{{ url('/') }}/assets/admin/assets/DataTables/DataTables-1.10.18/js/dataTables.bootstrap4.min.js">
-        </script>
+        <script src="{{ url('/') }}/assets/admin/assets/DataTables/DataTables-1.10.18/js/jquery.dataTables.min.js"></script>
+
+        <script src="{{ url('/') }}/assets/admin/assets/DataTables/DataTables-1.10.18/js/dataTables.bootstrap4.min.js"></script>
+        <script src="{{ url('/') }}/assets/admin/assets/DataTables/Buttons-1.5.6/js/dataTables.buttons.min.js"></script>
+        <script src="{{ url('/') }}/assets/admin/assets/DataTables/Buttons-1.5.6/js/buttons.bootstrap4.min.js"></script>
         <script src="{{ url('/') }}/assets/admin/assets/DataTables/JSZip-2.5.0/jszip.min.js"></script>
         <script src="{{ url('/') }}/assets/admin/assets/DataTables/pdfmake-0.1.36/pdfmake.min.js"></script>
         <script src="{{ url('/') }}/assets/admin/assets/DataTables/pdfmake-0.1.36/vfs_fonts.js"></script>
         <script src="{{ url('/') }}/assets/admin/assets/DataTables/Buttons-1.5.6/js/buttons.html5.min.js"></script>
         <script src="{{ url('/') }}/assets/admin/assets/DataTables/Buttons-1.5.6/js/buttons.print.min.js"></script>
         <script src="{{ url('/') }}/assets/admin/assets/DataTables/Buttons-1.5.6/js/buttons.colvis.min.js"></script>
-
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.17.2/dist/sweetalert2.all.min.js"></script>
 
@@ -972,39 +972,46 @@ if (auth()->user()->role == 'Admin') {
         </script>
 
         <script>
-            $(document).ready(function() {
-                var table = $('#table').DataTable({
-                    buttons: ['csv', 'print', 'excel', 'pdf'],
-                    dom: "<'row'<'col-md-3'l><'col-md-5'B><'col-md-4'f>>" +
-                        "<'row'<'col-md-12'tr>>" +
-                        "<'row'<'col-md-5'i><'col-md-7'p>>",
-                    lengthMenu: [
-                        [5, 10, 25, 50, 100, -1],
-                        [5, 10, 25, 50, 100, "ALL"]
-                    ]
-                });
+            $(function () {
+                if ($('#table').length) {
+                    let table = $('#table').DataTable({
+                        buttons: (window.location.href.includes('laporan')) ? ['csv','print','excel','pdf'] : []
+                        dom:
+                            "<'row'<'col-md-3'l><'col-md-5'B><'col-md-4'f>>" +
+                            "<'row'<'col-md-12'tr>>" +
+                            "<'row'<'col-md-5'i><'col-md-7'p>>",
+                        lengthMenu:[
+                            [5,10,25,50,100,-1],
+                            [5,10,25,50,100,"ALL"]
+                        ]
+                    });
 
-                table.buttons().container()
-                    .appendTo('#table_wrapper .col-md-5:eq(0)');
+                    table.buttons().container()
+                        .appendTo('#table_wrapper .col-md-5:eq(0)');
+                }
             });
         </script>
         <script>
-            $(document).ready(function() {
-                var table = $('#table2').DataTable({
-                    buttons: ['csv', 'print', 'excel', 'pdf'],
-                    dom: "<'row'<'col-md-3'l><'col-md-5'B><'col-md-4'f>>" +
-                        "<'row'<'col-md-12'tr>>" +
-                        "<'row'<'col-md-5'i><'col-md-7'p>>",
-                    lengthMenu: [
-                        [5, 10, 25, 50, 100, -1],
-                        [5, 10, 25, 50, 100, "ALL"]
-                    ]
-                });
+            $(function () {
+                if ($('#table2').length) {
+                    let table = $('#table2').DataTable({
+                        buttons: (window.location.href.includes('laporan')) ? ['csv','print','excel','pdf'] : []
+                        dom:
+                            "<'row'<'col-md-3'l><'col-md-5'B><'col-md-4'f>>" +
+                            "<'row'<'col-md-12'tr>>" +
+                            "<'row'<'col-md-5'i><'col-md-7'p>>",
+                        lengthMenu:[
+                            [5,10,25,50,100,-1],
+                            [5,10,25,50,100,"ALL"]
+                        ]
+                    });
 
-                table.buttons().container()
-                    .appendTo('#table_wrapper .col-md-5:eq(0)');
+                    table.buttons().container()
+                        .appendTo('#table2_wrapper .col-md-5:eq(0)');
+                }
             });
         </script>
+       
         <script>
             document.getElementById('profileEdit').addEventListener('click', function() {
                 document.getElementById('profileFileInput').click();

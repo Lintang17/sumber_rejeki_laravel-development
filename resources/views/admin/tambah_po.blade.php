@@ -275,13 +275,13 @@ input[type=number]{
                         <strong id="totalQty">1</strong>
                     </div>
                     <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
-                        <span>Total Estimasi</span>
-                        <strong id="grandTotal">Rp 0</strong>
+                        <span>Total PO</span>
+                        <strong>Menunggu Owner</strong>
                     </div>
                     <hr>
                     <div class="mb-3">
                         <label style="font-weight:600">
-                            DP Customer
+                            Nominal Pembayaran
                         </label>
 
                         <input type="number"
@@ -307,9 +307,22 @@ input[type=number]{
                         </select>
                     </div>
 
+                   <div class="mb-3">
+                        <label style="font-weight:600">
+                            Status Pembayaran
+                        </label>
+
+                        <select name="status_pembayaran"
+                                id="statusPembayaran"
+                                class="form-control">
+                            <option value="DP">DP</option>
+                            <option value="Lunas">Lunas</option>
+                        </select>
+                    </div>
+
                     <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
                         <span>Sisa Pembayaran</span>
-                        <strong id="sisaText">Rp 0</strong>
+                        <strong>Belum dapat dihitung</strong>
                     </div>
                     <button type="submit" style="width:100%;height:50px;border:none;border-radius:12px;background:#28a745;color:white;font-weight:600;cursor:pointer;">
                         <i class="mdi mdi-content-save-outline"></i>
@@ -478,7 +491,9 @@ function addProduk(){
     document.getElementById('produk-wrapper')
         .insertAdjacentHTML('beforeend', html);
 
-    calculateTotal();
+    // update ringkasan
+    let produkCount = document.querySelectorAll('.produk-card').length;
+    document.getElementById('totalProduk').innerText = produkCount;
 }
 
 function removeProduk(button){
@@ -508,38 +523,19 @@ function previewFoto(input){
 }
 
 function calculateTotal(){
+
     let qtys = document.querySelectorAll('.qty');
-    let hargaJual = document.querySelectorAll('.harga-jual');
 
     let totalQty = 0;
-    let totalHarga = 0;
 
-    qtys.forEach((qty,index)=>{
-
-        let q = parseInt(qty.value) || 0;
-        let harga = parseInt(hargaJual[index]?.value) || 0;
-
-        totalQty += q;
-        totalHarga += q * harga;
+    qtys.forEach(qty => {
+        totalQty += parseInt(qty.value) || 0;
     });
 
     let produkCount = document.querySelectorAll('.produk-card').length;
 
-    let dp = parseInt(document.getElementById('dp').value) || 0;
-
-    if(dp > totalHarga){
-        dp = totalHarga;
-        document.getElementById('dp').value = totalHarga;
-    }
-
-    let sisa = totalHarga - dp;
-
     document.getElementById('totalProduk').innerText = produkCount;
     document.getElementById('totalQty').innerText = totalQty;
-    document.getElementById('grandTotal').innerText =
-        'Rp ' + totalHarga.toLocaleString('id-ID');
-    document.getElementById('sisaText').innerText =
-        'Rp ' + sisa.toLocaleString('id-ID');
 }
 
 calculateTotal();

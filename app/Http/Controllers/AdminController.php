@@ -1065,37 +1065,88 @@ public function barangmasukupdate(Request $request, $id)
 
     public function internaledit($id)
     {
-        $data['user'] = User::find($id);
+        $user = User::find($id);
 
-        return view('admin.internaledit', $data);
+        if (!$user) {
+            return redirect('admin/internaldaftar')
+                ->with('error', 'User tidak ditemukan');
+        }
+
+        return view('admin.internaledit', compact('user'));
     }
 
     public function internalupdate(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'role' => 'required',
-        ]);
+        $user = User::find($id);
 
-        $data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
-        ];
-
-        if (!empty($request->password)) {
-            $data['password'] = bcrypt($request->password);
+        if (!$user) {
+            return redirect('admin/internaldaftar')
+                ->with('error', 'User tidak ditemukan');
         }
 
-        User::where('id', $id)->update($data);
+        $request->validate([
+            'name'  => 'required',
+            'email' => 'required|email|unique:users,email,' . $id,
+        ]);
 
-        return redirect('admin/internaldaftar')->with('success', 'User berhasil diperbarui');
+        $perubahan = [];
+
+        // cek perubahan
+        if ($user->name != $request->name) {
+            $perubahan[] = "• Nama telah diperbarui";
+        }
+
+        if ($user->email != $request->email) {
+            $perubahan[] = "• Email telah diperbarui";
+        }
+
+        $data = [
+            'name'  => $request->name,
+            'email' => $request->email,
+            'role'  => $user->role, 
+        ];
+
+        if ($request->has('change_password') && !empty($request->password)) {
+            $data['password'] = bcrypt($request->password);
+            $perubahan[] = "• Password telah diperbarui";
+        }
+
+        $user->update($data);
+
+        // kalau tidak ada perubahan
+        if (count($perubahan) == 0) {
+            $perubahan[] = "Tidak ada data yang diubah.";
+        }
+
+        $info =
+            "Data diperbarui oleh: " . auth()->user()->name .
+            "\nWaktu: " . now()->timezone('Asia/Jakarta')->format('d-m-Y H:i').
+            "\n\nPerubahan:\n" .
+            implode("\n", $perubahan);
+
+        return redirect('admin/internaldaftar')
+            ->with('info', $info);
     }
 
     public function internalhapus($id)
     {
-        User::where('id', $id)->delete();
+        // 1. Cegah admin menghapus diri sendiri
+        if ($id == auth()->user()->id) {
+            return redirect('admin/internaldaftar')->with('error', 'Anda tidak dapat menghapus akun sendiri!');
+        }
+
+        // 2. Cegah admin menghapus Owner
+        $user = User::findOrFail($id);
+        if ($user->role == 'Owner') {
+            return redirect('admin/internaldaftar')->with('error', 'Anda tidak memiliki izin untuk menghapus akun Owner!');
+        }
+
+        // 3. Hapus file profile jika ada
+        if ($user->file) {
+            Storage::disk('public')->delete($user->file);
+        }
+    
+        $user->delete();
 
         return redirect('admin/internaldaftar')->with('success', 'User berhasil dihapus');
     }
@@ -1182,6 +1233,7 @@ public function barangmasukupdate(Request $request, $id)
             'hpp_estimasi_admin.*' => 'nullable|numeric|min:0',
             'hpp_estimasi_gudang' => 'nullable|array',
             'hpp_estimasi_gudang.*' => 'nullable|numeric|min:0',
+            'status_pembayaran' => 'required|in:DP,Lunas',
             'estimasi_awal' => 'nullable|date',
             'estimasi_akhir' => 'nullable|date',
         ]);
@@ -1202,11 +1254,9 @@ public function barangmasukupdate(Request $request, $id)
                 'status' => 'Pending',
                 'dp' => $dp,
                 'metode_pembayaran' => $request->metode_pembayaran,
+                'status_pembayaran' => $request->status_pembayaran,               
                 'total' => 0,
-                'hpp_final' => 0
             ]);
-
-            $totalPO = 0;
 
             foreach ($request->produk as $i => $produk) {
 
@@ -1215,17 +1265,6 @@ public function barangmasukupdate(Request $request, $id)
                     $request->hpp_estimasi_admin[$i] ?? 0;
                 $hppEstimasiGudang =
                     $request->hpp_estimasi_gudang[$i] ?? 0;
-                $hargaJual = $request->harga_jual[$i] ?? 0;
-                $subtotal = $hargaJual * $qty;
-                $totalPO += $subtotal;
-                if ($dp > $totalPO) {
-                    DB::rollBack();
-
-                    return back()->with(
-                        'error',
-                        'DP tidak boleh melebihi total PO'
-                    );
-                }
 
                 $namaFoto = null;
 
@@ -1250,23 +1289,16 @@ public function barangmasukupdate(Request $request, $id)
                         $hppEstimasiAdmin,
                     'hpp_estimasi_gudang' =>
                         $hppEstimasiGudang,
-                    'harga_jual' => $hargaJual,
-                    'subtotal' => $subtotal
+                    'harga_jual' => 0,
+                    'hpp_final' => 0,
+                    'subtotal' => 0,
                 ]);
             }
 
-            $sisaBayar = $totalPO - $dp;
-            $statusPembayaran = 'Belum Bayar';
-            if ($dp > 0 && $dp < $totalPO) {
-                $statusPembayaran = 'DP';
-            } elseif ($dp >= $totalPO) {
-                $statusPembayaran = 'Lunas';
-            }
-
             $po->update([
-                'total' => $totalPO,
-                'sisa_pembayaran' => $sisaBayar,
-                'status_pembayaran' => $statusPembayaran
+                'status_pembayaran' => $request->status_pembayaran,
+                'total' => 0,
+                'sisa_pembayaran' => 0,
             ]);
 
             DB::commit();
@@ -1333,6 +1365,7 @@ public function barangmasukupdate(Request $request, $id)
                 'estimasi_awal' => $request->estimasi_awal,
                 'estimasi_akhir' => $request->estimasi_akhir,
                 'dp' => $request->dp ?? 0,
+                'status_pembayaran' => $request->status_pembayaran,
                 'metode_pembayaran' => $request->metode_pembayaran,
             ]);
 
@@ -1368,6 +1401,37 @@ public function barangmasukupdate(Request $request, $id)
         }
     }
 
+    public function updateStatusPo(Request $request, $id)
+    {
+        $po = Po::findOrFail($id);
+
+        $status = $request->status;
+
+        if ($status == 'Dikirim') {
+
+            if ($po->status_pembayaran != 'Lunas') {
+                return back()->with(
+                    'error',
+                    'PO tidak dapat dikirim karena pembayaran belum lunas.'
+                );
+            }
+
+            $po->tanggal_dikirim = now();
+        }
+
+        if ($status == 'Selesai') {
+            $po->tanggal_selesai = now();
+        }
+
+        $po->status = $status;
+        $po->save();
+
+        return back()->with(
+            'success',
+            'Status PO berhasil diperbarui.'
+        );
+    }
+
     public function poHapus($id)
     {
         DB::beginTransaction();
@@ -1393,17 +1457,24 @@ public function barangmasukupdate(Request $request, $id)
         }
     }
 
-  public function poPrint($id)
+    public function poPrint($id)
     {
         $po = Po::with('detail')->findOrFail($id);
 
-        if (strtolower(trim($po->status)) != 'selesai') {
-            return redirect('admin/po')
-                ->with('error', 'PO belum bisa dicetak');
+        // Status Dikirim -> Cetak Surat Jalan
+        if (strtolower(trim($po->status)) == 'dikirim') {
+            return view('admin.surat_jalan', compact('po'));
         }
 
-        $redirectUrl = url('admin/po');
+        // Status Selesai -> Cetak Invoice Perusahaan
+        if (strtolower(trim($po->status)) == 'selesai') {
 
-        return view('admin.print_po', compact('po', 'redirectUrl'));
+            $redirectUrl = url('admin/po');
+
+            return view('admin.print_po', compact('po', 'redirectUrl'));
+        }
+
+        return redirect('admin/po')
+            ->with('error', 'Dokumen belum dapat dicetak.');
     }
 }

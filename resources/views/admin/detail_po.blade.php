@@ -29,6 +29,8 @@
                                 <option value="Pending">Pending</option>
                                 <option value="Disetujui">Disetujui</option>
                                 <option value="Diproses">Diproses</option>
+                                <option value="Diambil">Diambil</option>
+                                <option value="Dikirim">Dikirim</option>
                                 <option value="Selesai">Selesai</option>
                             </select>
                         </div>
@@ -190,8 +192,7 @@
                                                     <i class="fas fa-lock mr-1"></i> Terkunci
                                                 </button>
                                             @endif
-                                            @if($item->status == 'Selesai')
-                                                <a href="{{ url('admin/po/print/'.$item->id) }}" 
+                                            @if($item->status == 'Dikirim' || $item->status == 'Selesai')                                                <a href="{{ url('admin/po/print/'.$item->id) }}" 
                                                    class="btn btn-success">
                                                     <i class="fas fa-print mr-1"></i> Print
                                                 </a>
@@ -264,7 +265,7 @@
                         <div class="form-group">
                             <label class="font-weight-bold">DP Customer</label>
                             <p class="form-control-static">
-                                Rp {{ number_format($item->dp_customer ?? 0, 0, ',', '.') }}
+                                Rp {{ number_format($item->dp ?? 0, 0, ',', '.') }}
                             </p>
                         </div>
                     </div>
@@ -280,33 +281,62 @@
 
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-bold">Sisa Pembayaran</label>
-                            <p class="form-control-static">
-                                @php
-                                    $total = $item->detail->sum(function($d){
-                                        return $d->qty * $d->harga_jual;
-                                    });
+                            <label class="font-weight-bold">Status Pembayaran</label>
 
-                                    $sisa = $total - ($item->dp_customer ?? 0);
-                                @endphp
-                                Rp {{ number_format($sisa, 0, ',', '.') }}
-                            </p>
+                            @if($item->status_pembayaran == 'DP')
+                                <span class="badge badge-warning badge-lg">
+                                    <i class="fas fa-wallet mr-1"></i> DP
+                                </span>
+                            @elseif($item->status_pembayaran == 'Lunas')
+                                <span class="badge badge-success badge-lg">
+                                    <i class="fas fa-check-circle mr-1"></i> Lunas
+                                </span>
+                            @endif
                         </div>
                     </div>
+
+                    @php
+                    $total = $item->detail->sum(function($d){
+                        return $d->qty * $d->harga_jual;
+                    });
+
+                    $sisa = $total - ($item->dp ?? 0);
+                    @endphp
+
+                    <small class="d-block mt-2">
+                        Sisa: <strong>Rp {{ number_format($sisa,0,',','.') }}</strong>
+                    </small>
+
                 </div>
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
                             <label class="font-weight-bold">Status</label>
                             <p>
-                                @if($item->status == 'Pending')
-                                    <span class="badge badge-warning badge-lg">Pending</span>
+                               @if($item->status == 'Pending')
+                                    <span class="badge badge-warning badge-lg">
+                                        <i class="fas fa-clock mr-1"></i> Pending
+                                    </span>
                                 @elseif($item->status == 'Disetujui')
-                                    <span class="badge badge-primary badge-lg">Disetujui</span>
+                                    <span class="badge badge-primary badge-lg">
+                                        <i class="fas fa-check-circle mr-1"></i> Disetujui
+                                    </span>
                                 @elseif($item->status == 'Diproses')
-                                    <span class="badge badge-info badge-lg">Diproses</span>
+                                    <span class="badge badge-info badge-lg">
+                                        <i class="fas fa-cogs mr-1"></i> Diproses
+                                    </span>
+                                @elseif($item->status == 'Diambil')
+                                    <span class="badge badge-secondary badge-lg">
+                                        <i class="fas fa-box mr-1"></i> Diambil
+                                    </span>
+                                @elseif($item->status == 'Dikirim')
+                                    <span class="badge badge-dark badge-lg">
+                                        <i class="fas fa-truck mr-1"></i> Dikirim
+                                    </span>
                                 @elseif($item->status == 'Selesai')
-                                    <span class="badge badge-success badge-lg">Selesai</span>
+                                    <span class="badge badge-success badge-lg">
+                                        <i class="fas fa-check-double mr-1"></i> Selesai
+                                    </span>
                                 @endif
                             </p>
                         </div>
