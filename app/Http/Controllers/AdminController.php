@@ -1072,6 +1072,12 @@ public function barangmasukupdate(Request $request, $id)
                 ->with('error', 'User tidak ditemukan');
         }
 
+        // Admin tidak boleh mengedit Owner
+        if (auth()->user()->role == 'Admin' && $user->role == 'Owner') {
+            return redirect('admin/internaldaftar')
+                ->with('error', 'Anda tidak memiliki hak untuk mengedit akun Owner.');
+        }
+
         return view('admin.internaledit', compact('user'));
     }
 
@@ -1082,6 +1088,12 @@ public function barangmasukupdate(Request $request, $id)
         if (!$user) {
             return redirect('admin/internaldaftar')
                 ->with('error', 'User tidak ditemukan');
+        }
+
+        // Admin tidak boleh mengedit Owner
+        if (auth()->user()->role == 'Admin' && $user->role == 'Owner') {
+            return redirect('admin/internaldaftar')
+                ->with('error', 'Anda tidak memiliki hak untuk mengedit akun Owner.');
         }
 
         $request->validate([

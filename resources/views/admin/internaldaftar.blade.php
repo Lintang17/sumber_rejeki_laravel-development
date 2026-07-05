@@ -113,49 +113,54 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group" role="group" style="gap:4px;">
-                                                <a href="{{ url('admin/internaledit', $user->id) }}"
-                                                   class="btn btn-sm btn-warning"
-                                                   style="width:32px; height:32px; padding:0; border-radius:6px; display:flex; align-items:center; justify-content:center;"
-                                                   data-toggle="tooltip"
-                                                   data-placement="top"
-                                                   title="Edit {{ $user->name }}">
-                                                    <i class="mdi mdi-pencil" style="font-size:16px;"></i>
-                                                </a>
-                                                @if($user->role == 'Owner')
-                                                    <!-- OWNER (tidak bisa delete) -->
+                                                {{-- Tombol Edit --}}
+                                                @if(auth()->user()->role == 'Admin' && $user->role == 'Owner')
                                                     <button class="btn btn-sm btn-secondary"
                                                             style="width:32px; height:32px; padding:0; border-radius:6px; cursor:not-allowed;"
                                                             disabled
                                                             data-toggle="tooltip"
-                                                            data-placement="top"
-                                                            title="Owner tidak dapat dihapus">
-                                                        <i class="mdi mdi-lock" style="font-size:16px;"></i>
-                                                    </button>
-                                                @elseif($user->id == auth()->user()->id)
-                                                    <!-- SELF DELETE DISABLE -->
-                                                    <button class="btn btn-sm btn-secondary"
-                                                            style="width:32px; height:32px; padding:0; border-radius:6px; cursor:not-allowed;"
-                                                            disabled
-                                                            data-toggle="tooltip"
-                                                            data-placement="top"
-                                                            title="Tidak dapat menghapus akun sendiri">
-                                                        <i class="mdi mdi-lock" style="font-size:16px;"></i>
+                                                            title="Admin tidak dapat mengedit Owner">
+                                                        <i class="mdi mdi-pencil-off"></i>
                                                     </button>
                                                 @else
-                                                    <!-- DELETE -->
-                                                    <button type="button"
-                                                            class="btn btn-sm btn-danger btn-delete"
-                                                            data-id="{{ $user->id }}"
-                                                            data-name="{{ $user->name }}"
-                                                            style="width:32px; height:32px; padding:0; border-radius:6px; display:flex; align-items:center; justify-content:center;"
-                                                            data-toggle="tooltip"
-                                                            data-placement="top"
-                                                            title="Hapus {{ $user->name }}">
-                                                        <i class="mdi mdi-delete" style="font-size:16px;"></i>
-                                                    </button>
+                                                    <a href="{{ url('admin/internaledit', $user->id) }}"
+                                                       class="btn btn-sm btn-warning"
+                                                       style="width:32px; height:32px; padding:0; border-radius:6px; display:flex; align-items:center; justify-content:center;"
+                                                       data-toggle="tooltip"
+                                                       title="Edit {{ $user->name }}">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </a>
                                                 @endif
-                                            </div>
-                                        </td>
+                                                {{-- Tombol Delete --}}
+                                                @if($user->role == 'Owner')
+                                                    <button class="btn btn-sm btn-secondary"
+                                                            style="width:32px; height:32px; padding:0; border-radius:6px; cursor:not-allowed;"
+                                                            disabled
+                                                            data-toggle="tooltip"
+                                                            title="Owner tidak dapat dihapus">
+                                                        <i class="mdi mdi-lock"></i>
+                                                    </button>
+                                            @elseif($user->id == auth()->user()->id)
+                                                <button class="btn btn-sm btn-secondary"
+                                                        style="width:32px; height:32px; padding:0; border-radius:6px; cursor:not-allowed;"
+                                                        disabled
+                                                        data-toggle="tooltip"
+                                                        title="Tidak dapat menghapus akun sendiri">
+                                                    <i class="mdi mdi-lock"></i>
+                                                </button>
+                                            @else
+                                                <button type="button"
+                                                        class="btn btn-sm btn-danger btn-delete"
+                                                        data-id="{{ $user->id }}"
+                                                        data-name="{{ $user->name }}"
+                                                        style="width:32px; height:32px; padding:0; border-radius:6px; display:flex; align-items:center; justify-content:center;"
+                                                        data-toggle="tooltip"
+                                                        title="Hapus {{ $user->name }}">
+                                                    <i class="mdi mdi-delete"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
                                     </tr>
                                 @endforeach
                             </tbody>

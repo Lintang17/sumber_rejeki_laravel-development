@@ -114,10 +114,133 @@
         .sidebar .sub-menu .nav-link:hover{
             background:rgba(255,255,255,.12);
         }
-
-        .page-body-wrapper{
-            margin-left:250px !important;
+       
+        .navbar{
+            height:75px;
+            background:linear-gradient(90deg,#A97474,#8E5F5F);
+            box-shadow:0 3px 15px rgba(0,0,0,.15);
+            border:none;
+            position: sticky;
+            top: 0;
+            z-index:1;
         }
+
+        .navbar-menu-wrapper{
+            height:75px;
+        }
+
+        .navbar-toggler{
+            border:none;
+            background:none;
+        }
+
+        .navbar-toggler i{
+            color:#fff;
+            font-size:30px;
+        }
+
+        .navbar-toggler:focus{
+            box-shadow:none;
+        }
+
+        .datetime-box{
+            text-align:right;
+            color:#fff;
+            line-height:1.2;
+            margin-right:20px;
+        }
+
+        .datetime-box #clock{
+            font-size:26px;
+            font-weight:700;
+        }
+
+        .datetime-box #today{
+            font-size:15px;
+            font-weight:500;
+            opacity:.95;
+        }
+
+        .profile-btn{
+            display:flex;
+            align-items:center;
+            color:#fff !important;
+            text-decoration:none !important;
+            padding:8px 15px;
+            border-radius:30px;
+            transition:.3s;
+        }
+
+        .profile-btn:hover{
+            background:rgba(255,255,255,.15);
+        }
+
+        .profile-btn span{
+            font-weight:600;
+            margin:0 8px;
+        }
+
+        .dropdown-menu{
+            border:none;
+            border-radius:15px;
+            overflow:hidden;
+            box-shadow:0 10px 30px rgba(0,0,0,.18);
+        }
+
+        .dropdown-item{
+            padding:12px 18px;
+            font-weight:600;
+        }
+
+        .btn-light{
+            border-radius:12px;
+            font-weight:600;
+        }
+
+       .page-body-wrapper{
+            margin-left:240px;
+            width:calc(100% - 240px);
+            transition:all .3s ease;
+        }
+
+        body.sidebar-icon-only .page-body-wrapper{
+            margin-left:70px;
+            width:calc(100% - 70px);
+        }
+
+        @media(max-width:768px){
+            .datetime-box #clock{
+                font-size:18px;
+            }
+
+            .datetime-box #today{
+                font-size:12px;
+            }
+
+            .profile-btn span{
+                display:none;
+            }
+
+            .navbar{
+                height:65px;
+            }
+
+            .navbar-menu-wrapper{
+                height:65px;
+            }
+        }
+
+        @media(max-width:576px){
+            .datetime-box{
+                display:none;
+            }
+
+            .nav-icon{
+                width:38px;
+                height:38px;
+            }
+        }
+
     </style>
 
 </head>
@@ -819,66 +942,60 @@ if (auth()->user()->role == 'Admin') {
         <!-- partial -->
         <div class="container-fluid page-body-wrapper">
             <!-- partial:./partials/_navbar.html -->
-            <nav class="navbar col-lg-12 col-12 px-0 py-0 py-lg-4 d-flex flex-row">
-                <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
-                    <button class="navbar-toggler navbar-toggler align-self-center" type="button"
-                        data-toggle="minimize">
-                        <span class="mdi mdi-menu"></span>
-                    </button>
-                    <div class="navbar-brand-wrapper">
-                        <input type="file" id="profileFileInput" style="display: none;" accept="image/*">
-                        <a class="navbar-brand brand-logo" id="profileEdit" href="javascript:void(0);">
-                            @if ($file = auth()->user()->file)
-                            <img src="{{ asset('storage/' . $file) }}" width="70" alt="logo" />
-                            @else
-                            <img src="{{ asset('assets/admin/assets_admin/adm.png') }}" width="70" alt="logo" />
-                            @endif
-                        </a>
-                        <a class="navbar-brand brand-logo-mini" href="javascript:void(0);"><img
-                                src="{{ asset('assets/admin/assets_admin/adm.png') }}" width="70" alt="logo" /></a>
+          
+            @php
+            if (auth()->user()->role == 'Admin') {
+                $url = 'admin/profile';
+            } elseif (auth()->user()->role == 'Kasir') {
+                $url = 'kasir/profile';
+            } elseif (auth()->user()->role == 'Owner') {
+                $url = 'owner/profile';
+            } else {
+                $url = 'gudang/profile';
+            }
+            @endphp
+
+        <nav class="navbar default-layout fixed-top">
+        <div class="navbar-menu-wrapper d-flex justify-content-between align-items-center px-3 w-100">
+            <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="minimize">
+                <i class="mdi mdi-menu"></i>
+            </button>
+            <div class="d-flex align-items-center">
+                <div class="datetime-box">
+                    <div id="clock"></div>
+                    <div id="today">
+                        {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
                     </div>
-                    <h4 class="font-weight-bold mb-0 d-none d-md-block mt-1">
-                        <?= auth()->user()->name ?>
-                    </h4>
-                    <ul class="navbar-nav navbar-nav-right">
-                        <li class="nav-item nav-profile dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
-                                <span class="nav-profile-name">
-                                    <?= auth()->user()->name ?>
-                                </span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right navbar-dropdown"
-                                aria-labelledby="profileDropdown">
-                                @php
-                                if (auth()->user()->role == 'Admin') {
-                                $url = 'admin/profile';
-                                } elseif (auth()->user()->role == 'Kasir') {
-                                $url = 'kasir/profile';
-                                } elseif (auth()->user()->role == 'Owner') {
-                                $url = 'owner/profile';
-                                } elseif (auth()->user()->role == 'Gudang') {
-                                $url = 'gudang/profile';
-                                }
-                                @endphp
-                                <a class="dropdown-item" href="{{ url($url) }}">
-                                    <i class="mdi mdi-settings text-primary"></i>
-                                    Ubah Profil
-                                </a>
-                                <a class="dropdown-item" href="javascript:void(0)" onclick="confirmLogout()">
-                                    <i class="mdi mdi-logout text-primary"></i>
-                                    Logout
-                                </a>
-                            </div>
-                        </li>
-                    </ul>
-                    <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button"
-                        data-toggle="offcanvas">
-                        <span class="mdi mdi-menu"></span>
-                    </button>
                 </div>
-
-            </nav>
-
+                <div class="dropdown">
+                    <a href="#"
+                        class="profile-btn"
+                        data-toggle="dropdown">
+                        <i class="mdi mdi-account-circle"
+                            style="font-size:28px;"></i>
+                        <span>{{ auth()->user()->role }}</span>
+                         <i class="mdi mdi-chevron-down"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item"
+                            href="{{ url($url) }}">
+                            <i class="mdi mdi-account-edit mr-2"></i>
+                            Profil
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger"
+                            href="javascript:void(0)"
+                            onclick="confirmLogout()">
+                            <i class="mdi mdi-logout mr-2"></i>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </nav>
             <div class="main-panel">
                 <div>
                     @yield('content')
@@ -969,6 +1086,17 @@ if (auth()->user()->role == 'Admin') {
                     }
                 });
             }
+        </script>
+  
+        <script>
+            function updateClock(){
+                const now=new Date();
+                const jam=now.toLocaleTimeString('id-ID');
+                document.getElementById('clock').innerHTML=jam;
+            }
+
+            setInterval(updateClock,1000);
+            updateClock();
         </script>
 
         <script>
