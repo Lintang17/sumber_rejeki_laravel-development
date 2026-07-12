@@ -31,17 +31,18 @@
         }
 
         .sidebar{
-            background:#A97474 !important;
-            position: fixed !important;
-            left: 0;
-            top: 0;
-            height: 100vh !important;
-            overflow-y: auto;
-            overflow-x: hidden;
-            z-index: 999;
-            box-shadow: 2px 0 12px rgba(0,0,0,.08);
+            width:250px;
+            background:#A97474;
+            position:fixed !important;
+            left:0;
+            top:0;
+            height:100vh !important;
+            min-height:100vh !important;
+            overflow-y:auto;
+            overflow-x:hidden;
+            z-index:999;
         }
-
+        
         .sidebar::-webkit-scrollbar{
             width:6px;
         }
@@ -57,19 +58,22 @@
 
         .sidebar .nav-link{
             display:flex !important;
-            align-items:center !important;
+            align-items:center;
             min-height:52px;
             padding:14px 18px !important;
-            border-radius:14px;
-            transition:.2s ease;
+            border-radius:12px;
+            transition:all .25s ease;
         }
 
         .sidebar .nav-link:hover{
-            background:rgba(255,255,255,.12);
+            background:#7A4F4F;
+            box-shadow:0 6px 15px rgba(0,0,0,.18);
+            transform:translateX(3px);
         }
 
-        .sidebar .nav-item.active > .nav-link{
-            background:rgba(255,255,255,.18);
+        .sidebar .nav-item.active>.nav-link{
+            background:#7A4F4F !important;
+            color:#fff !important;
         }
 
         .sidebar .menu-icon{
@@ -98,35 +102,42 @@
         }
 
         .sidebar .sub-menu{
-            padding-left:42px !important;
-            margin-top:5px;
+            padding:6px 0 6px 14px !important;
+            margin-top:4px;
+            margin-bottom:8px;
+            border-left:2px solid rgba(255,255,255,.12);
         }
 
         .sidebar .sub-menu .nav-link{
-            min-height:42px;
-            padding:10px 14px !important;
-            font-size:13px !important;
-            font-weight:600;
-            border-radius:10px;
-            background:rgba(255,255,255,.06);
+            background:transparent;
+            color:#f1f1f1 !important;
         }
 
         .sidebar .sub-menu .nav-link:hover{
-            background:rgba(255,255,255,.12);
+            background:#7A4F4F !important;
+            color:#fff !important;
         }
        
         .navbar{
+            position:fixed;
+            top:0;
+            right:0;
+            left:250px;
+            width:calc(100% - 250px);
             height:75px;
-            background:linear-gradient(90deg,#A97474,#8E5F5F);
-            box-shadow:0 3px 15px rgba(0,0,0,.15);
-            border:none;
-            position: sticky;
-            top: 0;
-            z-index:1;
+            z-index:9800;
+            background:white;
+            border-bottom:1px solid #590f00;
         }
 
         .navbar-menu-wrapper{
             height:75px;
+        }
+
+        .navbar-right{
+            display:flex;
+            align-items:center;
+            margin-left:auto;
         }
 
         .navbar-toggler{
@@ -145,7 +156,7 @@
 
         .datetime-box{
             text-align:right;
-            color:#fff;
+            color:#111827;
             line-height:1.2;
             margin-right:20px;
         }
@@ -164,7 +175,7 @@
         .profile-btn{
             display:flex;
             align-items:center;
-            color:#fff !important;
+            color:#111827 !important;
             text-decoration:none !important;
             padding:8px 15px;
             border-radius:30px;
@@ -197,47 +208,49 @@
             font-weight:600;
         }
 
-       .page-body-wrapper{
-            margin-left:240px;
-            width:calc(100% - 240px);
-            transition:all .3s ease;
+        .main-panel{
+            padding-top:65px;
+        }
+
+        .navbar.fixed-top{
+            left:250px !important;
+            right:0 !important;
+            width:auto !important;
+        }
+
+        .page-body-wrapper{
+            margin-left:250px !important;
+            width:calc(100% - 250px) !important;
+            min-height:100vh;
+        }
+
+        /* hanya saat benar-benar minimize */
+        body.sidebar-icon-only .navbar.fixed-top{
+            left:70px !important;
         }
 
         body.sidebar-icon-only .page-body-wrapper{
-            margin-left:70px;
-            width:calc(100% - 70px);
+            margin-left:70px !important;
+            width:calc(100% - 70px) !important;
         }
 
         @media(max-width:768px){
+            .datetime-box{
+                display:block;
+                margin-right:10px;
+                text-align:right;
+            }
             .datetime-box #clock{
-                font-size:18px;
+                font-size:15px;
             }
-
             .datetime-box #today{
-                font-size:12px;
+                font-size:10px;
             }
-
+            .profile-btn{
+                padding:6px 10px;
+            }
             .profile-btn span{
                 display:none;
-            }
-
-            .navbar{
-                height:65px;
-            }
-
-            .navbar-menu-wrapper{
-                height:65px;
-            }
-        }
-
-        @media(max-width:576px){
-            .datetime-box{
-                display:none;
-            }
-
-            .nav-icon{
-                width:38px;
-                height:38px;
             }
         }
 
@@ -259,7 +272,7 @@ if (auth()->user()->role == 'Admin') {
 <body>
     <div class="container-scroller d-flex">
         <!-- partial:./partials/_sidebar.html -->
-        <nav class="sidebar sidebar-offcanvas" id="sidebar" style="background-color: #A97474;">
+        <nav class="sidebar sidebar-offcanvas" id="sidebar">
             <ul class="nav"></ul>
                 <!-- <li class="nav-item sidebar-category">
                     <p style="color: #F5F5F5; font-weight: bold;">Menu</p>
@@ -956,14 +969,14 @@ if (auth()->user()->role == 'Admin') {
             @endphp
 
         <nav class="navbar default-layout fixed-top">
-        <div class="navbar-menu-wrapper d-flex justify-content-between align-items-center px-3 w-100">
+        <div class="navbar-menu-wrapper d-flex align-items-center w-100 px-3">
             <button class="navbar-toggler"
                     type="button"
                     data-toggle="minimize">
                 <i class="mdi mdi-menu"></i>
             </button>
-            <div class="d-flex align-items-center">
-                <div class="datetime-box">
+            <div class="ml-auto d-flex align-items-center navbar-right">
+                <div class="datetime-box mr-3">
                     <div id="clock"></div>
                     <div id="today">
                         {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}

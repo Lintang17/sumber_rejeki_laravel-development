@@ -2,54 +2,292 @@
 
 @section('content')
 <style>
+    body {
+        background: #f4f6fb;
+    }
+
     .card {
-        border-radius: 15px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 0;
+        border-radius: 18px;
+        overflow: hidden;
+        transition: .3s;
+        box-shadow: 0 6px 20px rgba(0,0,0,.08);
     }
 
-    .card-body {
-        padding-top: 3rem;
-        padding-bottom: 3rem;
-        text-align: center;
+    .card:hover{
+        transform: translateY(-4px);
+        box-shadow:0 18px 40px rgba(0,0,0,.15);
     }
 
-    .count-number {
-        font-weight: 700;
-        font-family: 'Poppins', sans-serif;
-        color: #ffffff !important;
-        text-shadow:
-            0 0 5px rgba(255, 255, 255, 0.8),
-            0 0 10px rgba(255, 255, 255, 0.6),
-            0 0 15px rgba(0, 0, 0, 0.7);
+    .content-wrapper{
+        padding-top:0px;
     }
 
-    .count-produk {
-        font-size: 3.2rem;
+    .stats-card::before{
+        content:"";
+        position:absolute;
+        right:-35px;
+        top:-35px;
+        width:120px;
+        height:120px;
+        border-radius:50%;
+        background:rgba(255,255,255,.08);
     }
 
-    .count-uang {
-        font-size: 3rem;
+    .stats-card::after{
+        content:"";
+        position:absolute;
+        left:-40px;
+        bottom:-40px;
+        width:120px;
+        height:120px;
+        border-radius:50%;
+        background:rgba(255,255,255,.05);
     }
 
-    .btn-light {
-        border-radius: 50px;
-        font-weight: 600;
+    .stats-card{
+        border-radius:18px;
+        overflow:hidden;
+        position:relative;
+        height:100%;
     }
+
+    .stats-card .card-body{
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        min-height:150px;
+        padding:15px;
+    }
+
+    .stats-card .btn{
+        margin-top:auto;
+        width:fit-content;
+    }
+
+    .dashboard-icon{
+        width:58px;
+        height:58px;
+        border-radius:16px;
+        background:rgba(255,255,255,.18);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        margin-bottom:20px;
+    }
+
+    .dashboard-icon i{
+        font-size:28px;
+    }
+
+    .count-number{
+        color:white;
+        font-size:3rem;
+        font-weight:700;
+        margin-bottom:10px;
+        line-height:1;
+        text-shadow:0 5px 12px rgba(0,0,0,.18);
+    }
+
+    .dashboard-title{
+        color:rgba(255,255,255,.92);
+        font-size:15px;
+        margin-bottom:15px;
+    }
+
+    .grid-margin{
+        margin-bottom:25px;
+    }
+
+    .stats-card:hover .dashboard-icon{
+        transform:rotate(-8deg) scale(1.08);
+    }
+
+    .stats-card:hover .btn-light{
+        background:white;
+    }
+
+    .btn-light i{
+        margin-right:4px;
+    }
+
+    .count-produk{
+        margin-bottom:12px;
+    }
+
+    .count-uang{
+        margin-bottom:12px;
+        word-break:break-word;
+    }
+
+    .btn-light{
+        border-radius:30px;
+        font-weight:600;
+        padding:8px 20px;
+    }
+
+    .notification-icon{
+        width:50px;
+        height:50px;
+        border-radius:15px;
+        background:#F8EFE9;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        margin-right:15px;
+    }
+
+    .notification-icon i{
+        font-size:24px;
+        color:#A7727D;
+    }
+
+    .po-title{
+        display:flex;
+        align-items:center;
+    }
+
+    .po-heading{
+        color:#333;
+        font-size:18px;
+        font-weight:700;
+    }
+
+    .po-card{
+        background:#fff;
+        border-radius:20px;
+        box-shadow:0 8px 25px rgba(0,0,0,.08);
+        border:1px solid #790000;
+    }
+
+    .po-count{
+        background:#A7727D;
+        color:white;
+        border-radius:30px;
+        padding:8px 18px;
+        margin-right:10px;
+        font-size:13px;
+    }
+
+    .po-item:last-child{
+        margin-bottom:0;
+    }
+
+    .po-item{
+        background:#FFF8F3;
+        border:1px solid #E9D5C5;
+        color:#333;
+    }
+
+    .po-item:hover{
+        background:#FDF1E8;
+    }
+
+    .po-code{
+        color:#5A3D2B;
+    }
+
+    .po-date{
+        color:#8A6B55;
+    }
+
+    .badge-status{
+        padding:8px 16px;
+        border-radius:25px;
+        font-size:11px;
+        font-weight:700;
+        letter-spacing:.5px;
+        box-shadow:0 4px 10px rgba(0,0,0,.18);
+    }
+
+    .empty-po{
+        padding:60px 20px;
+        text-align:center;
+        color:#9ca3af;
+    }
+
+    .empty-icon{
+        font-size:65px;
+        color:#d1d5db;
+        margin-bottom:15px;
+    }
+
+    .empty-po h6{
+        font-weight:700;
+        color:#555;
+    }
+
+    .empty-po p{
+        margin-bottom:0;
+    }
+
+    .dashboard-header-icon{
+        width:65px;
+        height:65px;
+        border-radius:18px;
+        background:rgba(255,255,255,.18);
+        display:flex;
+        justify-content:center;
+        align-items:center;
+    }
+
+    .dashboard-header-icon i{
+        color:#fff;
+        font-size:32px;
+    }
+
+    .text-white-50{
+        color:rgba(255,255,255,.8)!important;
+    }
+    
 </style>
 
 <div class="main-panel">
     <div class="content-wrapper">
+        <div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm"
+            style="background:linear-gradient(135deg,#A7727D,#8B5E5E); border-radius:20px;">
 
-        <div class="card border-0 shadow-sm mb-4" style="background:#1f2937;">
+            <div class="card-body py-4 px-4">
+
+                <div class="d-flex align-items-center flex-wrap">
+
+                    <div class="ml-3">
+                        <h3 class="text-white font-weight-bold mb-1">
+                            Dashboard Admin
+                        </h3>
+
+                        <p class="mb-0 text-white-50">
+                            Selamat datang di Sistem Informasi UD Sumber Rejeki.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+        <div class="card shadow-sm po-card mb-4">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0 fw-bold" style="color:#ffffff;">
-                        Notifikasi PO Terbaru
+                <div class="d-flex justify-content-between align-items-center flex-wrap pb-3 mb-4"
+                    style="border-bottom:1px solid #710c0c;">
+                    <h5 class="po-title mb-0">
+                        <span class="notification-icon">
+                            <i class="mdi mdi-bell-ring"></i>
+                        </span>
+
+                        <div>
+                            <div class="po-heading">
+                                Notifikasi PO Terbaru
+                            </div>
+                        </div>
                     </h5>
 
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="px-3 py-2 fw-bold"
-                                style="background:#374151;color:#ffffff;border-radius:8px;">
+                    <div class="d-flex align-items-center">
+                        <span class="po-count">
                             {{ $poBaru->count() }} PO
                         </span>
 
@@ -63,85 +301,126 @@
 
                 @if($poBaru && $poBaru->count() > 0)
 
-                    <div style="border:1px solid #374151;border-radius:10px;overflow:hidden;">
+                    <div class="mt-4">
                         @foreach($poBaru as $po)
 
                             <a href="{{ url('admin/po') }}"
-                                class="d-flex justify-content-between align-items-center text-decoration-none"
-                                style="padding:14px 16px;border-bottom:1px solid #374151;background:#111827;">
-                                
+                                class="po-item d-flex justify-content-between align-items-center text-decoration-none">                            
                                 <div>
-                                    <div style="font-weight:800;color:#ffffff;font-size:15px;">
+                                    <div class="po-code">
                                         {{ $po->kode_po }} - {{ $po->customer }}
                                     </div>
 
-                                    <div style="font-size:12px;color:#d1d5db;">
+                                    <div class="po-date">
                                         {{ $po->created_at->format('d M Y H:i') }}
                                     </div>
                                 </div>
 
-                                <span style="
+                                <span class="badge-status"
+                                    style="
                                     @if($po->status == 'Pending')
-                                        background:#facc15;color:#111827;
+                                        background:#facc15;color:#000;
                                     @elseif($po->status == 'Disetujui')
-                                        background:#3b82f6;color:#ffffff;
+                                        background:#3b82f6;color:#fff;
                                     @elseif($po->status == 'Diproses')
-                                        background:#06b6d4;color:#ffffff;
+                                        background:#06b6d4;color:#fff;
+                                    @elseif($po->status == 'Diambil')
+                                        background:#8b5cf6;color:#fff;
+                                    @elseif($po->status == 'Dikirim')
+                                        background:#f97316;color:#fff;
                                     @elseif($po->status == 'Selesai')
-                                        background:#22c55e;color:#ffffff;
+                                        background:#22c55e;color:#fff;
                                     @else
-                                        background:#ef4444;color:#ffffff;
-                                    @endif
-                                    font-weight:900;
-                                    padding:6px 14px;
-                                    border-radius:8px;
-                                    font-size:12px;">
-    
-                                    {{ strtoupper($po->status) }}
+                                        background:#ef4444;color:#fff;
+                                    @endif">
+                                        {{ strtoupper($po->status) }}
                                 </span>
                             </a>
                         @endforeach
                     </div>
                 @else
 
-                    <div style="text-align:center;padding:16px;color:#d1d5db;border:1px solid #374151;border-radius:10px;">
-                        Tidak ada data PO terbaru
-                    </div>
+                <div class="empty-po">
+                    <i class="mdi mdi-bell-off-outline empty-icon"></i>
+                    <h6>Belum Ada Purchase Order</h6>
+                    <p>
+                        Semua Purchase Order terbaru akan muncul di sini.
+                    </p>
+                </div>
                 @endif
             </div>
         </div>
 
         <div class="row">
 
-        <div class="col-md-4 grid-margin stretch-card">
-                <div class="card" style="background-color: #6B4F4F;">
-                    <div class="card-body">
-                        <h5 class="count-number count-produk" data-target="{{ $jumlahbarangshowroom }}">0</h5>
-                        <p class="text-white mb-0" style="font-size: 16px;">Barang Showroom</p>
-                        <a href="{{ url('admin/showroomdaftar') }}" class="btn btn-light btn-sm mt-3">Baca Selengkapnya</a>
+        <div class="col-lg-4 col-md-6 grid-margin stretch-card">
+            <div class="card stats-card"
+                style="background:linear-gradient(135deg,#8D6E63,#5D4037);">
+                <div class="card-body">
+                    <div class="dashboard-icon">
+                        <i class="mdi mdi-sofa"></i>
                     </div>
+                    <div class="count-number count-produk"
+                        data-target="{{ $jumlahbarangshowroom }}">
+                        0
+                    </div>
+                    <div class="dashboard-title">
+                        Barang Showroom
+                    </div>
+                    <a href="{{ url('admin/showroomdaftar') }}"
+                        class="btn btn-light">
+                        <i class="mdi mdi-arrow-right-circle-outline"></i>
+                        Lihat Detail
+                    </a>
                 </div>
             </div>
+        </div>
 
-            <div class="col-md-4 grid-margin stretch-card">
-                <div class="card" style="background-color: #A7727D;">
-                    <div class="card-body">
-                        <h5 class="count-number count-produk" data-target="{{ $jumlahproduk }}">0</h5>
-                        <p class="text-white mb-0" style="font-size: 16px;">Data Barang Produksi</p>
-                        <a href="{{ url('admin/produksidaftar') }}" class="btn btn-light btn-sm mt-3">Baca Selengkapnya</a>
+        <div class="col-lg-4 col-md-6 grid-margin stretch-card">
+            <div class="card stats-card"
+                style="background:linear-gradient(135deg,#C48B9F,#8E5A6A);">
+                <div class="card-body">
+                    <div class="dashboard-icon">
+                        <i class="mdi mdi-factory"></i>
                     </div>
+                    <div class="count-number count-produk"
+                        data-target="{{ $jumlahproduk }}">
+                        0
+                    </div>
+                    <div class="dashboard-title">
+                        Data Barang Produksi
+                    </div>
+                    <a href="{{ url('admin/produksidaftar') }}"
+                        class="btn btn-light">
+                        <i class="mdi mdi-arrow-right-circle-outline"></i>
+                        Lihat Detail
+                    </a>
                 </div>
             </div>
+        </div>
             
-            <div class="col-md-4 grid-margin stretch-card">
-                <div class="card" style="background-color: #3E3232;">
-                    <div class="card-body">
-                        <h5 class="count-number count-uang" data-target="{{ $totalpenjualan }}">0</h5>
-                        <p class="text-white mb-0" style="font-size: 16px;">Pemasukan Bulan Ini</p>
-                        <a href="{{ url('admin/penjualandaftar') }}" class="btn btn-light btn-sm mt-3">Baca Selengkapnya</a>
+        <div class="col-lg-4 col-md-6 grid-margin stretch-card">
+            <div class="card stats-card"
+                style="background:linear-gradient(135deg,#4E342E,#2E1F1B);">
+                <div class="card-body">
+                    <div class="dashboard-icon">
+                        <i class="mdi mdi-cash-multiple"></i>
                     </div>
+                    <div class="count-number count-uang"
+                        data-target="{{ $totalpenjualan }}">
+                        0
+                    </div>
+                    <div class="dashboard-title">
+                        Pemasukan Bulan Ini
+                    </div>
+                    <a href="{{ url('admin/penjualandaftar') }}"
+                        class="btn btn-light">
+                        <i class="mdi mdi-arrow-right-circle-outline"></i>
+                        Lihat Detail
+                    </a>
                 </div>
             </div>
+        </div>
 
             {{-- Pengeluaran Hari Ini 
             <div class="col-md-6 grid-margin stretch-card">

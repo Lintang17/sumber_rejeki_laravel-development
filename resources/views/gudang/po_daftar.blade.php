@@ -15,9 +15,6 @@
                             <small class="text-muted">Kelola semua data purchase order gudang</small>
                         </div>
                     </div>
-                    <a href="{{ url('gudang/po/tambah') }}" class="btn btn-primary">
-                        <i class="fas fa-plus-circle mr-2"></i> Tambah PO
-                    </a>
                 </div>
 
                 <div class="card-body">

@@ -43,8 +43,8 @@ input[type=number]{
     const isOwner = @json($isOwner);
 </script>
 
-<div class="content-wrapper">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap;gap:15px;">
+<div class="content-wrapper" style="padding-left:25px;padding-right:25px;">
+    <div style="background:white;padding:22px 28px;border-radius:18px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;box-shadow:0 4px 15px rgba(0,0,0,.05);border:1px solid #7a2323;">
         <div>
             <h2 style="font-weight:700;margin-bottom:5px;color:#2c2c2c;">Tambah PO</h2>
             <p style="color:#777;margin:0;">Tambahkan produk dan pantau total pesanan secara realtime.</p>
@@ -60,7 +60,7 @@ input[type=number]{
         <div class="row">
             <div class="col-lg-8">
                 <div id="produk-wrapper">
-                    <div style="background:white;border-radius:18px;padding:24px;margin-bottom:20px;border:1px solid #ececec;box-shadow:0 2px 10px rgba(0,0,0,.04);">
+                    <div style="background:white;border-radius:18px;padding:24px;margin-bottom:20px;border:1px solid #7e0c0c;box-shadow:0 2px 10px rgba(0,0,0,.04);">
                         <h5 style="font-weight:700;margin-bottom:20px;">
                             Informasi Customer
                         </h5>
@@ -127,7 +127,7 @@ input[type=number]{
                             </div>
                         </div>
                     </div>
-                    <div class="produk-card" style="background:white;border-radius:18px;padding:24px;margin-bottom:20px;border:1px solid #ececec;box-shadow:0 2px 10px rgba(0,0,0,.04);">
+                    <div class="produk-card" style="background:white;border-radius:18px;padding:24px;margin-bottom:20px;border:1px solid #760808;box-shadow:0 2px 10px rgba(0,0,0,.04);">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                             <div style="display:flex;align-items:center;">
                                 <div style="width:45px;height:45px;border-radius:12px;background:#4B49AC;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:14px;">1</div>
@@ -178,7 +178,7 @@ input[type=number]{
                                         name="qty[]"
                                         class="form-control qty"
                                         min="1"
-                                        value="1"
+                                        value=""
                                         oninput="calculateTotal()"
                                         required>
                             </div>
@@ -189,17 +189,16 @@ input[type=number]{
                                 </label>
 
                                 @if(auth()->user()->role == 'Admin')
-                                    <input type="number"
+                                    <input type="text"
                                             name="hpp_estimasi_admin[]"
                                             class="form-control harga-admin"
-                                            min="0"
-                                            value="0"
-                                            oninput="calculateTotal()">
+                                            value=""
+                                            oninput="formatRupiah(this); calculateTotal()">
                                 @else
-                                    <input type="number"
+                                    <input type="text"
                                             name="hpp_estimasi_admin[]"
                                             class="form-control"
-                                            value="0"
+                                            value=""
                                             readonly>
                                 @endif
                             </div>
@@ -210,17 +209,16 @@ input[type=number]{
                                 </label>
 
                                 @if(auth()->user()->role == 'Gudang')
-                                    <input type="number"
+                                    <input type="text"
                                             name="hpp_estimasi_gudang[]"
                                             class="form-control harga-gudang"
-                                            min="0"
-                                            value="0"
-                                            oninput="calculateTotal()">
+                                            value=""
+                                            oninput="formatRupiah(this); calculateTotal()">               
                                 @else
-                                    <input type="number"
+                                    <input type="text"
                                             name="hpp_estimasi_gudang[]"
                                             class="form-control"
-                                            value="0"
+                                            value=""
                                             readonly>
                                 @endif
                             </div>
@@ -231,21 +229,20 @@ input[type=number]{
                                 </label>
 
                                 @if($isOwner)
-                                   <input type="number"
+                                   <input type="text"
                                             name="harga_jual[]"
                                             class="form-control harga-jual"
-                                            min="0"
-                                            value="0"
-                                            oninput="calculateTotal()">
+                                            value=""
+                                            oninput="formatRupiah(this); calculateTotal()">
                                 @else
                                     <input type="hidden"
                                             name="harga_jual[]"
-                                            value="0">
+                                            value="">
 
-                                    <input type="number"
+                                    <input type="text"
                                             class="form-control"
                                             disabled
-                                            value="0">
+                                            value="">
                                 @endif
                             </div>
 
@@ -264,7 +261,7 @@ input[type=number]{
                 </div>
             </div>
             <div class="col-lg-4">
-                <div style="background:white;border-radius:18px;padding:25px;position:sticky;top:20px;border:1px solid #ececec;box-shadow:0 2px 12px rgba(0,0,0,.04);">
+                <div style="background:white;border-radius:18px;padding:25px;position:sticky;top:20px;border:1px solid #7e0c0c;box-shadow:0 2px 12px rgba(0,0,0,.04);">
                     <h5 style="font-weight:700;margin-bottom:25px;">Ringkasan PO</h5>
                     <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
                         <span>Total Produk</span>
@@ -272,10 +269,10 @@ input[type=number]{
                     </div>
                     <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
                         <span>Total Qty</span>
-                        <strong id="totalQty">1</strong>
+                        <strong id="totalQty">0</strong>
                     </div>
                     <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
-                        <span>Total PO</span>
+                        <span>Total Harga</span>
                         <strong>Menunggu Owner</strong>
                     </div>
                     <hr>
@@ -288,7 +285,7 @@ input[type=number]{
                             name="dp"
                             id="dp"
                             class="form-control"
-                            value="0"
+                            value=""
                             min="0"
                             oninput="calculateTotal()"> 
                     </div>
@@ -347,60 +344,57 @@ function addProduk(){
 
     if(role === 'Admin'){
         hppAdminInput = `
-            <input type="number"
+            <input type="text"
                 name="hpp_estimasi_admin[]"
                 class="form-control harga-admin"
-                min="0"
-                value="0"
-                oninput="calculateTotal()">
+                value=""
+                oninput="formatRupiah(this); calculateTotal()">
         `;
     } else {
         hppAdminInput = `
-            <input type="number"
+            <input type="text"
                 name="hpp_estimasi_admin[]"
                 class="form-control"
-                value="0"
+                value=""
                 readonly>
         `;
     }
 
     if(role === 'Gudang'){
         hppGudangInput = `
-            <input type="number"
+            <input type="text"
                 name="hpp_estimasi_gudang[]"
                 class="form-control harga-gudang"
-                min="0"
-                value="0"
-                oninput="calculateTotal()">
+                value=""
+                oninput="formatRupiah(this); calculateTotal()">
         `;
     } else {
         hppGudangInput = `
-            <input type="number"
+            <input type="text"
                 name="hpp_estimasi_gudang[]"
                 class="form-control"
-                value="0"
+                value=""
                 readonly>
         `;
     }
 
     if(isOwner){
         hargaJualInput = `
-            <input type="number"
+            <input type="text"
                 name="harga_jual[]"
                 class="form-control harga-jual"
-                min="0"
-                value="0"
-                oninput="calculateTotal()">
+                value=""
+                oninput="formatRupiah(this); calculateTotal()">
         `;
     } else {
         hargaJualInput = `
             <input type="hidden"
                 name="harga_jual[]"
-                value="0">
+                value="">
 
-            <input type="number"
+            <input type="text"
                 class="form-control"
-                value="0"
+                value=""
                 disabled>
         `;
     }
@@ -457,7 +451,7 @@ function addProduk(){
                     name="qty[]"
                     class="form-control qty"
                     min="1"
-                    value="1"
+                    value=""
                     oninput="calculateTotal()"
                     required>
             </div>
@@ -521,6 +515,27 @@ function previewFoto(input){
         reader.readAsDataURL(file);
     }
 }
+
+function formatRupiah(input){
+
+    let value = input.value.replace(/\D/g,''); // hapus selain angka
+
+    if(value){
+        input.value = new Intl.NumberFormat('id-ID').format(value);
+    }else{
+        input.value = '';
+    }
+}
+
+// sebelum submit ubah kembali jadi angka
+document.querySelector('form').addEventListener('submit', function(){
+
+    document.querySelectorAll('.harga-admin, .harga-gudang, .harga-jual')
+    .forEach(input => {
+        input.value = input.value.replace(/\./g,'');
+    });
+
+});
 
 function calculateTotal(){
 

@@ -1,169 +1,332 @@
 @extends('layouts.admin')
 
 @section('content')
+
 <style>
-    .card {
-        border-radius: 15px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    body{
+        background:#f4f6fb;
     }
 
-    .card:hover {
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    .card{
+        border:0;
+        border-radius:18px;
+        overflow:hidden;
+        transition:.3s;
+        box-shadow:0 6px 20px rgba(0,0,0,.08);
     }
 
-    .card-body {
-        padding-top: 3rem;
-        padding-bottom: 3rem;
-        text-align: center;
+    .card:hover{
+        transform:translateY(-4px);
+        box-shadow:0 18px 40px rgba(0,0,0,.15);
     }
 
-    .count-number {
-        font-weight: 700;
-        font-family: 'Poppins', sans-serif;
-        color: #ffffff !important;
-        text-shadow:
-            0 0 5px rgba(255, 255, 255, 0.8),
-            0 0 10px rgba(255, 255, 255, 0.6),
-            0 0 15px rgba(0, 0, 0, 0.7);
+    .content-wrapper{
+        padding-top:0;
     }
 
-    .count-produk {
-        font-size: 3.2rem;
+    .notification-icon{
+        width:50px;
+        height:50px;
+        border-radius:15px;
+        background:#F8EFE9;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        margin-right:15px;
     }
 
-    .count-uang {
-        font-size: 3rem;
+    .notification-icon i{
+        font-size:24px;
+        color:#A7727D;
     }
 
-    .btn-light {
-        border-radius: 50px;
-        font-weight: 600;
+    .po-heading{
+        font-size:18px;
+        font-weight:700;
+        color:#333;
     }
+
+    .po-count{
+        background:#A7727D;
+        color:white;
+        border-radius:30px;
+        padding:8px 18px;
+        font-size:13px;
+        font-weight:600;
+    }
+
+    .po-item{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:16px;
+        margin-bottom:12px;
+        border-radius:12px;
+        background:#FFF8F3;
+        border:1px solid #E9D5C5;
+        text-decoration:none;
+        color:#333;
+    }
+
+    .po-item:hover{
+        background:#FDF1E8;
+    }
+
+    .po-code{
+        color:#5A3D2B;
+        font-weight:700;
+    }
+
+    .po-date{
+        color:#8A6B55;
+        font-size:12px;
+    }
+
+    .badge-status{
+        padding:8px 16px;
+        border-radius:25px;
+        font-size:11px;
+        font-weight:700;
+    }
+
+    .empty-po{
+        text-align:center;
+        padding:50px;
+        color:#999;
+    }
+
+    .stats-card{
+        position:relative;
+        height:100%;
+        border-radius:18px;
+    }
+
+    .stats-card .card-body{
+        min-height:170px;
+        padding:20px;
+        display:flex;
+        flex-direction:column;
+    }
+
+    .dashboard-icon{
+        width:58px;
+        height:58px;
+        border-radius:16px;
+        background:rgba(255,255,255,.18);
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        margin-bottom:20px;
+    }
+
+    .dashboard-icon i{
+        font-size:28px;
+        color:white;
+    }
+
+    .count-number{
+        color:white;
+        font-size:3rem;
+        font-weight:700;
+        line-height:1;
+        text-shadow:0 5px 12px rgba(0,0,0,.18);
+    }
+
+    .dashboard-title{
+        color:rgba(255,255,255,.9);
+        margin-top:10px;
+        margin-bottom:20px;
+    }
+
+    .btn-light{
+        border-radius:30px;
+        font-weight:600;
+        padding:8px 20px;
+        width:max-content;
+    }
+
+    .grid-margin{
+        margin-bottom:25px;
+    }
+
 </style>
 
 <div class="main-panel">
     <div class="content-wrapper">
+        <div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm"
+            style="background:linear-gradient(135deg,#A7727D,#8B5E5E); border-radius:20px;">
 
-        @php
-            $poCount = $poBaru->count();    
-        @endphp
+            <div class="card-body py-4 px-4">
 
-        <div class="card border-0 mb-4" style="background:#1f2937;border-radius:12px;">
+                <div class="d-flex align-items-center flex-wrap">
+
+                    <div class="ml-3">
+                        <h3 class="text-white font-weight-bold mb-1">
+                            Dashboard Owner
+                        </h3>
+
+                        <p class="mb-0 text-white-50">
+                            Selamat datang di Sistem Informasi UD Sumber Rejeki.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+        <div class="card shadow-sm po-card mb-4">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-white">
-                        Notifikasi PO Terbaru
+                <div class="d-flex justify-content-between align-items-center flex-wrap pb-3 mb-4"
+                    style="border-bottom:1px solid #710c0c;">
+                    <h5 class="po-title mb-0">
+                        <span class="notification-icon">
+                            <i class="mdi mdi-bell-ring"></i>
+                        </span>
+
+                        <div>
+                            <div class="po-heading">
+                                Notifikasi PO Terbaru
+                            </div>
+                        </div>
                     </h5>
 
-                    <div class="d-flex align-items-center gap-2">
-                        <span style="
-                            background:#374151;
-                            color:#fff;
-                            padding:6px 12px;
-                            border-radius:8px;
-                            font-weight:700;">
-                            {{ $poCount }} PO
+                    <div class="d-flex align-items-center">
+                        <span class="po-count">
+                            {{ $poBaru->count() }} PO
                         </span>
 
                         <a href="{{ url('owner/po') }}"
-                            class="btn btn-light btn-sm"
-                            style="border-radius:8px;font-weight:700;">
+                            class="btn btn-sm btn-light"
+                            style="font-weight:600;">
                             Lihat Semua
                         </a>
                     </div>
                 </div>
 
-                @if($poCount > 0)
-                    <div style="border:1px solid #374151;border-radius:10px;overflow:hidden;">
-                        @foreach($poBaru->take(7) as $po)
-                            @php
-                                $status = $po->status;
-                                $bg = '#facc15';
-                                $text = '#111827';
-                                if($status == 'Pending'){
-                                    $bg = '#facc15';
-                                } elseif($status == 'Disetujui'){
-                                    $bg = '#22c55e';
-                                    $text = '#fff';
-                                } elseif($status == 'Diproses'){
-                                    $bg = '#3b82f6';
-                                    $text = '#fff';
-                                } elseif($status == 'Diambil'){
-                                    $bg = '#6366f1';
-                                    $text = '#fff';
-                                } elseif($status == 'Dikirim'){
-                                    $bg = '#06b6d4';
-                                    $text = '#fff';
-                                } elseif($status == 'Selesai'){
-                                    $bg = '#10b981';
-                                    $text = '#fff';
-                                }
-                            @endphp
+                @if($poBaru && $poBaru->count() > 0)
+
+                    <div class="mt-4">
+                        @foreach($poBaru as $po)
 
                             <a href="{{ url('owner/po') }}"
-                                style="display:flex;justify-content:space-between;align-items:center;
-                                        padding:14px 16px;
-                                        border-bottom:1px solid #374151;
-                                        background:#111827;
-                                        text-decoration:none;">
+                                class="po-item d-flex justify-content-between align-items-center text-decoration-none">                            
                                 <div>
-                                    <div style="font-weight:800;color:#fff;">
+                                    <div class="po-code">
                                         {{ $po->kode_po }} - {{ $po->customer }}
                                     </div>
-                                    <div style="font-size:12px;color:#9ca3af;">
+
+                                    <div class="po-date">
                                         {{ $po->created_at->format('d M Y H:i') }}
                                     </div>
                                 </div>
 
-                                <span style="
-                                    background:{{ $bg }};
-                                    color:{{ $text }};
-                                    font-weight:900;
-                                    padding:6px 12px;
-                                    border-radius:8px;">
-                                    {{ strtoupper($status) }}
+                                <span class="badge-status"
+                                    style="
+                                    @if($po->status == 'Pending')
+                                        background:#facc15;color:#000;
+                                    @elseif($po->status == 'Disetujui')
+                                        background:#3b82f6;color:#fff;
+                                    @elseif($po->status == 'Diproses')
+                                        background:#06b6d4;color:#fff;
+                                    @elseif($po->status == 'Diambil')
+                                        background:#8b5cf6;color:#fff;
+                                    @elseif($po->status == 'Dikirim')
+                                        background:#f97316;color:#fff;
+                                    @elseif($po->status == 'Selesai')
+                                        background:#22c55e;color:#fff;
+                                    @else
+                                        background:#ef4444;color:#fff;
+                                    @endif">
+                                        {{ strtoupper($po->status) }}
                                 </span>
                             </a>
                         @endforeach
                     </div>
                 @else
-                    <div style="padding:14px;text-align:center;color:#9ca3af;">
-                        Tidak ada PO Terbaru
-                    </div>
+
+                <div class="empty-po">
+                    <i class="mdi mdi-bell-off-outline empty-icon"></i>
+                    <h6>Belum Ada Purchase Order</h6>
+                </div>
                 @endif
             </div>
         </div>
+
         <div class="row">
 
-            <div class="col-md-4 grid-margin stretch-card">
-                <div class="card" style="background-color: #6B4F4F;">
-                    <div class="card-body">
-                        <h5 class="count-number count-produk" data-target="{{ $jumlahproduk }}">0</h5>
-                        <p class="text-white mb-0" style="font-size: 16px;">Data Barang Produksi</p>
-                        <a href="{{ url('owner/produksidaftar') }}" class="btn btn-light btn-sm mt-3">Baca Selengkapnya</a>
+        <div class="col-lg-4 col-md-6 grid-margin stretch-card">
+            <div class="card stats-card"
+                style="background:linear-gradient(135deg,#8D6E63,#5D4037);">
+                <div class="card-body">
+                    <div class="dashboard-icon">
+                        <i class="mdi mdi-factory"></i>
                     </div>
+                    <div class="count-number count-produk"
+                        data-target="{{ $jumlahproduk }}">
+                        0
+                    </div>
+                    <div class="dashboard-title">
+                        Data Barang Produksi
+                    </div>
+                    <a href="{{ url('owner/produksidaftar') }}"
+                        class="btn btn-light">
+                        <i class="mdi mdi-arrow-right-circle-outline"></i>
+                        Lihat Detail
+                    </a>
                 </div>
             </div>
+        </div>
 
-            <div class="col-md-4 grid-margin stretch-card">
-                <div class="card" style="background-color: #A7727D;">
-                    <div class="card-body">
-                        <h5 class="count-number count-produk" data-target="{{ $totalstokopname }}">0</h5>
-                        <p class="text-white mb-0" style="font-size: 16px;">Stok Opname</p>
-                        <a href="{{ url('owner/stokopname/riwayat') }}" class="btn btn-light btn-sm mt-3">Baca Selengkapnya</a>
+        <div class="col-lg-4 col-md-6 grid-margin stretch-card">
+            <div class="card stats-card"
+                style="background:linear-gradient(135deg,#C48B9F,#8E5A6A);">
+                <div class="card-body">
+                    <div class="dashboard-icon">
+                        <i class="mdi mdi-sofa"></i>
                     </div>
+                    <div class="count-number count-produk"
+                        data-target="{{ $totalstokopname }}">
+                        0
+                    </div>
+                    <div class="dashboard-title">
+                        Stock Opname
+                    </div>
+                    <a href="{{ url('owner/stokopname/riwayat') }}"
+                        class="btn btn-light">
+                        <i class="mdi mdi-arrow-right-circle-outline"></i>
+                        Lihat Detail
+                    </a>
                 </div>
             </div>
-
-            <div class="col-md-4 grid-margin stretch-card">
-                <div class="card" style="background-color: #3E3232;">
-                    <div class="card-body">
-                        <h5 class="count-number count-uang" data-target="{{ $totalpenjualan }}">0</h5>
-                        <p class="text-white mb-0" style="font-size: 16px;">Pemasukan Bulan Ini</p>
-                        <a href="{{ url('owner/penjualandaftar') }}" class="btn btn-light btn-sm mt-3">Baca Selengkapnya</a>
+        </div>
+            
+        <div class="col-lg-4 col-md-6 grid-margin stretch-card">
+            <div class="card stats-card"
+                style="background:linear-gradient(135deg,#4E342E,#2E1F1B);">
+                <div class="card-body">
+                    <div class="dashboard-icon">
+                        <i class="mdi mdi-cash-multiple"></i>
                     </div>
+                    <div class="count-number count-uang"
+                        data-target="{{ $totalpenjualan }}">
+                        0
+                    </div>
+                    <div class="dashboard-title">
+                        Pemasukan Bulan Ini
+                    </div>
+                    <a href="{{ url('owner/penjualandaftar') }}"
+                        class="btn btn-light">
+                        <i class="mdi mdi-arrow-right-circle-outline"></i>
+                        Lihat Detail
+                    </a>
                 </div>
             </div>
+        </div>
 
         </div>
     </div>

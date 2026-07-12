@@ -1297,12 +1297,10 @@ public function barangmasukupdate(Request $request, $id)
                     'deskripsi' => $request->deskripsi[$i] ?? null,
                     'foto' => $namaFoto,
                     'qty' => $qty,
-                    'hpp_estimasi_admin' =>
-                        $hppEstimasiAdmin,
-                    'hpp_estimasi_gudang' =>
-                        $hppEstimasiGudang,
+                    'hpp_estimasi_admin' => $hppEstimasiAdmin,
+                    'hpp_estimasi_gudang' => 0,
                     'harga_jual' => 0,
-                    'hpp_final' => 0,
+                    'hpp_final' => null,
                     'subtotal' => 0,
                 ]);
             }
@@ -1391,8 +1389,6 @@ public function barangmasukupdate(Request $request, $id)
                         'deskripsi' => $request->deskripsi[$index] ?? null,
                         'hpp_estimasi_admin' =>
                             $request->hpp_estimasi_admin[$index] ?? 0,
-                        'hpp_estimasi_gudang' =>
-                            $request->hpp_estimasi_gudang[$index] ?? 0,
                     ]);
                 }
             }

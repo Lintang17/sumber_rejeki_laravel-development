@@ -86,13 +86,6 @@
                         </div>
 
                         <div class="d-flex justify-content-between mt-4">
-
-                            <a href="{{ url('admin/internaldaftar') }}"
-                               class="btn btn-secondary">
-                                <i class="mdi mdi-arrow-left"></i>
-                                Back
-                            </a>
-
                             <button type="submit"
                                     class="btn btn-success">
                                 <i class="mdi mdi-content-save"></i>
