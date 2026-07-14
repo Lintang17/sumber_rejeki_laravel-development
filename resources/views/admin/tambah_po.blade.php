@@ -39,6 +39,17 @@ input[type=number]{
     $isOwner = auth()->user()->role === 'Owner';
 @endphp
 
+@if ($errors->any())
+<div class="alert alert-danger">
+    <strong>Terjadi kesalahan:</strong>
+    <ul>
+        @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
 <script>
     const isOwner = @json($isOwner);
 </script>
@@ -113,7 +124,8 @@ input[type=number]{
 
                                 <input type="date"
                                         name="estimasi_awal"
-                                        class="form-control">
+                                        class="form-control"
+                                        required>
                             </div>
 
                             <div class="col-md-3 mb-3">
@@ -123,7 +135,8 @@ input[type=number]{
 
                                 <input type="date" 
                                         name="estimasi_akhir" 
-                                        class="form-control">
+                                        class="form-control"
+                                        required>
                             </div>
                         </div>
                     </div>
@@ -136,10 +149,20 @@ input[type=number]{
                                     <small style="color:#777;">Isi informasi produk</small>
                                 </div>
                             </div>
-                            <button type="button" onclick="removeProduk(this)" style="display:flex;align-items:center;gap:8px;border:none;border-radius:12px;background:#fff1f1;color:#dc3545;padding:10px 16px;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s ease;box-shadow:0 2px 6px rgba(220,53,69,.12);" onmouseover="this.style.background='#dc3545';this.style.color='white';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 14px rgba(220,53,69,.25)';" onmouseout="this.style.background='#fff1f1';this.style.color='#dc3545';this.style.transform='translateY(0)';this.style.boxShadow='0 2px 6px rgba(220,53,69,.12)';">
-                                <i class="mdi mdi-delete" style="font-size:18px;"></i>
-                                <span>Hapus Produk</span>
-                            </button>
+                            <div style="display:flex;gap:10px;">
+                                <button type="button"
+                                    onclick="addProduk()"
+                                    style="display:flex;align-items:center;gap:8px;border:none;border-radius:12px;background:#4B49AC;color:white;padding:10px 16px;font-weight:600;font-size:14px;cursor:pointer;">
+                                    <i class="mdi mdi-plus" style="font-size:18px;"></i>
+                                    <span>Tambah Produk</span>
+                                </button>
+                                <button type="button"
+                                    onclick="removeProduk(this)"
+                                    style="display:flex;align-items:center;gap:8px;border:none;border-radius:12px;background:#fff1f1;color:#dc3545;padding:10px 16px;font-weight:600;font-size:14px;cursor:pointer;">
+                                    <i class="mdi mdi-delete" style="font-size:18px;"></i>
+                                    <span>Hapus Produk</span>
+                                </button>
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -166,7 +189,8 @@ input[type=number]{
                                             name="foto[]"
                                             class="form-control foto-input"
                                             accept="image/*"
-                                            onchange="previewFoto(this)">
+                                            onchange="previewFoto(this)"
+                                            required>
                                 </div>
                             </div>
 
@@ -193,7 +217,8 @@ input[type=number]{
                                             name="hpp_estimasi_admin[]"
                                             class="form-control harga-admin"
                                             value=""
-                                            oninput="formatRupiah(this); calculateTotal()">
+                                            oninput="formatRupiah(this); calculateTotal()"
+                                            required>
                                 @else
                                     <input type="text"
                                             name="hpp_estimasi_admin[]"
@@ -213,7 +238,8 @@ input[type=number]{
                                             name="hpp_estimasi_gudang[]"
                                             class="form-control harga-gudang"
                                             value=""
-                                            oninput="formatRupiah(this); calculateTotal()">               
+                                            oninput="formatRupiah(this); calculateTotal()"
+                                            required>            
                                 @else
                                     <input type="text"
                                             name="hpp_estimasi_gudang[]"
@@ -233,7 +259,8 @@ input[type=number]{
                                             name="harga_jual[]"
                                             class="form-control harga-jual"
                                             value=""
-                                            oninput="formatRupiah(this); calculateTotal()">
+                                            oninput="formatRupiah(this); calculateTotal()"
+                                            required>
                                 @else
                                     <input type="hidden"
                                             name="harga_jual[]"
@@ -254,7 +281,8 @@ input[type=number]{
                                 <textarea name="deskripsi[]"
                                           class="form-control"
                                           rows="2"
-                                          placeholder="Tambahkan detail produk..."></textarea>
+                                          placeholder="Tambahkan detail produk..."
+                                          required></textarea>
                             </div>
                         </div>
                     </div>
@@ -281,13 +309,14 @@ input[type=number]{
                             Nominal Pembayaran
                         </label>
 
-                        <input type="number"
+                        <input type="text"
                             name="dp"
                             id="dp"
                             class="form-control"
                             value=""
                             min="0"
-                            oninput="calculateTotal()"> 
+                            required
+                            oninput="formatRupiah(this); calculateTotal()"> 
                     </div>
 
                     <div class="mb-3">
@@ -296,7 +325,8 @@ input[type=number]{
                         </label>
 
                         <select name="metode_pembayaran"
-                                class="form-control">
+                                class="form-control"
+                                required>
                             <option value="">Pilih Metode</option>
                             <option value="Tunai">Tunai</option>
                             <option value="Transfer Bank">Transfer Bank</option>
@@ -311,7 +341,8 @@ input[type=number]{
 
                         <select name="status_pembayaran"
                                 id="statusPembayaran"
-                                class="form-control">
+                                class="form-control"
+                                required>
                             <option value="DP">DP</option>
                             <option value="Lunas">Lunas</option>
                         </select>
@@ -348,7 +379,8 @@ function addProduk(){
                 name="hpp_estimasi_admin[]"
                 class="form-control harga-admin"
                 value=""
-                oninput="formatRupiah(this); calculateTotal()">
+                oninput="formatRupiah(this); calculateTotal()"
+                required>
         `;
     } else {
         hppAdminInput = `
@@ -366,7 +398,8 @@ function addProduk(){
                 name="hpp_estimasi_gudang[]"
                 class="form-control harga-gudang"
                 value=""
-                oninput="formatRupiah(this); calculateTotal()">
+                oninput="formatRupiah(this); calculateTotal()"
+                required>
         `;
     } else {
         hppGudangInput = `
@@ -384,7 +417,8 @@ function addProduk(){
                 name="harga_jual[]"
                 class="form-control harga-jual"
                 value=""
-                oninput="formatRupiah(this); calculateTotal()">
+                oninput="formatRupiah(this); calculateTotal()"
+                required>
         `;
     } else {
         hargaJualInput = `
@@ -412,12 +446,20 @@ function addProduk(){
                 </div>
             </div>
 
-            <button type="button"
-                onclick="removeProduk(this)"
-                style="display:flex;align-items:center;gap:8px;border:none;border-radius:12px;background:#fff1f1;color:#dc3545;padding:10px 16px;font-weight:600;cursor:pointer;">
-                <i class="mdi mdi-delete"></i>
-                Hapus Produk
-            </button>
+            <div style="display:flex;gap:10px;">
+                <button type="button"
+                    onclick="addProduk()"
+                    style="display:flex;align-items:center;gap:8px;border:none;border-radius:12px;background:#4B49AC;color:white;padding:10px 16px;font-weight:600;cursor:pointer;">
+                    <i class="mdi mdi-plus"></i>
+                    Tambah Produk
+                </button>
+                <button type="button"
+                    onclick="removeProduk(this)"
+                    style="display:flex;align-items:center;gap:8px;border:none;border-radius:12px;background:#fff1f1;color:#dc3545;padding:10px 16px;font-weight:600;cursor:pointer;">
+                    <i class="mdi mdi-delete"></i>
+                    Hapus Produk
+                </button>
+            </div>
         </div>
 
         <div class="row">
@@ -441,7 +483,8 @@ function addProduk(){
                         name="foto[]"
                         class="form-control foto-input"
                         accept="image/*"
-                        onchange="previewFoto(this)">
+                        onchange="previewFoto(this)"
+                        required>
                 </div>
             </div>
 
@@ -476,7 +519,7 @@ function addProduk(){
                 <textarea name="deskripsi[]"
                     class="form-control"
                     rows="2"
-                    placeholder="Tambahkan detail produk..."></textarea>
+                    placeholder="Tambahkan detail produk..."required></textarea>
             </div>
         </div>
     </div>
@@ -529,8 +572,7 @@ function formatRupiah(input){
 
 // sebelum submit ubah kembali jadi angka
 document.querySelector('form').addEventListener('submit', function(){
-
-    document.querySelectorAll('.harga-admin, .harga-gudang, .harga-jual')
+    document.querySelectorAll('.harga-admin, .harga-gudang, .harga-jual, #dp')
     .forEach(input => {
         input.value = input.value.replace(/\./g,'');
     });

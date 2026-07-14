@@ -2,33 +2,26 @@
 
 @section('content')
 <div class="content-wrapper">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;gap:15px;flex-wrap:wrap;">
-
-    <div>
-        <h2 style="font-weight:700;margin-bottom:5px;color:#2c2c2c;">
-            Edit Purchase Order
-        </h2>
-
-        <p style="color:#777;margin:0;">
-            Edit data purchase order selama status masih pending.
-        </p>
-    </div>
-
-    <div style="display:flex;gap:10px;align-items:center;">
-
+    <div style="background:white;padding:22px 28px;border-radius:18px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;box-shadow:0 4px 15px rgba(0,0,0,.05);border:1px solid #7a2323;">
+        <div>
+            <h2 style="font-weight:700;margin-bottom:5px;color:#2c2c2c;">
+                Edit Purchase Order
+            </h2>
+            <p style="color:#777;margin:0;">
+                Perbarui data PO selama status masih Pending.
+            </p>
+        </div>
         <a href="{{ url('admin/po') }}"
-           class="btn btn-light shadow-sm"
-           style="border-radius:12px;padding:10px 18px;white-space:nowrap;">
-            <i class="mdi mdi-arrow-left"></i>
-            Kembali
+            class="btn"
+            style="background:#6c757d;color:white;border-radius:12px;padding:11px 20px;font-weight:600;">
+            <i class="mdi mdi-arrow-left mr-1"></i>
+            Kembali ke Daftar PO
         </a>
-
     </div>
-
-</div>
 
     <form action="{{ url('admin/po/update/' . $po->id) }}"
-          method="POST">
+          method="POST"
+          enctype="multipart/form-data">
 
         @csrf
         @method('PUT')
@@ -51,6 +44,25 @@
                                    name="customer"
                                    class="form-control input-custom"
                                    value="{{ $po->customer }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="label-custom">
+                                No HP
+                            </label>
+                            <input type="text"
+                                    name="no_hp"
+                                    class="form-control input-custom"
+                                    value="{{ $po->no_hp }}">
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label class="label-custom">
+                                Alamat
+                            </label>
+                            <textarea name="alamat"
+                                      class="form-control input-custom"
+                                      rows="3">{{ $po->alamat }}</textarea>
                         </div>
 
                         <div class="col-md-3 mb-3">
@@ -102,11 +114,33 @@
                             <label class="label-custom">
                                 Nama Produk
                             </label>
-
                             <input type="text"
-                                   name="produk[]"
-                                   class="form-control input-custom"
-                                   value="{{ $detail->produk }}">
+                                    name="produk[]"
+                                    class="form-control input-custom"
+                                    value="{{ $detail->produk }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="label-custom">
+                                Foto Produk
+                            </label>
+                            <div class="foto-wrapper">
+                                @if($detail->foto)
+                                    <img src="{{ asset('assets/foto/po/'.$detail->foto) }}"
+                                        class="preview-foto">
+                                @else
+                                    <div class="text-muted">
+                                        Tidak ada foto
+                                    </div>
+                                @endif
+                                <input type="file"
+                                        name="foto[]"
+                                        class="form-control input-custom"
+                                        accept="image/*">
+                            </div>
+                            <small class="text-muted">
+                                Kosongkan jika tidak ingin mengganti foto
+                            </small>
                         </div>
 
                         <div class="col-md-3 mb-3">
@@ -123,12 +157,29 @@
 
                         <div class="col-md-3 mb-3">
                             <label class="label-custom">
-                                HPP Estimasi
+                                HPP Estimasi Admin
                             </label>
+                            @if($po->status == 'Pending')
+                                <input type="text"
+                                       name="hpp_estimasi_admin[]"
+                                       class="form-control input-custom rupiah"
+                                       value="{{ $detail->hpp_estimasi_admin }}"
+                                       oninput="formatRupiah(this)">
+                            @else
+                                <input type="text"
+                                       class="form-control readonly-input"
+                                       value="Rp {{ number_format($detail->hpp_estimasi_admin ?? 0,0,',','.') }}"
+                                       readonly>
+                            @endif
+                        </div>
 
-                            <input type="number"
+                        <div class="col-md-3 mb-3">
+                            <label class="label-custom">
+                                HPP Estimasi Gudang
+                            </label>
+                            <input type="text"
                                    class="form-control readonly-input"
-                                   value="{{ $detail->hpp_estimasi }}"
+                                   value="Rp {{ number_format($detail->hpp_estimasi_gudang ?? 0,0,',','.') }}"
                                    readonly>
                         </div>
 
@@ -138,15 +189,15 @@
                                 Harga Jual
                             </label>
 
-                            <input type="number"
+                            <input type="text"
                                    class="form-control readonly-input"
-                                   value="{{ $detail->harga_jual }}"
+                                   value="{{ $detail->harga_jual ? 'Rp '.number_format($detail->harga_jual,0,',','.') : 'Menunggu Owner' }}"
                                    readonly>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label class="label-custom">
-                                Deskripsi
+                                Deskripsi Produk
                             </label>
 
                             <textarea name="deskripsi[]"
@@ -169,12 +220,55 @@
 
                     <div class="mb-3">
                         <label class="label-custom">
+                            DP Customer
+                        </label>
+                        @if($po->status == 'Pending')
+                            <input type="text"
+                                   name="dp"
+                                   class="form-control input-custom rupiah"
+                                   value="{{ $po->dp }}"
+                                   oninput="formatRupiah(this)">
+                        @else
+                            <div class="readonly-input p-3">
+                                Rp {{ number_format($po->dp ?? 0,0,',','.') }}
+                            </div>
+                        @endif
+                    </div>
+                    <div class="mb-3">
+                        <label class="label-custom">
+                            Metode Pembayaran
+                        </label>
+                        @if($po->status == 'Pending')
+                            <select name="metode_pembayaran"
+                                    class="form-control input-custom">
+                                <option value="Tunai"
+                                    {{ $po->metode_pembayaran == 'Tunai' ? 'selected':'' }}>
+                                    Tunai
+                                </option>
+                                <option value="Transfer Bank"
+                                    {{ $po->metode_pembayaran == 'Transfer Bank' ? 'selected':'' }}>
+                                    Transfer Bank
+                                </option>
+                                <option value="QRIS"
+                                    {{ $po->metode_pembayaran == 'QRIS' ? 'selected':'' }}>
+                                    QRIS
+                                </option>
+                            </select>
+                        @else
+                            <div class="readonly-input p-3">
+                                {{ $po->metode_pembayaran ?? '-' }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="label-custom">
                             Keterangan
                         </label>
 
-                        <textarea class="form-control readonly-input"
-                                  rows="5"
-                                  readonly>{{ $po->keterangan ?? '-' }}</textarea>
+                        <div class="readonly-input p-3">
+                            {{ $po->keterangan ?? 'Belum ada keterangan' }}
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -198,6 +292,28 @@
         </div>
     </form>
 </div>
+
+<script>
+function formatRupiah(input){
+
+    let value = input.value.replace(/\D/g,'');
+
+    if(value){
+        input.value = new Intl.NumberFormat('id-ID').format(value);
+    }else{
+        input.value='';
+    }
+}
+
+document.querySelector('form').addEventListener('submit',function(){
+
+    document.querySelectorAll('.rupiah')
+    .forEach(input=>{
+        input.value=input.value.replace(/\./g,'');
+    });
+
+});
+</script>
 
 <style>
 
@@ -288,6 +404,24 @@
 
 textarea{
     resize:none;
+}
+
+.foto-wrapper{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    padding:10px;
+    background:#f8f9fa;
+    border-radius:12px;
+    border:1px solid #e5e7eb;
+}
+
+.preview-foto{
+    width:80px;
+    height:80px;
+    object-fit:cover;
+    border-radius:12px;
+    border:1px solid #ddd;
 }
 
 </style>

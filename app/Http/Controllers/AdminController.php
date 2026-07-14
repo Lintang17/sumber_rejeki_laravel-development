@@ -1233,21 +1233,22 @@ public function barangmasukupdate(Request $request, $id)
             'customer' => 'required|string',
             'no_hp' => 'required|regex:/^[0-9]+$/|digits_between:10,15',
             'alamat' => 'required|string',
-            'produk' => 'required|array',
+            'produk' => 'required|array|min:1',
             'produk.*' => 'required|string',
-            'deskripsi' => 'nullable|array',
+            'deskripsi' => 'required|array',
+            'deskripsi.*' => 'required|string',
             'qty' => 'required|array',
             'qty.*' => 'required|numeric|min:1',
-            'foto.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-            'dp' => 'nullable|numeric|min:0',
-            'metode_pembayaran' => 'nullable|string',
-            'hpp_estimasi_admin' => 'nullable|array',
-            'hpp_estimasi_admin.*' => 'nullable|numeric|min:0',
+            'foto' => 'required|array|min:1',
+            'foto.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',            'dp' => 'nullable|numeric|min:0',
+            'metode_pembayaran' => 'required|string',
+            'status_pembayaran' => 'required|in:DP,Lunas',
+            'hpp_estimasi_admin' => 'required|array',
+            'hpp_estimasi_admin.*' => 'required|numeric|min:0',
             'hpp_estimasi_gudang' => 'nullable|array',
             'hpp_estimasi_gudang.*' => 'nullable|numeric|min:0',
-            'status_pembayaran' => 'required|in:DP,Lunas',
-            'estimasi_awal' => 'nullable|date',
-            'estimasi_akhir' => 'nullable|date',
+            'estimasi_awal' => 'required|date',
+            'estimasi_akhir' => 'required|date',
         ]);
 
         DB::beginTransaction();
@@ -1275,8 +1276,7 @@ public function barangmasukupdate(Request $request, $id)
                 $qty = $request->qty[$i];
                 $hppEstimasiAdmin =
                     $request->hpp_estimasi_admin[$i] ?? 0;
-                $hppEstimasiGudang =
-                    $request->hpp_estimasi_gudang[$i] ?? 0;
+                $hppEstimasiGudang = 0;
 
                 $namaFoto = null;
 
@@ -1360,6 +1360,11 @@ public function barangmasukupdate(Request $request, $id)
             'qty' => 'required|array',
             'qty.*' => 'required|numeric|min:1',
             'deskripsi' => 'nullable|array',
+            'foto' => 'nullable|array',
+            'foto.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'hpp_estimasi_admin' => 'nullable|array',
+            'hpp_estimasi_admin.*' => 'nullable|numeric|min:0',
+            'dp' => 'nullable|numeric|min:0',
             'estimasi_awal' => 'nullable|date',
             'estimasi_akhir' => 'nullable|date',
         ]);
@@ -1380,16 +1385,35 @@ public function barangmasukupdate(Request $request, $id)
             ]);
 
             foreach ($request->produk as $index => $produk) {
-
                 if (isset($po->detail[$index])) {
-
-                    $po->detail[$index]->update([
+                    $detail = $po->detail[$index];
+                    $data = [
                         'produk' => $produk,
                         'qty' => $request->qty[$index],
                         'deskripsi' => $request->deskripsi[$index] ?? null,
                         'hpp_estimasi_admin' =>
                             $request->hpp_estimasi_admin[$index] ?? 0,
-                    ]);
+                    ];
+                    // jika ada upload foto baru
+                    if($request->hasFile('foto') &&
+                        isset($request->file('foto')[$index])){
+                        $file = $request->file('foto')[$index];
+                        $namaFoto = time().'_'.$index.'.'.$file->getClientOriginalExtension();
+                        // hapus foto lama
+                        if($detail->foto &&
+                            file_exists(public_path('assets/foto/po/'.$detail->foto))){
+                            unlink(
+                                public_path('assets/foto/po/'.$detail->foto)
+                            );
+                        }
+                        // simpan foto baru
+                        $file->move(
+                            public_path('assets/foto/po'),
+                            $namaFoto
+                        );
+                        $data['foto'] = $namaFoto;
+                    }
+                    $detail->update($data);
                 }
             }
 

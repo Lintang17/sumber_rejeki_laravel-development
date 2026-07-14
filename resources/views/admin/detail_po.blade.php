@@ -65,7 +65,7 @@
                                     <th width="150">Kode PO</th>
                                     <th width="150">Customer</th>
                                     <th width="150">Produk</th>
-                                    <th>Deskripsi</th>
+                                    <th>Deskripsi Produksi</th>
                                     <th class="text-center" width="50">Jml</th>
                                     <th class="text-center" width="100">Qty</th>
                                     <th width="130">Estimasi</th>
@@ -261,6 +261,52 @@
                     </div>
                 </div>
                 <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                Foto Produk
+                            </label>
+                            <div class="d-flex flex-wrap" style="gap:15px;">
+                                @foreach($item->detail as $detail)
+                                    @if($detail->foto)
+                                        <div class="text-center">
+                                            <img src="{{ asset('assets/foto/po/'.$detail->foto) }}"
+                                                 class="img-thumbnail"
+                                                 style="
+                                                    width:120px;
+                                                    height:120px;
+                                                    object-fit:cover;
+                                                    border-radius:12px;
+                                                 ">
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    {{ $detail->produk }}
+                                                </small>
+                                             </div>
+                                        </div>
+                                    @else
+                                        <div class="text-center">
+                                            <div class="d-flex align-items-center justify-content-center"
+                                                 style="
+                                                    width:120px;
+                                                    height:120px;
+                                                    background:#f5f5f5;
+                                                    border-radius:12px;
+                                                    color:#999;
+                                                 ">
+                                                <i class="fas fa-image fa-2x"></i>
+                                            </div>
+                                            <small class="text-muted">
+                                                {{ $detail->produk }}
+                                            </small>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="font-weight-bold">DP Customer</label>
@@ -296,16 +342,34 @@
                     </div>
 
                     @php
-                    $total = $item->detail->sum(function($d){
-                        return $d->qty * $d->harga_jual;
-                    });
+                        $hargaBelumAda = $item->detail->contains(function($d){
+                            return empty($d->harga_jual) || $d->harga_jual <= 0;
+                        });
 
-                    $sisa = $total - ($item->dp ?? 0);
+                        $total = $item->detail->sum(function($d){
+                            return $d->qty * ($d->harga_jual ?? 0);
+                        });
+                        $sisa = $total - ($item->dp ?? 0);
                     @endphp
 
-                    <small class="d-block mt-2">
-                        Sisa: <strong>Rp {{ number_format($sisa,0,',','.') }}</strong>
-                    </small>
+                    <div class="mt-3 p-3 rounded" style="background:#f8f9fa;">
+                        <label class="font-weight-bold mb-1">
+                            Sisa Pembayaran
+                        </label>
+
+                        @if($hargaBelumAda)
+                            <p class="mb-0 text-muted">
+                                <i class="fas fa-clock mr-1"></i>
+                                Menunggu Owner mengisi harga jual
+                            </p>
+                        @else
+                            <p class="mb-0">
+                                <strong>
+                                    Rp {{ number_format(max($sisa,0),0,',','.') }}
+                                </strong>
+                            </p>
+                        @endif
+                    </div>
 
                 </div>
                 <div class="row">
@@ -376,11 +440,9 @@
     .card-body {
         padding: 25px;
     }
-    
     .bg-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
-    
     .form-control {
         border-radius: 4px;
         border: 1px solid #ced4da;
@@ -391,7 +453,6 @@
         border-color: #667eea;
         box-shadow: 0 0 0 0.2rem rgba(102,126,234,0.25);
     }
-    
     select.form-control {
         -webkit-appearance: auto;
         -moz-appearance: auto;
@@ -402,7 +463,6 @@
         padding: 8px 12px;
         font-size: 14px;
     }
-    
     .input-group-text {
         border: 1px solid #ced4da;
         border-right: none;
@@ -414,7 +474,6 @@
     .input-group .form-control:focus {
         border-left: none;
     }
-    
     .table thead th {
         background: #f8f9fa;
         border-bottom: 2px solid #dee2e6;
@@ -433,7 +492,6 @@
     .table tbody tr:hover {
         background-color: #f8f9fa;
     }
-    
     .badge {
         font-size: 12px;
         padding: 5px 12px;
@@ -463,7 +521,6 @@
         background-color: #17a2b8;
         color: white;
     }
-    
     .btn-group .btn {
         font-size: 12px;
         padding: 5px 12px;
@@ -472,12 +529,13 @@
     .btn-group .btn i {
         font-size: 11px;
     }
-    
     .btn-block {
         display: block;
         width: 100%;
     }
-    
+    .modal {
+        z-index: 99999 !important;
+    }
     .modal-header.bg-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
@@ -489,19 +547,16 @@
         color: white;
         opacity: 0.8;
     }
-    
     label {
         font-size: 13px;
         font-weight: 600;
         color: #495057;
     }
-    
     .form-control-static {
         font-size: 14px;
         padding: 6px 0;
         margin-bottom: 0;
     }
-    
     .mb-1 {
         margin-bottom: 0.25rem !important;
     }

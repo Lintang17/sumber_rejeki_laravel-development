@@ -33,47 +33,47 @@
                     </div>
 
                     <div class="card-body">
-
-                        <div class="row mb-4">
-                            <div class="col-md-3 mb-2">
-                                <div class="form-group">
-                                    <label class="font-weight-bold text-secondary small">Status</label>
-                                    <select id="filterStatus" class="form-control form-control-sm">
-                                        <option value="">-- Semua Status --</option>
-                                        <option value="Pending">Pending</option>
-                                        <option value="Disetujui">Disetujui</option>
-                                        <option value="Diproses">Diproses</option>
-                                        <option value="Selesai">Selesai</option>
-                                    </select>
-                                </div>
+                        <div class="row mb-4 align-items-end">
+                            <div class="col-md-3">
+                                <label class="font-weight-bold text-secondary mb-1">Status</label>
+                                <select id="filterStatus" class="form-control" style="height:38px !important; padding:0 12px !important;">                                
+                                    <option value="">-- Semua Status --</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Disetujui">Disetujui</option>
+                                    <option value="Diproses">Diproses</option>
+                                    <option value="Diambil">Diambil</option>
+                                    <option value="Dikirim">Dikirim</option>
+                                    <option value="Selesai">Selesai</option>
+                                </select>
                             </div>
-                            <div class="col-md-3 mb-2">
-                                <div class="form-group">
-                                    <label class="font-weight-bold text-secondary small">Bulan</label>
-                                    <input type="month" id="filterMonth" class="form-control form-control-sm">
-                                </div>
+                            <div class="col-md-3">
+                                <label class="font-weight-bold text-secondary mb-1">Bulan</label>
+                                <input type="month" id="filterMonth" class="form-control" style="height:38px !important; padding:0 12px !important;">
                             </div>
-                            <div class="col-md-4 mb-2">
-                                <div class="form-group">
-                                    <label class="font-weight-bold text-secondary small">Pencarian</label>
-                                    <div class="input-group input-group-sm">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                        </div>
-                                        <input type="text" id="searchPO" class="form-control" 
-                                               placeholder="Cari kode PO atau customer...">
+                            <div class="col-md-4">
+                                <label class="font-weight-bold text-secondary mb-1">Pencarian</label>
+                                <div class="input-group" style="height:38px;">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white" style="height:38px;">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
                                     </div>
+                                    <input type="text"
+                                          id="searchPO"
+                                          class="form-control"
+                                          style="height:38px !important;"
+                                          placeholder="Cari kode PO atau customer...">
                                 </div>
                             </div>
-                            <div class="col-md-2 mb-2">
-                                <div class="form-group">
-                                    <label class="font-weight-bold text-secondary small">&nbsp;</label>
-                                    <button id="resetFilter" class="btn btn-primary btn-sm btn-block">
-                                        <i class="fas fa-undo mr-1"></i> Reset
-                                    </button>
-                                </div>
+                            <div class="col-md-2">
+                                <label class="font-weight-bold text-secondary mb-1">&nbsp;</label>
+                                <button id="resetFilter"
+                                        class="btn btn-primary btn-block" style="height:38px;">
+                                    <i class="fas fa-undo mr-2"></i>
+                                    Reset
+                                </button>
                             </div>
-                        </div>
+                        </div>    
 
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover" id="table">
@@ -401,17 +401,16 @@
         font-size: 14px;
     }
     .form-control {
-        font-size: 14px;
-        height: 38px;
         border-radius: 4px;
-        border-color: #ced4da;
+        border: 1px solid #ced4da;
+        height: 38px;
+        font-size: 14px;
     }
     .form-control:focus {
         border-color: #3b7ddd;
         box-shadow: 0 0 0 0.2rem rgba(59, 125, 221, 0.25);
     }
     .form-control-sm {
-        height: 35px;
         font-size: 13px;
         border-radius: 4px;
     }
@@ -421,10 +420,15 @@
         color: #495057;
     }
     .input-group-text {
-        font-size: 14px;
-        border-radius: 4px 0 0 4px;
-        background-color: #f8f9fa;
-        border-color: #ced4da;
+        border: 1px solid #ced4da;
+        border-right: none;
+        background: white;
+    }
+    .input-group .form-control {
+        border-left: none;
+    }
+    .input-group .form-control:focus {
+        border-left: none;
     }
     .input-group-sm .input-group-text {
         font-size: 13px;
