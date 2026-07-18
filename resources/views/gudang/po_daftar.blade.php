@@ -243,9 +243,16 @@
                                                    <i class="fas fa-edit mr-1" style="color:#fff;"></i> Edit
                                                 </a>
                                             @elseif($item->status == 'Disetujui')
-                                                <button class="btn btn-secondary" disabled>
-                                                    <i class="fas fa-hourglass-half mr-1"></i> Menunggu
-                                                </button>
+                                                <form id="proses-form-{{ $item->id }}" 
+                                                      action="{{ url('gudang/po/'.$item->id.'/proses') }}" 
+                                                      method="POST">
+                                                    @csrf
+                                                    <button type="button" 
+                                                            onclick="prosesPo({{ $item->id }})"
+                                                            class="btn btn-warning btn-block">
+                                                        <i class="fas fa-play mr-1"></i> Proses
+                                                    </button>
+                                                </form>
                                             @elseif($item->status == 'Diproses')
                                                 <a href="{{ url('gudang/po/'.$item->id.'/print') }}" 
                                                    target="_blank"
@@ -643,6 +650,24 @@ $(document).ready(function () {
         filterTable();
     });
 });
+
+function prosesPo(id) {
+    Swal.fire({
+        title: 'Konfirmasi Proses PO',
+        text: 'Apakah Anda yakin ingin memproses PO ini? Status akan berubah menjadi Diproses.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#5b0ff3',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-play mr-1"></i> Ya, Proses',
+        cancelButtonText: '<i class="fas fa-times mr-1"></i> Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('proses-form-' + id).submit();
+        }
+    });
+}
 
 $(document).on('click', '.foto-po', function(){
     $('#previewFoto').attr('src', $(this).data('foto'));

@@ -800,7 +800,8 @@ public function exportExcelStokOpname()
                 'keterangan' => $request->keterangan,
             ]);
 
-            return back()->with('success', 'Data gudang berhasil disimpan.');
+            return redirect('/gudang/po')
+                ->with('success', 'Data gudang berhasil disimpan.');
         }
 
         if ($po->status == 'Disetujui') {
@@ -812,7 +813,8 @@ public function exportExcelStokOpname()
                 'status' => 'Diproses',
             ]);
 
-            return back()->with('success', 'PO berhasil diproses (Print Internal siap).');
+            return redirect('/gudang/po')
+                ->with('success', 'PO berhasil diproses (Print Internal siap).');
         }
 
         if ($po->status == 'Diproses') {
@@ -824,10 +826,24 @@ public function exportExcelStokOpname()
                 'status' => 'Diambil',
             ]);
 
-            return back()->with('success', 'PO sudah diambil (Surat pengambilan siap).');
+            return redirect('/gudang/po')
+                ->with('success', 'PO sudah diambil (Surat pengambilan siap).');
         }
 
         return back()->with('error', 'Status tidak valid.');
+    }
+
+    public function proses($id)
+    {
+        $po = Po::findOrFail($id);
+        if ($po->status != 'Disetujui') {
+            return back()->with('error', 'PO belum bisa diproses.');
+        }
+        $po->update([
+            'status' => 'Diproses'
+        ]);
+
+        return back()->with('success', 'PO berhasil diproses.');
     }
 
     public function poDetail($id)

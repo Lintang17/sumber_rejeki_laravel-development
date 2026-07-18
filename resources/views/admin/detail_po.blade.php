@@ -166,9 +166,17 @@
                                             <span class="badge badge-primary badge-lg">
                                                 <i class="fas fa-check-circle mr-1"></i> Disetujui
                                             </span>
-                                        @elseif($item->status == 'Diproses')
+                                         @elseif($item->status == 'Diproses')
                                             <span class="badge badge-info badge-lg">
                                                 <i class="fas fa-spinner mr-1"></i> Diproses
+                                            </span>
+                                        @elseif($item->status == 'Diambil')
+                                            <span class="badge badge-secondary badge-lg">
+                                                <i class="fas fa-box mr-1"></i> Diambil
+                                            </span>
+                                        @elseif($item->status == 'Dikirim')
+                                            <span class="badge badge-dark badge-lg">
+                                                <i class="fas fa-truck mr-1"></i> Dikirim
                                             </span>
                                         @elseif($item->status == 'Selesai')
                                             <span class="badge badge-success badge-lg">
@@ -345,12 +353,29 @@
                         $hargaBelumAda = $item->detail->contains(function($d){
                             return empty($d->harga_jual) || $d->harga_jual <= 0;
                         });
-
-                        $total = $item->detail->sum(function($d){
+                        $totalHargaJual = $item->detail->sum(function($d){
                             return $d->qty * ($d->harga_jual ?? 0);
                         });
-                        $sisa = $total - ($item->dp ?? 0);
+                        $sisa = $totalHargaJual - ($item->dp ?? 0);
                     @endphp
+
+                    <div class="mt-3 p-3 rounded" style="background:#fff8e1;">
+                        <label class="font-weight-bold mb-1">
+                            Total Harga Jual
+                        </label>
+                        @if($hargaBelumAda)
+                            <p class="mb-0 text-muted">
+                                <i class="fas fa-clock mr-1"></i>
+                                Menunggu Owner mengisi harga jual
+                            </p>
+                        @else
+                            <p class="mb-0">
+                                <strong class="text-success">
+                                    Rp {{ number_format($totalHargaJual,0,',','.') }}
+                                </strong>
+                            </p>
+                        @endif
+                    </div>
 
                     <div class="mt-3 p-3 rounded" style="background:#f8f9fa;">
                         <label class="font-weight-bold mb-1">

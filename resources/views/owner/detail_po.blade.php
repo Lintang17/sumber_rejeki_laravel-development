@@ -5,7 +5,7 @@
     @php
         $gudangSelesai = !empty($po->keterangan);
         foreach ($po->detail as $detail) {
-            if (empty($detail->hpp_estimasi) || $detail->hpp_estimasi <= 0) {
+            if (empty($detail->hpp_estimasi_gudang) || $detail->hpp_estimasi_gudang <= 0) {
                 $gudangSelesai = false;
                 break;
             }
@@ -17,7 +17,7 @@
             return ($item->hpp_estimasi_admin ?? 0) * $item->qty;
         });
         $totalHppGudang = $po->detail->sum(function($item){
-            return $item->hpp_estimasi * $item->qty;
+            return ($item->hpp_estimasi_gudang ?? 0) * $item->qty;
         });
         $totalHargaJual = $po->detail->sum(function($item){
             return $item->harga_jual * $item->qty;
@@ -58,11 +58,20 @@
 
         <div class="card-body p-4">
 
-            {{-- ALERT --}}
+            {{-- INFO STATUS GUDANG --}}
             @if(!$gudangSelesai)
             <div class="alert alert-warning border-0 mb-4">
-                <strong>Gudang belum mengisi keterangan dan HPP Gudang.</strong><br>
-                Owner dapat mengisi HPP Final, Harga Jual, dan melakukan approval setelah Gudang mengisi HPP Gudang serta Keterangan.
+                <strong>Menunggu Gudang</strong><br>
+                Gudang belum mengisi Keterangan dan HPP Gudang.
+                <br>
+                Owner belum dapat mengisi HPP Final, Harga Jual, dan melakukan Approval.
+            </div>
+            @else
+            <div class="alert alert-success border-0 mb-4">
+                <strong>Gudang sudah mengisi Keterangan dan HPP Gudang.</strong>
+                <br>
+                Owner dapat mengisi <strong>HPP Final</strong>, <strong>Harga Jual</strong>,
+                serta mengubah status pada bagian <strong>Approval Owner</strong>.
             </div>
             @endif
 
@@ -174,14 +183,14 @@
                                             Rp {{ number_format($detail->hpp_estimasi_admin ?? 0,0,',','.') }}
                                         </td>
                                         <td style="padding:10px 12px; text-align:right; vertical-align:middle; font-weight:700; color:#475569; font-size:13px;">
-                                            Rp {{ number_format($detail->hpp_estimasi,0,',','.') }}
+                                            Rp {{ number_format($detail->hpp_estimasi_gudang ?? 0,0,',','.') }}
                                         </td>
                                         <td style="padding:10px 12px; background:#fff8db; text-align:right; vertical-align:middle;">
-                                            <input type="text" name="hpp_final[]" class="form-control form-control-owner rupiah" value="{{ number_format($detail->hpp_final ?? 0,0,',','.') }}" {{ $disabled ? 'readonly' : '' }} style="background:#fff8db; border:1.5px solid #f4c430; border-radius:6px;
+                                            <input type="text" name="hpp_final[]" class="form-control form-control-owner rupiah" value="{{ $detail->hpp_final ? number_format($detail->hpp_final,0,',','.') : '' }}" {{ $disabled ? 'readonly' : '' }} style="background:#fff8db; border:1.5px solid #f4c430; border-radius:6px;
                                                 padding:4px 8px; height:32px; max-width:120px; margin-left:auto; font-weight:700; font-size:12px; text-align:right; color:#8a5a00;">
                                         </td>
                                         <td style="padding:10px 12px; background:#fff8db; text-align:right; vertical-align:middle;">
-                                            <input type="text" name="harga_jual[]" class="form-control form-control-owner rupiah" value="{{ number_format($detail->harga_jual,0,',','.') }}" {{ $disabled ? 'readonly' : '' }} autocomplete="off" required style="background:#fff8db; border:1.5px solid #f4c430; border-radius:6px;
+                                            <input type="text" name="harga_jual[]" class="form-control form-control-owner rupiah" value="{{ ($detail->harga_jual > 0) ? number_format($detail->harga_jual,0,',','.') : '' }}" {{ $disabled ? 'readonly' : '' }} autocomplete="off" required style="background:#fff8db; border:1.5px solid #f4c430; border-radius:6px;
                                                 padding:4px 8px; height:32px; max-width:120px; margin-left:auto; font-weight:700; font-size:12px; text-align:right; color:#8a5a00;">
                                         </td>
                                     </tr>
