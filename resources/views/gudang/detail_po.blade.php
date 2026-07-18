@@ -154,7 +154,8 @@
                                                        name="hpp_estimasi_gudang[{{ $detail->id }}]"
                                                        class="form-control rupiah"
                                                        placeholder="Contoh : 1.200.000"
-                                                       value="{{ $detail->hpp_estimasi_gudang > 0 ? number_format($detail->hpp_estimasi_gudang,0,',','.') : '' }}">
+                                                       value="{{ $detail->hpp_estimasi_gudang > 0 ? number_format($detail->hpp_estimasi_gudang,0,',','.') : '' }}"
+                                                       required>
                                             </div>
                                             <small class="text-warning font-weight-bold">
                                                 Wajib diisi oleh pihak Gudang sebelum PO disetujui Owner.
@@ -192,7 +193,7 @@
                                 </label>
 
                                 <input type="date"
-                                       {{ $po->status == 'Selesai' ? 'disabled' : '' }}
+                                       {{ $po->status != 'Pending' ? 'disabled' : '' }}
                                        name="estimasi_akhir"
                                        class="form-control"
                                        value="{{ $po->estimasi_akhir }}">
@@ -277,11 +278,15 @@
                                     Keterangan
                                 </label>
 
-                                <textarea name="keterangan"
-                                          {{ $po->status == 'Selesai' ? 'disabled' : '' }}
-                                          class="form-control"
-                                          rows="4"
-                                          placeholder="Masukkan keterangan progress PO">{{ $po->keterangan }}</textarea>
+                               <textarea name="keterangan"
+                                         class="form-control"
+                                         rows="4"
+                                         placeholder="Masukkan keterangan PO"
+                                         @if($po->status == 'Pending')
+                                            required
+                                         @else
+                                            disabled
+                                         @endif>{{ $po->keterangan }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -298,9 +303,9 @@
                     @endif
 
                     <a href="{{ url('gudang/po') }}"
-                       class="btn btn-secondary px-4">
-
-                        <i class="mdi mdi-arrow-left"></i>
+                       class="btn btn-secondary px-4"
+                       style="background:#6c757d;border-color:#6c757d;color:#fff !important;">
+                       <i class="mdi mdi-arrow-left" style="color:#fff !important;"></i>
                         Kembali
                     </a>
                 </div>
@@ -322,13 +327,25 @@
 }
 
 .custom-table thead th{
-    border:none !important;
-    background:#f8fafc;
-    color:#6b7280;
+    background:linear-gradient(180deg,#F4F8FF 0%, #9bb7e4 100%);
+    color:#365486;
     font-size:13px;
-    font-weight:600;
-    padding:12px 14px;
+    font-weight:700;
+    padding:14px 16px;
     white-space:nowrap;
+    border-top:1px solid #D6E4FF !important;
+    border-bottom:2px solid #C5D8FF !important;
+    border-left:none !important;
+    border-right:none !important;
+    letter-spacing:.3px;
+}
+
+.custom-table thead th:first-child{
+    border-top-left-radius:12px;
+}
+
+.custom-table thead th:last-child{
+    border-top-right-radius:12px;
 }
 
 .custom-table tbody tr{

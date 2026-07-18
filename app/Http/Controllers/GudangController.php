@@ -776,51 +776,52 @@ public function exportExcelStokOpname()
         }
 
         if ($po->status == 'Pending') {
+            $request->validate([
+                'estimasi_akhir' => 'required|date',
+                'keterangan' => 'required|string',
+                'hpp_estimasi_gudang.*' => 'required|string',
+            ],[
+                'estimasi_akhir.required' => 'Estimasi akhir wajib diisi.',
+                'keterangan.required' => 'Keterangan wajib diisi.',
+                'hpp_estimasi_gudang.*.required' => 'HPP Estimasi Gudang wajib diisi.',
+            ]);
+            foreach ($request->hpp_estimasi_gudang as $detailId => $hpp) {
+                $hpp = str_replace('.', '', $hpp);
 
-            if ($request->hpp_estimasi_gudang) {
-                foreach ($request->hpp_estimasi_gudang as $detailId => $hpp) {
-                    $hpp = str_replace('.', '', $hpp);
-                    PoDetail::where('id', $detailId)
-                        ->where('po_id', $po->id)
-                        ->update([
-                            'hpp_estimasi_gudang' => $hpp ?: null
-                        ]);
-                    }
+                PoDetail::where('id', $detailId)
+                    ->where('po_id', $po->id)
+                    ->update([
+                        'hpp_estimasi_gudang' => $hpp,
+                    ]);
             }
 
             $po->update([
                 'estimasi_akhir' => $request->estimasi_akhir,
-                'keterangan'     => $request->keterangan,
+                'keterangan' => $request->keterangan,
             ]);
 
             return back()->with('success', 'Data gudang berhasil disimpan.');
         }
 
         if ($po->status == 'Disetujui') {
-    
-            if ($request->status != 'Diproses') {
-                return back()->with('error', 'PO harus diubah ke Diproses.');
-            }
+            $request->validate([
+                'status' => 'required|in:Diproses',
+            ]);
 
             $po->update([
-                'status'         => 'Diproses',
-                'estimasi_akhir' => $request->estimasi_akhir,
-                'keterangan'     => $request->keterangan,
+                'status' => 'Diproses',
             ]);
 
             return back()->with('success', 'PO berhasil diproses (Print Internal siap).');
         }
 
         if ($po->status == 'Diproses') {
-
-            if ($request->status != 'Diambil') {
-                return back()->with('error', 'PO hanya bisa diubah ke Diambil.');
-            }
+            $request->validate([
+                'status' => 'required|in:Diambil',
+            ]);
 
             $po->update([
-                'status'         => 'Diambil',
-                'estimasi_akhir' => $request->estimasi_akhir,
-                'keterangan'     => $request->keterangan,
+                'status' => 'Diambil',
             ]);
 
             return back()->with('success', 'PO sudah diambil (Surat pengambilan siap).');

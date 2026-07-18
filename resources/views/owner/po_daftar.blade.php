@@ -32,6 +32,27 @@
                     </div>
 
                     <div class="card-body">
+                        {{-- Informasi --}}
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="d-flex align-items-start p-3"
+                                     style="background:#FFF8E6; border:1px solid #F4D35E; border-left:5px solid #E9B949; border-radius:8px;">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-2 font-weight-bold" style="color:#8A5A00;">
+                                            Informasi Review PO
+                                        </h6>
+                                        <p class="mb-0 text-dark" style="line-height:1.7;">
+                                            Owner bertugas melakukan
+                                            <strong>review PO</strong> dengan cara
+                                            mengisi <strong>HPP Final</strong> dan
+                                            <strong>Harga Jual</strong>, kemudian melakukan
+                                            <strong>Approval PO</strong> agar proses produksi dapat
+                                            dilanjutkan oleh pihak Gudang.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row mb-4 align-items-end">
                             <div class="col-md-3">
                                 <label class="font-weight-bold text-secondary mb-1">Status</label>
@@ -89,8 +110,14 @@
                                         <th>Keterangan</th>
                                         <th class="text-right">HPP Admin</th>
                                         <th class="text-right">HPP Gudang</th>
-                                        <th class="text-right text-primary font-weight-bold">HPP Final</th>
-                                        <th class="text-right">Harga Jual</th>
+                                        <th class="text-right font-weight-bold"
+                                            style="background:#FFF3CD;color:#8A5A00;border-bottom:2px solid #E9C46A;">
+                                            HPP Final
+                                        </th>
+                                        <th class="text-right font-weight-bold"
+                                            style="background:#FFF3CD;color:#8A5A00;border-bottom:2px solid #E9C46A;">
+                                            Harga Jual
+                                        </th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center" width="120">Aksi</th>
                                     </tr>
@@ -170,26 +197,32 @@
                                         
                                         <td class="text-right">
                                             @foreach($item->detail as $detail)
-                                                <div style="font-size: 13px;">Rp {{ number_format($detail->hpp_estimasi_admin ?? 0, 0, ',', '.') }}</div>
+                                                <div style="font-size: 14px;">Rp {{ number_format($detail->hpp_estimasi_admin ?? 0, 0, ',', '.') }}</div>
                                             @endforeach
                                         </td>
                                         
                                         <td class="text-right">
                                             @foreach($item->detail as $detail)
-                                                <div style="font-size: 13px;">Rp {{ number_format($detail->hpp_estimasi_gudang ?? 0, 0, ',', '.') }}</div>
+                                                <div style="font-size: 14px;">Rp {{ number_format($detail->hpp_estimasi_gudang ?? 0, 0, ',', '.') }}</div>
                                             @endforeach
                                         </td>
 
                                         {{-- HPP FINAL --}}
-                                        <td class="text-right font-weight-bold text-primary" style="font-size: 14px;">
+                                        <td class="text-right"
+                                            style="background:#FFFDF5;color:#8A5A00;font-size:14px;font-weight:700;border-left:2px solid #F4D35E;">
                                             @foreach($item->detail as $detail)
-                                                <div>Rp {{ number_format($detail->hpp_final ?? 0, 0, ',', '.') }}</div>
+                                                <div style="padding:5px 0;">
+                                                    Rp {{ number_format($detail->hpp_final ?? 0, 0, ',', '.') }}
+                                                </div>
                                             @endforeach
                                         </td>
-                                        
-                                        <td class="text-right font-weight-bold text-success" style="font-size: 14px;">
+
+                                        <td class="text-right"
+                                            style="background:#FFFDF5;color:#8A5A00;font-size:14px;font-weight:700;border-right:2px solid #F4D35E;">
                                             @foreach($item->detail as $detail)
-                                                <div>Rp {{ number_format($detail->harga_jual ?? 0, 0, ',', '.') }}</div>
+                                                <div style="padding:5px 0;">
+                                                    Rp {{ number_format($detail->harga_jual ?? 0, 0, ',', '.') }}
+                                                </div>
                                             @endforeach
                                         </td>
                                         
@@ -215,8 +248,8 @@
                                                 </button>
                                             @else
                                                 <a href="{{ url('owner/po/'.$item->id.'/review') }}" 
-                                                    class="btn btn-primary btn-block"
-                                                    style="font-size:12px;padding:4px 6px;font-weight:600;">
+                                                    class="btn btn-block"
+                                                    style="background:#7C3AED;border-color:#7C3AED;color:#fff;font-size:12px;padding:6px 8px;font-weight:600;">
                                                     <i class="fas fa-clipboard-check mr-1"></i>
                                                     Review
                                                 </a>

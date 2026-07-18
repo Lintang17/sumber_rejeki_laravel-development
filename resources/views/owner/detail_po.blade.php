@@ -3,7 +3,14 @@
 @section('content')
 <div class="content-wrapper">
     @php
-        $disabled = !$bolehApprove || $po->status != 'Pending';
+        $gudangSelesai = !empty($po->keterangan);
+        foreach ($po->detail as $detail) {
+            if (empty($detail->hpp_estimasi) || $detail->hpp_estimasi <= 0) {
+                $gudangSelesai = false;
+                break;
+            }
+        }
+        $disabled = !$gudangSelesai || $po->status != 'Pending';
 
         $totalQty = $po->detail->sum('qty');
         $totalHppAdmin = $po->detail->sum(function($item){
@@ -52,20 +59,18 @@
         <div class="card-body p-4">
 
             {{-- ALERT --}}
-            @if(!$bolehApprove && $po->status=='Pending')
-                <div class="alert border-0 mb-4" style="border-radius:10px; background:#fffbeb; border-left:5px solid #f59e0b; padding:14px 20px;">
-                    <span style="color:#78350f; font-weight:700; font-size:14px;">
-                        <i class="fas fa-exclamation-triangle mr-2" style="color:#d97706;"></i>
-                        Gudang harus mengisi Estimasi Akhir, HPP Gudang, dan Keterangan terlebih dahulu sebelum Owner dapat mengisi Harga Jual & HPP Final.
-                    </span>
-                </div>
+            @if(!$gudangSelesai)
+            <div class="alert alert-warning border-0 mb-4">
+                <strong>Gudang belum mengisi keterangan dan HPP Gudang.</strong><br>
+                Owner dapat mengisi HPP Final, Harga Jual, dan melakukan approval setelah Gudang mengisi HPP Gudang serta Keterangan.
+            </div>
             @endif
 
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <div class="border rounded p-3" style="border-color:#e2e8f0 !important; background:#fafbfc;">
-                        <h6 class="fw-bold mb-2" style="color:#1e293b; font-size:15px; border-bottom:2px solid #4f46e5; padding-bottom:6px;">
-                            <i class="fas fa-user mr-2" style="color:#4f46e5;"></i> Informasi Customer
+                        <h6 class="fw-bold mb-3" style="color:#2563eb; font-size:15px; border-bottom:2px solid #2563eb; padding-bottom:8px;">
+                            Informasi Customer
                         </h6>
                         <div class="d-flex justify-content-between py-2" style="border-bottom:1px dashed #e2e8f0;">
                             <span style="color:#64748b; font-weight:700; font-size:14px;">Kode PO</span>
@@ -87,8 +92,8 @@
                 </div>
                 <div class="col-md-6">
                     <div class="border rounded p-3" style="border-color:#e2e8f0 !important; background:#fafbfc;">
-                        <h6 class="fw-bold mb-2" style="color:#1e293b; font-size:15px; border-bottom:2px solid #4f46e5; padding-bottom:6px;">
-                            <i class="fas fa-clock mr-2" style="color:#4f46e5;"></i> Informasi Produksi
+                        <h6 class="fw-bold mb-3" style="color:#2563eb; font-size:15px; border-bottom:2px solid #2563eb; padding-bottom:8px;">
+                            Informasi Produksi
                         </h6>
                         <div class="d-flex justify-content-between py-2" style="border-bottom:1px dashed #e2e8f0;">
                             <span style="color:#64748b; font-weight:700; font-size:14px;">Estimasi Awal</span>
@@ -110,33 +115,6 @@
                 </div>
             </div>
 
-            <div class="border rounded p-3 mb-4" style="border-color:#e2e8f0 !important; background:#fafbfc;">
-                <h6 class="fw-bold mb-3" style="color:#1e293b; font-size:15px; border-bottom:2px solid #4f46e5; padding-bottom:6px;">
-                    <i class="fas fa-images mr-2" style="color:#4f46e5;"></i> Produk
-                </h6>
-                <div class="row g-3">
-                    @foreach($po->detail as $detail)
-                        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
-                            <div class="border rounded" style="border-color:#e2e8f0 !important; overflow:hidden; background:#fff;">
-                                @if($detail->foto)
-                                    <a href="{{ asset('assets/foto/po/'.$detail->foto) }}" target="_blank">
-                                        <img src="{{ asset('assets/foto/po/'.$detail->foto) }}" style="width:100%; height:140px; object-fit:cover; display:block;">
-                                    </a>
-                                @else
-                                    <div style="height:140px; display:flex; align-items:center; justify-content:center; background:#f8fafc; color:#cbd5e1;">
-                                        <i class="fas fa-image fa-3x"></i>
-                                    </div>
-                                @endif
-                                <div class="p-2 text-center">
-                                    <div style="font-weight:700; font-size:13px; color:#1e293b;">{{ $detail->produk }}</div>
-                                    <span class="badge" style="background:#eef2ff; color:#4f46e5; font-weight:700; font-size:11px; border-radius:20px; padding:4px 12px;">Qty {{ $detail->qty }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
             <form action="{{ url('owner/po/' . $po->id . '/approve') }}" method="POST">
                 @csrf
 
@@ -153,13 +131,13 @@
                                 <tr>
                                     <th style="padding:10px 12px; font-weight:700; color:#475569; text-align:center; width:45px;">No</th>
                                     <th style="padding:10px 12px; font-weight:700; color:#475569; width:160px;">Produk</th>
-                                    <th style="padding:10px 12px; font-weight:700; color:#475569;">Deskripsi</th>
+                                    <th class="text-center" style="width:90px;">Foto</th>
+                                    <th style="width:220px; min-width:220px; max-width:220px;">Deskripsi</th>
                                     <th style="padding:10px 12px; font-weight:700; color:#475569; text-align:center; width:60px;">Qty</th>
                                     <th style="padding:10px 12px; font-weight:700; color:#475569; text-align:right; width:140px;">HPP Admin</th>
                                     <th style="padding:10px 12px; font-weight:700; color:#475569; text-align:right; width:140px;">HPP Gudang</th>
-                                    <th style="padding:10px 12px; font-weight:700; color:#4f46e5; text-align:right; width:140px;">HPP Final</th>
-                                    <th style="padding:10px 12px; font-weight:700; color:#475569; text-align:right; width:140px;">Harga Jual</th>
-                                    <th style="padding:10px 12px; font-weight:700; color:#d97706; text-align:right; width:130px;">Subtotal Harga Jual</th>
+                                    <th style="background:#ffe082; color:#8a5a00; text-align:right; width:110px; min-width:110px; max-width:110px;">HPP Final</th>
+                                    <th style="background:#ffe082; color:#8a5a00; text-align:right; width:110px; min-width:110px; max-width:110px;">Harga Jual</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -176,6 +154,18 @@
                                             <span style="display:inline-block; width:28px; height:28px; border-radius:50%; background:#4f46e5; color:#fff; font-weight:700; font-size:12px; text-align:center; line-height:28px;">{{ $index+1 }}</span>
                                         </td>
                                         <td style="padding:10px 12px; vertical-align:middle; font-weight:700; color:#1e293b; font-size:13px;">{{ $detail->produk }}</td>
+                                        <td class="text-center">
+                                            @if($detail->foto)
+                                                <a href="#"
+                                                    data-toggle="modal"
+                                                    data-target="#fotoModal{{ $detail->id }}">
+                                                    <img src="{{ asset('assets/foto/po/'.$detail->foto) }}"
+                                                        style="width:55px; height:55px; object-fit:cover; border-radius:8px; border:2px solid #dee2e6; cursor:pointer;">
+                                                </a>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
                                         <td style="padding:10px 12px; vertical-align:middle; color:#64748b; font-weight:600; font-size:13px;">{{ $detail->deskripsi ?? '-' }}</td>
                                         <td style="padding:10px 12px; text-align:center; vertical-align:middle;">
                                             <span class="badge" style="background:#1e293b; color:#fff; font-weight:700; border-radius:20px; padding:4px 12px; font-size:12px;">{{ $detail->qty }}</span>
@@ -186,46 +176,76 @@
                                         <td style="padding:10px 12px; text-align:right; vertical-align:middle; font-weight:700; color:#475569; font-size:13px;">
                                             Rp {{ number_format($detail->hpp_estimasi,0,',','.') }}
                                         </td>
-                                        <td style="padding:10px 12px; text-align:right; vertical-align:middle;">
-                                            <input type="text" name="hpp_final[]" class="form-control form-control-owner rupiah" value="{{ number_format($detail->hpp_final ?? 0,0,',','.') }}" {{ $disabled ? 'readonly' : '' }} style="border-radius:8px; border:1.5px solid #c7d2fe; padding:6px 10px; font-weight:700; font-size:13px; width:100%; text-align:right; height:36px; background:#fafbfc;">
+                                        <td style="padding:10px 12px; background:#fff8db; text-align:right; vertical-align:middle;">
+                                            <input type="text" name="hpp_final[]" class="form-control form-control-owner rupiah" value="{{ number_format($detail->hpp_final ?? 0,0,',','.') }}" {{ $disabled ? 'readonly' : '' }} style="background:#fff8db; border:1.5px solid #f4c430; border-radius:6px;
+                                                padding:4px 8px; height:32px; max-width:120px; margin-left:auto; font-weight:700; font-size:12px; text-align:right; color:#8a5a00;">
                                         </td>
-                                        <td style="padding:10px 12px; text-align:right; vertical-align:middle;">
-                                            <input type="text" name="harga_jual[]" class="form-control form-control-owner rupiah" value="{{ number_format($detail->harga_jual,0,',','.') }}" {{ $disabled ? 'readonly' : '' }} autocomplete="off" required style="border-radius:8px; border:1.5px solid #fde68a; padding:6px 10px; font-weight:700; font-size:13px; width:100%; text-align:right; height:36px; background:#fffbeb;">
-                                        </td>
-                                        <td style="padding:10px 12px; text-align:right; vertical-align:middle; font-weight:700; color:#d97706; font-size:13px;">
-                                            Rp {{ number_format($detail->harga_jual*$detail->qty,0,',','.') }}
+                                        <td style="padding:10px 12px; background:#fff8db; text-align:right; vertical-align:middle;">
+                                            <input type="text" name="harga_jual[]" class="form-control form-control-owner rupiah" value="{{ number_format($detail->harga_jual,0,',','.') }}" {{ $disabled ? 'readonly' : '' }} autocomplete="off" required style="background:#fff8db; border:1.5px solid #f4c430; border-radius:6px;
+                                                padding:4px 8px; height:32px; max-width:120px; margin-left:auto; font-weight:700; font-size:12px; text-align:right; color:#8a5a00;">
                                         </td>
                                     </tr>
+                                @endforeach
+                                
+                                @foreach($po->detail as $detail)
+                                    <div class="modal fade"
+                                         id="fotoModal{{ $detail->id }}"
+                                         tabindex="-1">
+                                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">
+                                                        {{ $detail->produk }}
+                                                    </h5>
+                                                    <button class="close"
+                                                            data-dismiss="modal">
+                                                        <span>&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                <img src="{{ asset('assets/foto/po/'.$detail->foto) }}"
+                                                     class="img-fluid rounded shadow">
+                                                        <div class="mt-3">
+                                                            <span class="badge badge-primary">
+                                                                Qty:
+                                                                {{ $detail->qty }}
+                                                             </span>
+                                                        </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <div class="row g-3 mt-3">
-                    <div class="col-md-3">
-                        <div class="p-3 text-center border rounded" style="border-color:#e2e8f0 !important; background:linear-gradient(135deg, #f8fafc, #fff);">
-                            <small style="color:#94a3b8; font-size:11px; font-weight:700; text-transform:uppercase;">Total Qty</small>
-                            <h4 class="fw-bold mb-0" style="color:#1e293b;">{{ $totalQty }}</h4>
-                        </div>
+                <div class="mt-4 border-top pt-3">
+                    <div class="d-flex justify-content-between py-2">
+                        <span style="font-weight:700; font-size:15px; color:#1e293b;">
+                            Total HPP Admin
+                        </span>
+                        <strong class="text-primary">
+                            Rp {{ number_format($totalHppAdmin,0,',','.') }}
+                        </strong>
                     </div>
-                    <div class="col-md-3">
-                        <div class="p-3 text-center border rounded" style="border-color:#e2e8f0 !important; background:linear-gradient(135deg, #eef2ff, #fff);">
-                            <small style="color:#94a3b8; font-size:11px; font-weight:700; text-transform:uppercase;">Total HPP Admin</small>
-                            <h5 class="fw-bold mb-0" style="color:#4f46e5;">Rp {{ number_format($totalHppAdmin,0,',','.') }}</h5>
-                        </div>
+                    <div class="d-flex justify-content-between py-2">
+                        <span style="font-weight:700; font-size:15px; color:#1e293b;">
+                            Total HPP Gudang
+                        </span>
+                        <strong class="text-success">
+                            Rp {{ number_format($totalHppGudang,0,',','.') }}
+                        </strong>
                     </div>
-                    <div class="col-md-3">
-                        <div class="p-3 text-center border rounded" style="border-color:#e2e8f0 !important; background:linear-gradient(135deg, #d1fae5, #fff);">
-                            <small style="color:#94a3b8; font-size:11px; font-weight:700; text-transform:uppercase;">Total HPP Gudang</small>
-                            <h5 class="fw-bold mb-0" style="color:#059669;">Rp {{ number_format($totalHppGudang,0,',','.') }}</h5>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="p-3 text-center border rounded" style="border-color:#e2e8f0 !important; background:linear-gradient(135deg, #fef3c7, #fff);">
-                            <small style="color:#94a3b8; font-size:11px; font-weight:700; text-transform:uppercase;">Total Harga Jual</small>
-                            <h5 class="fw-bold mb-0" style="color:#d97706;">Rp {{ number_format($totalHargaJual,0,',','.') }}</h5>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3"
+                         style="border-top:2px dashed #dee2e6;">
+                        <span style="font-size:17px;font-weight:700;">
+                            Total Harga Jual
+                        </span>
+                        <span style="font-size:22px;font-weight:700;color:#d97706;">
+                            Rp {{ number_format($totalHargaJual,0,',','.') }}
+                        </span>
                     </div>
                 </div>
 
@@ -240,8 +260,8 @@
                                 <label style="font-weight:700; color:#475569; font-size:14px;">Keputusan Approval</label>
                                 <select name="status" class="form-select" required style="border-radius:8px; border:1.5px solid #e2e8f0; padding:8px 12px; font-size:14px; width:100%; height:40px; background:#fff; font-weight:700;">
                                     <option value="">-- Pilih Status --</option>
-                                    <option value="Approve" style="color:#059669;">✓ Approve PO</option>
-                                    <option value="Reject" style="color:#dc2626;">✗ Reject PO</option>
+                                    <option value="Approve" style="color:#059669;">Approve PO</option>
+                                    <option value="Reject" style="color:#dc2626;">Reject PO</option>
                                 </select>
                             </div>
                         </div>
@@ -258,9 +278,7 @@
                         </button>
                     @endif
                 </div>
-
             </form>
-
         </div>
     </div>
 </div>
