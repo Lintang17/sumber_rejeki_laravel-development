@@ -163,8 +163,7 @@
                                 <input type="text"
                                        name="hpp_estimasi_admin[]"
                                        class="form-control input-custom rupiah"
-                                       value="{{ $detail->hpp_estimasi_admin }}"
-                                       oninput="formatRupiah(this)">
+                                       value="{{ $detail->hpp_estimasi_admin ? number_format($detail->hpp_estimasi_admin,0,',','.') : '' }}"                                       oninput="formatRupiah(this)">
                             @else
                                 <input type="text"
                                        class="form-control readonly-input"
@@ -179,7 +178,7 @@
                             </label>
                             <input type="text"
                                    class="form-control readonly-input"
-                                   value="Rp {{ number_format($detail->hpp_estimasi_gudang ?? 0,0,',','.') }}"
+                                   value="{{ $detail->hpp_estimasi_gudang ? number_format($detail->hpp_estimasi_gudang,0,',','.') : '-' }}"
                                    readonly>
                         </div>
 
@@ -226,7 +225,7 @@
                             <input type="text"
                                    name="dp"
                                    class="form-control input-custom rupiah"
-                                   value="{{ $po->dp }}"
+                                   value="{{ $po->dp ? number_format($po->dp,0,',','.') : '' }}"
                                    oninput="formatRupiah(this)">
                         @else
                             <div class="readonly-input p-3">
@@ -258,6 +257,29 @@
                             <div class="readonly-input p-3">
                                 {{ $po->metode_pembayaran ?? '-' }}
                             </div>
+                        @endif
+                    </div>
+                    <div class="mb-3">
+                        <label class="label-custom">
+                            Status Pembayaran
+                        </label>
+                        @if($po->status == 'Pending')
+                            <select name="status_pembayaran"
+                                    class="form-control input-custom">
+                                <option value="DP"
+                                    {{ $po->status_pembayaran == 'DP' ? 'selected' : '' }}>
+                                    DP
+                                </option>
+                                <option value="Lunas"
+                                    {{ $po->status_pembayaran == 'Lunas' ? 'selected' : '' }}>
+                                    Lunas
+                                </option>
+                            </select>
+                        @else
+                            <input type="text"
+                                   class="form-control readonly-input"
+                                   value="{{ $po->status_pembayaran ?? '-' }}"
+                                   readonly>
                         @endif
                     </div>
 
@@ -294,24 +316,25 @@
 </div>
 
 <script>
-function formatRupiah(input){
-
+function formatRupiah(input) {
     let value = input.value.replace(/\D/g,'');
-
     if(value){
         input.value = new Intl.NumberFormat('id-ID').format(value);
     }else{
-        input.value='';
+        input.value = '';
     }
 }
 
-document.querySelector('form').addEventListener('submit',function(){
-
-    document.querySelectorAll('.rupiah')
-    .forEach(input=>{
-        input.value=input.value.replace(/\./g,'');
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.rupiah').forEach(function(input){
+        formatRupiah(input);
     });
+});
 
+document.querySelector('form').addEventListener('submit', function () {
+    document.querySelectorAll('.rupiah').forEach(function(input){
+        input.value = input.value.replace(/\./g,'');
+    });
 });
 </script>
 

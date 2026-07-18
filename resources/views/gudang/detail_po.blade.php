@@ -54,7 +54,7 @@
 
                 <div class="col-md-4 mb-2">
                     <div class="info-card">
-                        <small>Tanggal</small>
+                        <small>Tanggal PO</small>
                         <h6 class="mb-0 fw-bold">
                             {{ \Carbon\Carbon::parse($po->tanggal)->format('d M Y') }}
                         </h6>
@@ -68,24 +68,21 @@
 
                 <div class="table-responsive custom-scroll mb-3">
                     <table class="table custom-table align-middle">
-
-                        <thead>
+                       <thead>
                             <tr>
                                 <th>Nama Produk</th>
+                                <th>Foto</th>
                                 <th>Deskripsi</th>
-                                <th>Qty</th>
-                                <th style="width:100px; min-width:100px;">
-                                    Jumlah Produk
-                                </th>
-                                <th>HPP Estimasi</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-center">Jumlah Produk</th>
+                                <th>Estimasi Awal</th>
+                                <th>HPP Estimasi Admin</th>
+                                <th>HPP Estimasi Gudang</th>
                                 <th>Harga Jual</th>
                             </tr>
                         </thead>
-
                         <tbody>
-
                             @foreach($po->detail as $index => $detail)
-
                             <tr>
                                 <td>
                                     <div class="produk-box">
@@ -94,71 +91,94 @@
                                         </strong>
                                     </div>
                                 </td>
-
+                                <td width="90">
+                                    @if($detail->foto)
+                                        <img src="{{ asset('assets/foto/po/'.$detail->foto) }}"
+                                             class="img-thumbnail"
+                                             style="width:70px;height:70px;object-fit:cover;border-radius:10px;">
+                                    @else
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-image fa-2x"></i>
+                                        </div>
+                                    @endif
+                                </td>
                                 <td style="min-width:220px;">
                                     {{ $detail->deskripsi ?? '-' }}
                                 </td>
-
                                 <td class="text-center">
-                                    <span class="qty-badge">
-                                        {{ $detail->qty }}
-                                    </span>
+                                    <div class="qty-box">
+                                        <div class="qty-number">
+                                            {{ $detail->qty }}
+                                        </div>
+                                    </div>
                                 </td>
-
-                                @if($index == 0)
-                                <td class="text-center align-middle"
-                                    rowspan="{{ $po->detail->count() }}"
-                                    style="width:100px; min-width:100px;">
-
+                                @if($index==0)
+                                <td rowspan="{{ $po->detail->count() }}"
+                                    class="align-middle text-center">
                                     <div class="produk-total-box">
-                                        {{ $po->detail->count() }}
+                                        <div class="total-number">
+                                            {{ $po->detail->count() }}
+                                        </div>
                                         <small>Produk</small>
                                     </div>
-
                                 </td>
                                 @endif
-
                                 <td>
-                                    @if($detail->hpp_estimasi_gudang > 0)
-                                        <div class="mb-1">
-                                            <small class="text-muted d-block">
-                                                HPP Gudang
-                                            </small>
-                                            <span class="text-success fw-semibold">
-                                                Rp {{ number_format($detail->hpp_estimasi_gudang,0,',','.') }}
-                                            </span>
-                                        </div>
-                                    @endif
-
-                                    @if($detail->hpp_estimasi_admin > 0)
-                                        <div>
-                                            <small class="text-muted d-block">
-                                                HPP Admin
-                                            </small>
-
-                                            <span class="text-primary fw-semibold">
-                                                Rp {{ number_format($detail->hpp_estimasi_admin,0,',','.') }}
-                                            </span>
-                                        </div>
-                                    @endif
-
-                                    @if(
-                                        ($detail->hpp_estimasi_gudang ?? 0) <= 0 &&
-                                        ($detail->hpp_estimasi_admin ?? 0) <= 0
-                                    )
-                                        <span class="text-muted">
-                                            -
+                                    @if($po->estimasi_awal)
+                                        <span class="badge badge-success px-3 py-2">
+                                            {{ \Carbon\Carbon::parse($po->estimasi_awal)->format('d M Y') }}
                                         </span>
+                                    @else
+                                        <span class="text-muted">-</span>
                                     @endif
                                 </td>
-
-                                <td class="text-primary fw-semibold">
-                                    Rp {{ number_format($detail->harga_jual,0,',','.') }}
+                                <td>
+                                    @if($detail->hpp_estimasi_admin)
+                                        <div class="hpp-admin">
+                                            Rp {{ number_format($detail->hpp_estimasi_admin,0,',','.') }}
+                                        </div>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td style="min-width:250px;">
+                                    @if($po->status == 'Pending')
+                                        <div style="background:#FFF7E6;border:2px dashed #F59E0B;border-radius:12px;padding:12px;">
+                                            <label class="font-weight-bold mb-2 d-block" style="color:#B45309;">
+                                                <i class="mdi mdi-pencil-circle"></i>
+                                                HPP Estimasi Gudang
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group mb-2">
+                                                <input type="text"
+                                                       name="hpp_estimasi_gudang[{{ $detail->id }}]"
+                                                       class="form-control rupiah"
+                                                       placeholder="Contoh : 1.200.000"
+                                                       value="{{ $detail->hpp_estimasi_gudang > 0 ? number_format($detail->hpp_estimasi_gudang,0,',','.') : '' }}">
+                                            </div>
+                                            <small class="text-warning font-weight-bold">
+                                                Wajib diisi oleh pihak Gudang sebelum PO disetujui Owner.
+                                            </small>
+                                        </div>
+                                    @else
+                                        @if($detail->hpp_estimasi_gudang > 0)
+                                            <div style="background:#DCFCE7;color:#166534;padding:10px;border-radius:10px;font-weight:700;text-align:center;">
+                                                Rp {{ number_format($detail->hpp_estimasi_gudang,0,',','.') }}
+                                            </div>
+                                        @else
+                                            <span class="badge badge-danger px-3 py-2">
+                                                Belum Diisi
+                                            </span>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td>
+                                    <div style="background:#EFF6FF;color:#2563EB;padding:10px;border-radius:10px;font-weight:700;text-align:center;">
+                                        Rp {{ number_format($detail->harga_jual,0,',','.') }}
+                                    </div>
                                 </td>
                             </tr>
-
                             @endforeach
-
                         </tbody>
                     </table>
                 </div>
@@ -186,7 +206,7 @@
                                 @if($po->status == 'Pending')
                                     <div class="alert alert-warning py-2 px-3 mb-2">
                                         Menunggu approval owner.
-                                        Gudang hanya dapat mengisi estimasi akhir dan keterangan.
+                                        Gudang hanya dapat mengisi estimasi akhir, HPP estimasi gudang dan keterangan.
                                     </div>
 
                                 @elseif($po->status == 'Disetujui')
@@ -218,21 +238,28 @@
                                     @endif
 
                                     {{-- Owner approve --}}
-                                    @if($po->status == 'Disetujui')
+                                    @if($po->status=='Disetujui')
+                                    <div class="alert alert-info">
+                                        <b>PO telah disetujui Owner.</b><br>
+                                        Gudang dapat memulai produksi dengan mengubah status menjadi
+                                        <b>Diproses</b>.
+                                    </div>
+                                    <select name="status" class="form-control">
                                         <option value="Diproses">
                                             Diproses
                                         </option>
+                                    </select>
                                     @endif
 
                                     {{-- Sedang diproses --}}
-                                    @if($po->status == 'Diproses')
-                                        <option value="Diproses" selected>
-                                            Diproses
-                                        </option>
-
-                                        <option value="Selesai">
-                                            Selesai
-                                        </option>
+                                    @if($po->status=='Diproses')
+                                    <div class="alert alert-primary">
+                                        PO sedang diproses gudang.
+                                    </div>
+                                    <select name="status" class="form-control">
+                                        <option value="Diproses" selected>Diproses</option>
+                                        <option value="Diambil">Diambil</option>
+                                    </select>
                                     @endif
 
                                     {{-- Sudah selesai --}}
@@ -428,4 +455,17 @@ textarea.form-control{
 }
 
 </style>
+
+<script>
+document.querySelectorAll('.rupiah').forEach(function(input){
+    input.addEventListener('input', function(){
+        let angka = this.value.replace(/\D/g,'');
+        if(angka === ''){
+            this.value = '';
+            return;
+        }
+        this.value = new Intl.NumberFormat('id-ID').format(angka);
+    });
+});
+</script>
 @endsection

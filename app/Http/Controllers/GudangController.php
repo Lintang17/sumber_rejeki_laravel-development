@@ -766,7 +766,7 @@ public function exportExcelStokOpname()
             'estimasi_akhir' => 'nullable|date',
             'keterangan'     => 'nullable|string',
             'status'         => 'nullable|in:Diproses,Diambil',
-            'hpp_estimasi_gudang.*' => 'nullable|numeric|min:0'
+            'hpp_estimasi_gudang.*' => 'nullable|string'
         ]);
 
         $po = Po::with('detail')->findOrFail($id);
@@ -779,12 +779,13 @@ public function exportExcelStokOpname()
 
             if ($request->hpp_estimasi_gudang) {
                 foreach ($request->hpp_estimasi_gudang as $detailId => $hpp) {
+                    $hpp = str_replace('.', '', $hpp);
                     PoDetail::where('id', $detailId)
                         ->where('po_id', $po->id)
                         ->update([
-                            'hpp_estimasi_gudang' => $hpp
+                            'hpp_estimasi_gudang' => $hpp ?: null
                         ]);
-                }
+                    }
             }
 
             $po->update([

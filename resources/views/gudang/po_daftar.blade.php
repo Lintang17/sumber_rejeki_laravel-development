@@ -70,13 +70,15 @@
                                     <th class="text-center" width="40">#</th>
                                     <th width="150">Kode PO</th>
                                     <th width="150">Customer</th>
-                                    <th width="150">Produk</th>
+                                    <th width="150">Nama Produk</th>
+                                    <th width="90" class="text-center">Foto</th>
                                     <th>Deskripsi</th>
                                     <th class="text-center" width="50">Jml</th>
                                     <th class="text-center" width="100">Qty</th>
                                     <th width="130">Estimasi</th>
                                     <th width="100">Keterangan</th>
-                                    <th class="text-right" width="120">HPP Estimasi</th>
+                                    <th class="text-right" width="120">HPP Estimasi Admin</th>
+                                    <th class="text-right" width="140">HPP Estimasi Gudang</th>
                                     @if(auth()->user()->role != 'admin')
                                         <th class="text-right" width="120">HPP Final</th>
                                     @endif
@@ -102,13 +104,37 @@
                                     <td>
                                         <strong>{{ $item->customer }}</strong>
                                         <br>
-                                        <a href="#" class="text-primary" data-toggle="modal" data-target="#modalCustomer{{ $item->id }}">
+                                        <a href="#" class="text-primary" data-toggle="modal" data-target="#customer{{ $item->id }}">
                                             <i class="fas fa-eye mr-1"></i> Lihat Detail
                                         </a>
                                     </td>
                                     <td>
                                         @foreach($item->detail as $detail)
                                             <span class="badge badge-primary mb-1" style="display: block;">{{ $detail->produk }}</span>
+                                        @endforeach
+                                    </td>
+                                    <td class="text-center">
+                                        @foreach($item->detail as $detail)
+                                            @if($detail->foto)
+                                               <img src="{{ asset('assets/foto/po/'.$detail->foto) }}"
+                                                    class="img-thumbnail foto-po"
+                                                    data-toggle="modal"
+                                                    data-target="#modalFoto"
+                                                    data-foto="{{ asset('assets/foto/po/'.$detail->foto) }}"
+                                                    data-produk="{{ $detail->produk }}"
+                                                    data-qty="{{ $detail->qty }}"
+                                                    style="
+                                                        width:60px;
+                                                        height:60px;
+                                                        object-fit:cover;
+                                                        border-radius:10px;
+                                                        cursor:pointer;
+                                                        margin-bottom:5px;">
+                                            @else
+                                                <div class="text-muted mb-1">
+                                                    <i class="fas fa-image"></i>
+                                                </div>
+                                            @endif
                                         @endforeach
                                     </td>
                                     <td>
@@ -128,17 +154,16 @@
                                             </div>
                                         @endforeach
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         @if($item->estimasi_awal)
-                                            <small class="text-success">
+                                            <div style="font-size:15px; font-weight:700; color:#28a745; line-height:1.5;">
                                                 <i class="fas fa-play mr-1"></i>
                                                 {{ \Carbon\Carbon::parse($item->estimasi_awal)->format('d/m/Y') }}
-                                            </small>
-                                            <br>
-                                            <small class="text-danger">
+                                            </div>
+                                            <div style="font-size:15px; font-weight:700; color:#dc3545; line-height:1.5;">
                                                 <i class="fas fa-stop mr-1"></i>
                                                 {{ \Carbon\Carbon::parse($item->estimasi_akhir)->format('d/m/Y') }}
-                                            </small>
+                                            </div>
                                         @else
                                             <span class="text-muted">-</span>
                                         @endif
@@ -153,12 +178,20 @@
                                     <td class="text-right">
                                         @foreach($item->detail as $detail)
                                             <div class="mb-1">
-                                                Rp {{ number_format(
-                                                    $detail->hpp_estimasi_gudang > 0
-                                                        ? $detail->hpp_estimasi_gudang
-                                                        : $detail->hpp_estimasi_admin,
-                                                    0, ',', '.'
-                                                ) }}
+                                                Rp {{ number_format($detail->hpp_estimasi_admin ?? 0, 0, ',', '.') }}
+                                            </div>
+                                        @endforeach
+                                    </td>
+                                    <td class="text-right">
+                                        @foreach($item->detail as $detail)
+                                            <div class="mb-1">
+                                                @if($detail->hpp_estimasi_gudang)
+                                                    <span class="text-primary font-weight-bold">
+                                                        Rp {{ number_format($detail->hpp_estimasi_gudang, 0, ',', '.') }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
                                             </div>
                                         @endforeach
                                     </td>
@@ -204,14 +237,11 @@
                                     <td>
                                         <div class="btn-group btn-group-sm" style="width:100%">
                                             @if($item->status == 'Pending')
-                                                <a href="{{ url('gudang/po/'.$item->id.'/detail') }}" 
-                                                   class="btn btn-warning">
-                                                    <i class="fas fa-edit mr-1"></i> Edit
+                                                <a href="{{ url('gudang/po/'.$item->id.'/detail') }}"
+                                                   class="btn btn-block"
+                                                   style="background:#6f42c1; border-color:#6f42c1; color:#fff;">
+                                                   <i class="fas fa-edit mr-1" style="color:#fff;"></i> Edit
                                                 </a>
-                                                <button onclick="hapusPo({{ $item->id }})" 
-                                                        class="btn btn-danger">
-                                                    <i class="fas fa-trash mr-1"></i> Hapus
-                                                </button>
                                             @elseif($item->status == 'Disetujui')
                                                 <button class="btn btn-secondary" disabled>
                                                     <i class="fas fa-hourglass-half mr-1"></i> Menunggu
@@ -248,7 +278,7 @@
 
 <!-- Modal-->
 @foreach($po as $item)
-<div class="modal fade" id="modalCustomer{{ $item->id }}" tabindex="-1">
+<div class="modal fade" id="customer{{ $item->id }}" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
@@ -284,7 +314,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="font-weight-bold">No. HP</label>
-                            <p class="form-control-static">{{ $item->customer_hp ?? '-' }}</p>
+                            <p class="form-control-static">{{ $item->no_hp ?? '-' }}</p>
                         </div>
                     </div>
                 </div>
@@ -292,7 +322,7 @@
                     <div class="col-md-12">
                         <div class="form-group">
                             <label class="font-weight-bold">Alamat</label>
-                            <p class="form-control-static">{{ $item->customer_alamat ?? '-' }}</p>
+                            <p class="form-control-static">{{ $item->alamat ?? '-' }}</p>
                         </div>
                     </div>
                 </div>
@@ -301,18 +331,30 @@
                         <div class="form-group">
                             <label class="font-weight-bold">Status</label>
                             <p>
-                                @if($item->status == 'Pending')
-                                    <span class="badge badge-warning badge-lg">Pending</span>
+                               @if($item->status == 'Pending')
+                                    <span class="badge badge-warning badge-lg">
+                                        <i class="fas fa-clock mr-1"></i> Pending
+                                    </span>
                                 @elseif($item->status == 'Disetujui')
-                                    <span class="badge badge-primary badge-lg">Disetujui</span>
+                                    <span class="badge badge-primary badge-lg">
+                                        <i class="fas fa-check-circle mr-1"></i> Disetujui
+                                    </span>
                                 @elseif($item->status == 'Diproses')
-                                    <span class="badge badge-info badge-lg">Diproses</span>
+                                    <span class="badge badge-info badge-lg">
+                                        <i class="fas fa-cogs mr-1"></i> Diproses
+                                    </span>
                                 @elseif($item->status == 'Diambil')
-                                    <span class="badge badge-success badge-lg">Diambil</span>
+                                    <span class="badge badge-secondary badge-lg">
+                                        <i class="fas fa-box mr-1"></i> Diambil
+                                    </span>
                                 @elseif($item->status == 'Dikirim')
-                                    <span class="badge badge-success badge-lg">Dikirim</span>
+                                    <span class="badge badge-dark badge-lg">
+                                        <i class="fas fa-truck mr-1"></i> Dikirim
+                                    </span>
                                 @elseif($item->status == 'Selesai')
-                                    <span class="badge badge-success badge-lg">Selesai</span>
+                                    <span class="badge badge-success badge-lg">
+                                        <i class="fas fa-check-double mr-1"></i> Selesai
+                                    </span>
                                 @endif
                             </p>
                         </div>
@@ -329,15 +371,38 @@
 </div>
 @endforeach
 
-@foreach($po as $item)
-<form id="delete-form-{{ $item->id }}" 
-      action="{{ url('gudang/po/hapus/'.$item->id) }}" 
-      method="POST" 
-      style="display:none">
-    @csrf
-    @method('DELETE')
-</form>
-@endforeach
+<div class="modal fade" id="modalFoto" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-image mr-2"></i>Detail Foto Produk
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body text-center">
+                <img id="previewFoto"
+                     src=""
+                     class="img-fluid rounded shadow mb-3"
+                     style="max-height:450px;">
+
+                <table class="table table-bordered">
+                    <tr>
+                        <th width="150">Nama Produk</th>
+                        <td><strong id="namaProduk"></strong></td>
+                    </tr>
+                    <tr>
+                        <th>Qty</th>
+                        <td><strong id="qtyProduk"></strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
     .card {
@@ -355,7 +420,6 @@
     .bg-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
-    
     .form-control {
         border-radius: 4px;
         border: 1px solid #ced4da;
@@ -366,7 +430,6 @@
         border-color: #667eea;
         box-shadow: 0 0 0 0.2rem rgba(102,126,234,0.25);
     }
-    
     select.form-control {
         -webkit-appearance: auto;
         -moz-appearance: auto;
@@ -377,7 +440,6 @@
         padding: 8px 12px;
         font-size: 14px;
     }
-    
     .input-group-text {
         border: 1px solid #ced4da;
         border-right: none;
@@ -389,7 +451,6 @@
     .input-group .form-control:focus {
         border-left: none;
     }
-    
     .table thead th {
         background: #f8f9fa;
         border-bottom: 2px solid #dee2e6;
@@ -408,7 +469,6 @@
     .table tbody tr:hover {
         background-color: #f8f9fa;
     }
-    
     .badge {
         font-size: 12px;
         padding: 5px 12px;
@@ -438,7 +498,6 @@
         background-color: #17a2b8;
         color: white;
     }
-    
     .btn-group .btn {
         font-size: 12px;
         padding: 5px 12px;
@@ -447,12 +506,35 @@
     .btn-group .btn i {
         font-size: 11px;
     }
-    
     .btn-block {
         display: block;
         width: 100%;
     }
-    
+    .modal{
+        z-index: 99999 !important;
+    }
+    .modal-backdrop{
+        z-index:1060 !important;
+    }
+    .modal-dialog{
+        margin-top:40px;
+    }
+    .modal-content{
+        border:none;
+        border-radius:16px;
+        overflow:hidden;
+        box-shadow:0 15px 40px rgba(0,0,0,.18); 
+    }
+    .modal-header{
+        border-bottom:none;
+    }
+    .modal-footer{
+        border-top:none;
+    }
+    .modal-body{
+        max-height:70vh;
+        overflow-y:auto;
+    }
     .modal-header.bg-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
@@ -464,23 +546,19 @@
         color: white;
         opacity: 0.8;
     }
-    
     label {
         font-size: 13px;
         font-weight: 600;
         color: #495057;
     }
-    
     .form-control-static {
         font-size: 14px;
         padding: 6px 0;
         margin-bottom: 0;
     }
-    
     .mb-1 {
         margin-bottom: 0.25rem !important;
     }
-    
     .btn-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border: none;
@@ -488,7 +566,6 @@
     .btn-primary:hover {
         background: linear-gradient(135deg, #5a6fd6 0%, #6a4292 100%);
     }
-    
     #resetFilter {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border: none;
@@ -511,7 +588,7 @@ $(document).ready(function () {
 
     $('#table').DataTable({
         pageLength: 10,
-        scrollX: true,
+        responsive: true,
         autoWidth: false,
         ordering: false,
         language: {
@@ -567,22 +644,11 @@ $(document).ready(function () {
     });
 });
 
-function hapusPo(id) {
-    Swal.fire({
-        title: 'Konfirmasi Hapus',
-        html: 'Apakah Anda yakin ingin menghapus Purchase Order ini?<br><strong>Data yang dihapus tidak dapat dikembalikan!</strong>',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: '<i class="fas fa-trash mr-1"></i> Ya, Hapus!',
-        cancelButtonText: '<i class="fas fa-times mr-1"></i> Batal',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('delete-form-' + id).submit();
-        }
-    });
-}
+$(document).on('click', '.foto-po', function(){
+    $('#previewFoto').attr('src', $(this).data('foto'));
+    $('#namaProduk').text($(this).data('produk'));
+    $('#qtyProduk').text($(this).data('qty'));
+
+});
 </script>
 @endsection
