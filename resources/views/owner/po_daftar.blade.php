@@ -232,6 +232,8 @@
                                                     'Pending'   => 'badge-warning',
                                                     'Disetujui' => 'badge-primary',
                                                     'Diproses'  => 'badge-info',
+                                                    'Diambil'   => 'badge-purple',
+                                                    'Dikirim'   => 'badge-orange',
                                                     'Selesai'   => 'badge-success',
                                                 ];
                                             @endphp
@@ -455,11 +457,11 @@
                                         <i class="fas fa-cogs mr-1"></i> Diproses
                                     </span>
                                 @elseif($item->status == 'Diambil')
-                                    <span class="badge badge-secondary badge-lg">
+                                        <span class="badge badge-purple badge-lg">
                                         <i class="fas fa-box mr-1"></i> Diambil
                                     </span>
                                 @elseif($item->status == 'Dikirim')
-                                    <span class="badge badge-dark badge-lg">
+                                    <span class="badge badge-orange badge-lg">
                                         <i class="fas fa-truck mr-1"></i> Dikirim
                                     </span>
                                 @elseif($item->status == 'Selesai')
@@ -627,6 +629,18 @@
         background-color: #6c757d;
         border-color: #6c757d;
         color: #fff;
+    }
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-purple{
+        background:#6f42c1;
+        color:#fff;
+    }
+    .badge-orange{
+        background:#fd7e14;
+        color:#fff;
     }
     .btn-secondary:hover {
         background-color: #5a6268;

@@ -536,9 +536,16 @@ function addProduk(){
 function removeProduk(button){
     let cards = document.querySelectorAll('.produk-card');
     if(cards.length <= 1){
-        alert('Minimal 1 produk');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Tidak dapat menghapus',
+            text: 'Minimal harus ada 1 produk.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#4B49AC'
+        });
         return;
     }
+    
     button.closest('.produk-card').remove();
     calculateTotal();
 }

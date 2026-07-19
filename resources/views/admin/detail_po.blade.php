@@ -171,11 +171,11 @@
                                                 <i class="fas fa-spinner mr-1"></i> Diproses
                                             </span>
                                         @elseif($item->status == 'Diambil')
-                                            <span class="badge badge-secondary badge-lg">
+                                            <span class="badge badge-purple badge-lg">
                                                 <i class="fas fa-box mr-1"></i> Diambil
                                             </span>
                                         @elseif($item->status == 'Dikirim')
-                                            <span class="badge badge-dark badge-lg">
+                                            <span class="badge badge-orange badge-lg">
                                                 <i class="fas fa-truck mr-1"></i> Dikirim
                                             </span>
                                         @elseif($item->status == 'Selesai')
@@ -529,6 +529,14 @@
     .badge-secondary {
         background-color: #6c757d;
         color: white;
+    }
+    .badge-purple{
+        background:#7C3AED;
+        color:#fff;
+    }
+    .badge-orange{
+        background:#F59E0B;
+        color:#fff;
     }
     .badge-primary {
         background-color: #007bff;

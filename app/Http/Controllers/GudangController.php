@@ -866,10 +866,11 @@ public function exportExcelStokOpname()
         if ($po->status == 'Diproses') {
 
             $pdf = Pdf::loadView(
-                'gudang.po_print_internal',
+                'gudang.po_print',
                 compact('po')
             )->setPaper('A4', 'portrait');
 
+            // return $pdf->download('PO-Internal-'.$po->kode_po.'.pdf');
             return $pdf->stream('PO-Internal-'.$po->kode_po.'.pdf');
         }
 

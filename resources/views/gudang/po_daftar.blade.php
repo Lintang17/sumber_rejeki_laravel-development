@@ -221,11 +221,11 @@
                                                 <i class="fas fa-spinner mr-1"></i> Diproses
                                             </span>
                                         @elseif($item->status == 'Diambil')
-                                            <span class="badge badge-success badge-lg">
+                                            <span class="badge badge-purple badge-lg">
                                                 <i class="fas fa-hand-holding mr-1"></i> Diambil
                                             </span>
                                         @elseif($item->status == 'Dikirim')
-                                            <span class="badge badge-success badge-lg">
+                                            <span class="badge badge-orange badge-lg">
                                                 <i class="fas fa-truck mr-1"></i> Dikirim
                                             </span>
                                         @elseif($item->status == 'Selesai')
@@ -254,16 +254,31 @@
                                                     </button>
                                                 </form>
                                             @elseif($item->status == 'Diproses')
-                                                <a href="{{ url('gudang/po/'.$item->id.'/print') }}" 
-                                                   target="_blank"
-                                                   class="btn btn-primary">
-                                                    <i class="fas fa-print mr-1"></i> Print
-                                                </a>
+                                                <div class="d-flex flex-column" style="gap:5px">
+                                                    {{-- Print Internal Gudang --}}
+                                                    <a href="{{ url('gudang/po/'.$item->id.'/print') }}" 
+                                                       target="_blank"
+                                                       class="btn btn-primary btn-sm">
+                                                       <i class="fas fa-print mr-1"></i> Print Internal
+                                                    </a>
+                                                    {{-- Ubah Status Diambil --}}
+                                                    <form action="{{ url('gudang/po/'.$item->id.'/update') }}" 
+                                                          method="POST"
+                                                          id="ambil-form-{{ $item->id }}">
+                                                         @csrf
+                                                        <input type="hidden" name="status" value="Diambil">
+                                                        <button type="button"
+                                                                onclick="ambilPo({{ $item->id }})"
+                                                                class="btn btn-success btn-sm btn-block">
+                                                            <i class="fas fa-check mr-1"></i> Selesai Produksi
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             @elseif($item->status == 'Diambil')
                                                 <a href="{{ url('gudang/po/'.$item->id.'/print') }}" 
                                                    target="_blank"
-                                                   class="btn btn-success">
-                                                    <i class="fas fa-file-pdf mr-1"></i> Surat
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-file-pdf mr-1"></i> Surat Pengambilan
                                                 </a>
                                             @else
                                                 <button class="btn btn-secondary" disabled>
@@ -505,6 +520,14 @@
         background-color: #17a2b8;
         color: white;
     }
+    .badge-purple{
+        background:#6f42c1;
+        color:#fff;
+    }
+    .badge-orange{
+        background:#fd7e14;
+        color:#fff;
+    }
     .btn-group .btn {
         font-size: 12px;
         padding: 5px 12px;
@@ -651,6 +674,7 @@ $(document).ready(function () {
     });
 });
 
+// Ubah Status Menjadi 'Diproses'
 function prosesPo(id) {
     Swal.fire({
         title: 'Konfirmasi Proses PO',
@@ -665,6 +689,25 @@ function prosesPo(id) {
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('proses-form-' + id).submit();
+        }
+    });
+}
+
+// Ubah Status Menjadi 'Diambil'
+function ambilPo(id) {
+    Swal.fire({
+        title: 'Konfirmasi Selesai Produksi',
+        text: 'Apakah produksi PO ini sudah selesai dan siap diambil?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-check mr-1"></i> Ya, Selesai',
+        cancelButtonText: '<i class="fas fa-times mr-1"></i> Batal'
+    }).then((result)=>{
+
+        if(result.isConfirmed){
+            document.getElementById('ambil-form-'+id).submit();
         }
     });
 }

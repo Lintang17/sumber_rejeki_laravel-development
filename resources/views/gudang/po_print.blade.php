@@ -2,8 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Print PO</title>
-
+    <title>Print PO Gudang</title>
     <style>
         body{
             font-family: sans-serif;
@@ -24,21 +23,12 @@
             border:1px solid #000;
             padding:8px;
             text-align:left;
+            vertical-align:middle;
         }
 
         .no-border td{
             border:none;
             padding:3px 0;
-        }
-
-        .ttd{
-            margin-top:50px;
-            width:100%;
-        }
-
-        .ttd td{
-            border:none;
-            text-align:center;
         }
     </style>
 </head>
@@ -60,18 +50,32 @@
     </tr>
 
     <tr>
-        <td>Tanggal</td>
+        <td>Alamat</td>
+        <td>: {{ $po->alamat ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Total Jenis Produk</td>
+        <td>: {{ $po->detail->count() }} Produk</td>
+    </tr>
+
+    <tr>
+        <td>Tanggal Order</td>
         <td>:
             {{ \Carbon\Carbon::parse($po->tanggal)->format('d M Y') }}
         </td>
     </tr>
 
     <tr>
-        <td>Estimasi</td>
+        <td>Estimasi Produksi</td>
         <td>:
-            {{ $po->estimasi_akhir
-            ? \Carbon\Carbon::parse($po->estimasi_akhir)->format('d M Y')
-            : '-' }}
+            @if($po->estimasi_awal && $po->estimasi_akhir)
+                {{ \Carbon\Carbon::parse($po->estimasi_awal)->format('d M Y') }}
+                -
+                {{ \Carbon\Carbon::parse($po->estimasi_akhir)->format('d M Y') }}
+            @else
+                -
+            @endif
         </td>
     </tr>
 </table>
@@ -79,41 +83,43 @@
 <br>
 
 <table>
-    <thead>
-        <tr>
-            <th>No</th>
-            <th>Nama Produk</th>
-            <th>Deskripsi</th>
-            <th>Qty</th>
-            <th>HPP</th>
-            <th>Harga Jual</th>
-        </tr>
-    </thead>
+<thead>
+<tr>
+    <th width="40">No</th>
+    <th>Nama Produk</th>
+    <th>Deskripsi</th>
+    <th width="60">Qty</th>
+</tr>
+</thead>
 
-    <tbody>
+<tbody>
+@foreach($po->detail as $index => $detail)
+<tr>
+    <td>
+        {{ $index + 1 }}
+    </td>
 
-    @foreach($po->detail as $index => $detail)
-    <tr>
-        <td>{{ $index+1 }}</td>
-        <td>{{ $detail->produk }}</td>
-        <td>{{ $detail->deskripsi ?? '-' }}</td>
-        <td>{{ $detail->qty }}</td>
-        <td>
-            Rp {{ number_format($detail->hpp_estimasi,0,',','.') }}
-        </td>
-        <td>
-            Rp {{ number_format($detail->harga_jual,0,',','.') }}
-        </td>
-    </tr>
-    @endforeach
+    <td>
+        {{ $detail->produk }}
+    </td>
 
-    </tbody>
+    <td>
+        {{ $detail->deskripsi ?? '-' }}
+    </td>
+
+    <td style="text-align:center">
+        {{ $detail->qty }}
+    </td>
+</tr>
+@endforeach
+
+</tbody>
 </table>
 
 <br>
-
-<strong>Keterangan:</strong>
-<p>{{ $po->keterangan ?? '-' }}</p>
-
+<strong>Keterangan Produksi:</strong>
+<p>
+    {{ $po->keterangan ?? '-' }}
+</p>
 </body>
 </html>
