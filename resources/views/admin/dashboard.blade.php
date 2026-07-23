@@ -5,7 +5,6 @@
     body {
         background: #f4f6fb;
     }
-
     .card {
         border: 0;
         border-radius: 18px;
@@ -13,16 +12,13 @@
         transition: .3s;
         box-shadow: 0 6px 20px rgba(0,0,0,.08);
     }
-
     .card:hover{
         transform: translateY(-4px);
         box-shadow:0 18px 40px rgba(0,0,0,.15);
     }
-
     .content-wrapper{
         padding-top:0px;
     }
-
     .stats-card::before{
         content:"";
         position:absolute;
@@ -33,7 +29,6 @@
         border-radius:50%;
         background:rgba(255,255,255,.08);
     }
-
     .stats-card::after{
         content:"";
         position:absolute;
@@ -44,14 +39,12 @@
         border-radius:50%;
         background:rgba(255,255,255,.05);
     }
-
     .stats-card{
         border-radius:18px;
         overflow:hidden;
         position:relative;
         height:100%;
     }
-
     .stats-card .card-body{
         display:flex;
         flex-direction:column;
@@ -59,12 +52,10 @@
         min-height:150px;
         padding:15px;
     }
-
     .stats-card .btn{
         margin-top:auto;
         width:fit-content;
     }
-
     .dashboard-icon{
         width:58px;
         height:58px;
@@ -75,11 +66,9 @@
         justify-content:center;
         margin-bottom:20px;
     }
-
     .dashboard-icon i{
         font-size:28px;
     }
-
     .count-number{
         color:white;
         font-size:3rem;
@@ -88,44 +77,35 @@
         line-height:1;
         text-shadow:0 5px 12px rgba(0,0,0,.18);
     }
-
     .dashboard-title{
         color:rgba(255,255,255,.92);
         font-size:15px;
         margin-bottom:15px;
     }
-
     .grid-margin{
         margin-bottom:25px;
     }
-
     .stats-card:hover .dashboard-icon{
         transform:rotate(-8deg) scale(1.08);
     }
-
     .stats-card:hover .btn-light{
         background:white;
     }
-
     .btn-light i{
         margin-right:4px;
     }
-
     .count-produk{
         margin-bottom:12px;
     }
-
     .count-uang{
         margin-bottom:12px;
         word-break:break-word;
     }
-
     .btn-light{
         border-radius:30px;
         font-weight:600;
         padding:8px 20px;
     }
-
     .notification-icon{
         width:50px;
         height:50px;
@@ -136,31 +116,26 @@
         justify-content:center;
         margin-right:15px;
     }
-
     .notification-icon i{
         font-size:24px;
         color:#A7727D;
     }
-
     .po-title{
         display:flex;
         align-items:center;
     }
-
     .po-heading{
         color:#333;
         font-size:18px;
         font-weight:800 !important;
         letter-spacing:.3px;
     }
-
     .po-card{
         background:#fff;
         border-radius:20px;
         box-shadow:0 8px 25px rgba(0,0,0,.08);
         border:1px solid #790000;
     }
-
     .po-count{
         background:#A7727D;
         color:white;
@@ -169,33 +144,27 @@
         margin-right:10px;
         font-size:13px;
     }
-
     .po-item:last-child{
         margin-bottom:0;
     }
-
     .po-item{
         background:#FFF8F3;
         border:1px solid #E9D5C5;
         color:#333;
     }
-
     .po-item:hover{
         background:#FDF1E8;
     }
-
     .po-code{
         color:#5A3D2B;
         font-weight:700;
         font-size:15px;
     }
-
     .po-date{
         color:#8A6B55;
         font-weight:700;
         font-size:15px;
     }
-
     .badge-status{
         padding:8px 16px;
         border-radius:25px;
@@ -204,28 +173,23 @@
         letter-spacing:.5px;
         box-shadow:0 4px 10px rgba(0,0,0,.18);
     }
-
     .empty-po{
         padding:60px 20px;
         text-align:center;
         color:#9ca3af;
     }
-
     .empty-icon{
         font-size:65px;
         color:#d1d5db;
         margin-bottom:15px;
     }
-
     .empty-po h6{
         font-weight:700;
         color:#555;
     }
-
     .empty-po p{
         margin-bottom:0;
     }
-
     .dashboard-header-icon{
         width:65px;
         height:65px;
@@ -235,12 +199,10 @@
         justify-content:center;
         align-items:center;
     }
-
     .dashboard-header-icon i{
         color:#fff;
         font-size:32px;
     }
-
     .text-white-50{
         color:rgba(255,255,255,.8)!important;
     }
