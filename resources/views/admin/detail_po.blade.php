@@ -7,11 +7,8 @@
             <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
-                        <div class="bg-primary rounded-circle p-2 mr-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-file-invoice text-white"></i>
-                        </div>
                         <div>
-                            <h4 class="mb-0 font-weight-bold">Purchase Order</h4>
+                            <h4 class="mb-0 font-weight-bold">Purchase Order (Admin)</h4>
                             <small class="text-muted">Kelola semua data purchase order</small>
                         </div>
                     </div>
@@ -748,7 +745,7 @@ $(document).ready(function () {
         autoWidth: false,
         ordering: false,
         language: {
-            search: "",
+            search: "Search:",
             lengthMenu: "Tampilkan _MENU_ data",
             info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
             infoEmpty: "Tidak ada data",

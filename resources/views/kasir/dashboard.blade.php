@@ -54,9 +54,10 @@
         color:#A7727D;
     }
     .penjualan-card{
+        background:#fff;
         border-radius:20px;
-        border:1px solid #ead8d8;
         box-shadow:0 8px 25px rgba(0,0,0,.08);
+        border:1px solid #790000;
     }
     .penjualan-title{
         display:flex;
@@ -176,6 +177,7 @@
         font-weight:600;
         width:fit-content;
     }
+    
 </style>
 
 <div class="main-panel">

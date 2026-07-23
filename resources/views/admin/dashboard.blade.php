@@ -67,6 +67,7 @@
         margin-bottom:20px;
     }
     .dashboard-icon i{
+        color:#fff;
         font-size:28px;
     }
     .count-number{

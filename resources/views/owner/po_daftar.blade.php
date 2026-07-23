@@ -20,7 +20,7 @@
                         <div class="d-flex flex-wrap justify-content-between align-items-center">
                             <div>
                                 <h4 class="mb-0 font-weight-bold text-dark">
-                                    Purchase Order
+                                    Purchase Order (Owner)
                                 </h4>
                             </div>
                             <div>
