@@ -6,7 +6,6 @@
     body{
         background:#f4f6fb;
     }
-
     .card{
         border:0;
         border-radius:18px;
@@ -14,16 +13,13 @@
         transition:.3s;
         box-shadow:0 6px 20px rgba(0,0,0,.08);
     }
-
     .card:hover{
         transform:translateY(-4px);
         box-shadow:0 18px 40px rgba(0,0,0,.15);
     }
-
     .content-wrapper{
         padding-top:0;
     }
-
     .notification-icon{
         width:50px;
         height:50px;
@@ -34,80 +30,76 @@
         justify-content:center;
         margin-right:15px;
     }
-
     .notification-icon i{
         font-size:24px;
         color:#A7727D;
     }
-
     .po-heading{
-        font-size:18px;
-        font-weight:700;
         color:#333;
+        font-size:18px;
+        font-weight:800 !important;
+        letter-spacing:.3px;
     }
-
     .po-count{
         background:#A7727D;
         color:white;
         border-radius:30px;
         padding:8px 18px;
+        margin-right:10px;
         font-size:13px;
-        font-weight:600;
     }
-
     .po-item{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        padding:16px;
-        margin-bottom:12px;
-        border-radius:12px;
         background:#FFF8F3;
         border:1px solid #E9D5C5;
-        text-decoration:none;
         color:#333;
     }
-
     .po-item:hover{
         background:#FDF1E8;
     }
-
+    .po-title{
+        display:flex;
+        align-items:center;
+    }
+    .po-card{
+        background:#fff;
+        border-radius:20px;
+        box-shadow:0 8px 25px rgba(0,0,0,.08);
+        border:1px solid #790000;
+    }
     .po-code{
         color:#5A3D2B;
         font-weight:700;
+        font-size:15px;
     }
-
     .po-date{
         color:#8A6B55;
-        font-size:12px;
+        font-weight:700;
+        font-size:15px;
     }
-
     .badge-status{
         padding:8px 16px;
         border-radius:25px;
         font-size:11px;
         font-weight:700;
+        letter-spacing:.5px;
+        box-shadow:0 4px 10px rgba(0,0,0,.18);
     }
-
     .empty-po{
         text-align:center;
         padding:50px;
         color:#999;
     }
-
     .stats-card{
         position:relative;
         height:100%;
         border-radius:18px;
     }
-
     .stats-card .card-body{
         min-height:170px;
         padding:20px;
         display:flex;
         flex-direction:column;
     }
-
     .dashboard-icon{
         width:58px;
         height:58px;
@@ -118,35 +110,47 @@
         align-items:center;
         margin-bottom:20px;
     }
-
     .dashboard-icon i{
         font-size:28px;
         color:white;
     }
-
+    .dashboard-header-icon{
+        width:65px;
+        height:65px;
+        border-radius:18px;
+        background:rgba(255,255,255,.18);
+        display:flex;
+        justify-content:center;
+        align-items:center;
+    }
+    .dashboard-header-icon i{
+        color:#fff;
+        font-size:32px;
+    }
     .count-number{
         color:white;
         font-size:3rem;
         font-weight:700;
+        margin-bottom:10px;
         line-height:1;
         text-shadow:0 5px 12px rgba(0,0,0,.18);
     }
-
     .dashboard-title{
-        color:rgba(255,255,255,.9);
-        margin-top:10px;
-        margin-bottom:20px;
+        color:rgba(255,255,255,.92);
+        font-size:15px;
+        margin-bottom:15px;
     }
-
     .btn-light{
         border-radius:30px;
         font-weight:600;
         padding:8px 20px;
         width:max-content;
     }
-
     .grid-margin{
         margin-bottom:25px;
+    }
+    .text-white-50{
+        color:rgba(255,255,255,.8)!important;
     }
 
 </style>
@@ -154,30 +158,24 @@
 <div class="main-panel">
     <div class="content-wrapper">
         <div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm"
-            style="background:linear-gradient(135deg,#A7727D,#8B5E5E); border-radius:20px;">
-
-            <div class="card-body py-4 px-4">
-
-                <div class="d-flex align-items-center flex-wrap">
-
-                    <div class="ml-3">
-                        <h3 class="text-white font-weight-bold mb-1">
-                            Dashboard Owner
-                        </h3>
-
-                        <p class="mb-0 text-white-50">
-                            Selamat datang di Sistem Informasi UD Sumber Rejeki.
-                        </p>
+            <div class="col-12">
+                <div class="card border-0 shadow-sm"
+                    style="background:linear-gradient(135deg,#A7727D,#8B5E5E); border-radius:20px;">
+                    <div class="card-body py-4 px-4">
+                        <div class="d-flex align-items-center flex-wrap">
+                            <div class="ml-3">
+                                <h3 class="text-white font-weight-bold mb-1">
+                                    Dashboard Owner
+                                </h3>
+                                <p class="mb-0 text-white-50">
+                                    Selamat datang di Sistem Informasi UD Sumber Rejeki.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
-
             </div>
         </div>
-    </div>
-</div>
 
         <div class="card shadow-sm po-card mb-4">
             <div class="card-body">

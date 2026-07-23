@@ -412,13 +412,12 @@
                         $hargaBelumAda = $item->detail->contains(function($d){
                             return empty($d->harga_jual) || $d->harga_jual <= 0;
                         });
-
-                        $total = $item->detail->sum(function($d){
-                            return $d->qty * ($d->harga_jual ?? 0);
-                        });
-                        $sisa = $total - ($item->dp ?? 0);
+                        if ($item->status_pembayaran == 'Lunas') {
+                            $sisa = 0;
+                        } else {
+                            $sisa = $item->sisa_pembayaran ?? 0;
+                        }
                     @endphp
-
                     <div class="mt-3 p-3 rounded" style="background:#f8f9fa;">
                         <label class="font-weight-bold mb-1">
                             Sisa Pembayaran
@@ -430,11 +429,18 @@
                                 Menunggu Owner mengisi harga jual
                             </p>
                         @else
-                            <p class="mb-0">
-                                <strong>
-                                    Rp {{ number_format(max($sisa,0),0,',','.') }}
-                                </strong>
-                            </p>
+                            @if($item->status_pembayaran == 'Lunas')
+                                <p class="mb-0 text-success font-weight-bold">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Lunas (Rp 0)
+                                </p>
+                            @else
+                                <p class="mb-0">
+                                    <strong>
+                                        Rp {{ number_format($sisa,0,',','.') }}
+                                    </strong>
+                                </p>
+                            @endif
                         @endif
                     </div>
 
@@ -666,7 +672,7 @@ $(document).ready(function() {
         autoWidth: false,
         ordering: false,
         language: {
-            search: "",
+            search: "Search:",
             lengthMenu: "Tampilkan _MENU_ per halaman",
             info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
             infoEmpty: "Tidak ada data",
@@ -678,7 +684,10 @@ $(document).ready(function() {
             zeroRecords: "Data tidak ditemukan",
             emptyTable: "Belum ada data purchase order"
         },
-        dom: '<"d-flex justify-content-between align-items-center"l>tip',
+        dom:
+            '<"row mb-2"<"col-md-6"l><"col-md-6 text-right"f>>' +
+            'rt' +
+            '<"row mt-2"<"col-md-6"i><"col-md-6"p>>',
         columnDefs: [
             { orderable: false, targets: '_all' }
         ]
@@ -719,6 +728,7 @@ $(document).ready(function() {
         $('#filterStatus').val('');
         $('#filterMonth').val(currentMonth);
         $('#searchPO').val('');
+        table.search('').draw(); 
         filterTable();
     });
 });
