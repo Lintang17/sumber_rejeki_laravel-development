@@ -1115,30 +1115,25 @@ if (auth()->user()->role == 'Admin') {
         <script>
             $(function () {
                 if ($('#table').length) {
-                    let table = $('#table').DataTable({
-                        buttons: (window.location.href.includes('laporan')) ? ['csv','print','excel','pdf'] : [],
-                        dom:
-                            "<'row'<'col-md-3'l><'col-md-5'B><'col-md-4'f>>" +
+                    $('#table').DataTable({
+                       dom:
+                            "<'row align-items-center'<'col-md-6'l><'col-md-6 d-flex justify-content-end'f>>" +
                             "<'row'<'col-md-12'tr>>" +
                             "<'row'<'col-md-5'i><'col-md-7'p>>",
-                        lengthMenu:[
+                        lengthMenu: [
                             [5,10,25,50,100,-1],
                             [5,10,25,50,100,"ALL"]
                         ]
                     });
-
-                    table.buttons().container()
-                        .appendTo('#table_wrapper .col-md-5:eq(0)');
                 }
             });
         </script>
         <script>
             $(function () {
                 if ($('#table2').length) {
-                    let table = $('#table2').DataTable({
-                        buttons: (window.location.href.includes('laporan')) ? ['csv','print','excel','pdf'] : [],
+                    $('#table').DataTable({
                         dom:
-                            "<'row'<'col-md-3'l><'col-md-5'B><'col-md-4'f>>" +
+                            "<'row align-items-center'<'col-md-6'l><'col-md-6 d-flex justify-content-end'f>>" +
                             "<'row'<'col-md-12'tr>>" +
                             "<'row'<'col-md-5'i><'col-md-7'p>>",
                         lengthMenu:[
@@ -1146,9 +1141,6 @@ if (auth()->user()->role == 'Admin') {
                             [5,10,25,50,100,"ALL"]
                         ]
                     });
-
-                    table.buttons().container()
-                        .appendTo('#table2_wrapper .col-md-5:eq(0)');
                 }
             });
         </script>

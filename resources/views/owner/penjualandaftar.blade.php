@@ -76,7 +76,7 @@
                                                 {{ $item->statuspengiriman }}
                                             </button>
                                         </td>
-                                        <td class="text-center" style="min-width: 160px;">
+                                        <td class="text-center">
                                             @if($item->statuspembayaran == 'DP' && $item->sisabayar > 0)
                                                 <button class="btn btn-warning btn-sm" style="min-width:90px;" data-toggle="modal" data-target="#edit{{ $item->idpenjualan }}">Pelunasan</button>
                                             @else

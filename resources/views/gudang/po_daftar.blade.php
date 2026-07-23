@@ -7,9 +7,6 @@
             <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
-                        <div class="bg-primary rounded-circle p-2 mr-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-warehouse text-white"></i>
-                        </div>
                         <div>
                             <h4 class="mb-0 font-weight-bold">Purchase Order (Gudang)</h4>
                             <small class="text-muted">Kelola semua data purchase order gudang</small>
@@ -55,10 +52,10 @@
                                 <input type="text" id="searchPO" class="form-control" placeholder="Cari kode PO atau customer...">
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <label class="font-weight-bold text-secondary mb-1">&nbsp;</label>
-                            <button id="resetFilter" class="btn btn-primary btn-block">
-                                <i class="fas fa-undo mr-2"></i> Reset
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button id="resetFilter" class="btn btn-primary btn-block"
+                                style="height:38px; white-space:nowrap;">
+                                Reset
                             </button>
                         </div>
                     </div>
@@ -298,7 +295,7 @@
     </div>
 </div>
 
-<!-- Modal-->
+<!-- Modal Detail-->
 @foreach($po as $item)
 <div class="modal fade" id="customer{{ $item->id }}" tabindex="-1">
     <div class="modal-dialog">
@@ -393,34 +390,24 @@
 </div>
 @endforeach
 
+<!-- Modal Detail-->
 <div class="modal fade" id="modalFoto" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title text-white">
-                    <i class="fas fa-image mr-2"></i>Detail Foto Produk
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content modal-foto">
+
+            <div class="modal-header">
+                <h5 class="modal-title mb-0">
+                    <span id="judulProduk"></span>
+                    <span class="ml-2 text-dark">
+                        <strong>(Qty : <span id="qtyProdukHeader"></span>)</strong>
+                    </span>
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
+                <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
-
-            <div class="modal-body text-center">
-                <img id="previewFoto"
-                     src=""
-                     class="img-fluid rounded shadow mb-3"
-                     style="max-height:450px;">
-
-                <table class="table table-bordered">
-                    <tr>
-                        <th width="150">Nama Produk</th>
-                        <td><strong id="namaProduk"></strong></td>
-                    </tr>
-                    <tr>
-                        <th>Qty</th>
-                        <td><strong id="qtyProduk"></strong></td>
-                    </tr>
-                </table>
+            <div class="modal-body">
+                <img id="previewFoto" class="foto-preview" src="">
             </div>
         </div>
     </div>
@@ -438,7 +425,6 @@
     .card-body {
         padding: 25px;
     }
-    
     .bg-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
@@ -575,6 +561,44 @@
     .modal-header .close:hover {
         color: white;
         opacity: 0.8;
+    }  
+    .modal-xl{
+        max-width:650px;
+    }
+    .modal-foto{
+        border-radius:8px;
+        overflow:hidden;
+        border:none;
+    }
+    .modal-foto .modal-header{
+        background:#fff;
+        padding:16px 22px;
+        border-bottom:1px solid #e5e5e5;
+    }
+    .modal-foto .modal-title{
+        font-size:22px;
+        font-weight:700;
+        color:#2d3748;
+    }   
+    .modal-foto .close{
+        font-size:30px;
+        opacity:.6;
+        outline:none;
+    }
+    .modal-foto .close:hover{
+        opacity:1;
+    }
+    .modal-foto .modal-body{
+        background:#f7f7f7;
+        padding:10px;
+        text-align:center;
+    }
+    .foto-preview{
+        width:100%;
+        max-height:85vh;
+        object-fit:contain;
+        border-radius:6px;
+        background:#fff;
     }
     label {
         font-size: 13px;
@@ -622,7 +646,7 @@ $(document).ready(function () {
         autoWidth: false,
         ordering: false,
         language: {
-            search: "",
+            search: "Search:",
             lengthMenu: "Tampilkan _MENU_ data",
             info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
             infoEmpty: "Tidak ada data",
@@ -712,11 +736,10 @@ function ambilPo(id) {
     });
 }
 
-$(document).on('click', '.foto-po', function(){
+$(document).on('click', '.foto-po', function () {
     $('#previewFoto').attr('src', $(this).data('foto'));
-    $('#namaProduk').text($(this).data('produk'));
-    $('#qtyProduk').text($(this).data('qty'));
-
+    $('#judulProduk').text($(this).data('produk'));
+    $('#qtyProdukHeader').text($(this).data('qty'));
 });
 </script>
 @endsection

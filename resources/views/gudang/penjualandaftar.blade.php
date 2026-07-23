@@ -78,9 +78,9 @@
                                         </td>
                                         <td class="text-center">
                                             @if($item->statuspembayaran == 'DP' && $item->sisabayar > 0)
-                                            <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#edit{{ $item->idpenjualan }}">Pelunasan</button>
+                                                <button class="btn btn-warning btn-sm" style="min-width:90px;" data-toggle="modal" data-target="#edit{{ $item->idpenjualan }}">Pelunasan</button>
                                             @else
-                                            <span class="badge badge-success">Tuntas</span>
+                                                <button class="btn btn-success btn-sm" style="min-width:90px;" disabled>Tuntas</span>
                                             @endif
                                             {{-- <div class="mt-2">
                                                 <a href="{{ url('owner/nota', $item->notajual) }}" target="_blank" class="btn btn-info btn-sm mr-1 mb-1">Nota</a>
