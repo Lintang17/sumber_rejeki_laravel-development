@@ -1116,7 +1116,7 @@ if (auth()->user()->role == 'Admin') {
             $(function () {
                 if ($('#table').length) {
                     let table = $('#table').DataTable({
-                        buttons: (window.location.href.includes('laporan')) ? ['csv','print','excel','pdf'] : []
+                        buttons: (window.location.href.includes('laporan')) ? ['csv','print','excel','pdf'] : [],
                         dom:
                             "<'row'<'col-md-3'l><'col-md-5'B><'col-md-4'f>>" +
                             "<'row'<'col-md-12'tr>>" +
@@ -1136,7 +1136,7 @@ if (auth()->user()->role == 'Admin') {
             $(function () {
                 if ($('#table2').length) {
                     let table = $('#table2').DataTable({
-                        buttons: (window.location.href.includes('laporan')) ? ['csv','print','excel','pdf'] : []
+                        buttons: (window.location.href.includes('laporan')) ? ['csv','print','excel','pdf'] : [],
                         dom:
                             "<'row'<'col-md-3'l><'col-md-5'B><'col-md-4'f>>" +
                             "<'row'<'col-md-12'tr>>" +

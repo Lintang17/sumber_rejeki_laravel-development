@@ -27,6 +27,10 @@ class KasirController extends Controller
         $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
         $data['jumlahbarangshowroom'] = ShowroomModel::count();
         $data['jumlahpenjualan'] = PenjualanModel::count();
+        // Notifikasi transaksi penjualan terbaru
+        $data['penjualanTerbaru'] = PenjualanModel::orderBy('tanggalpenjualan', 'desc')
+            ->take(5)
+            ->get();
 
         return view('kasir.dashboard', $data);
     }

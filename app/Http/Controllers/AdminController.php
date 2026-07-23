@@ -1240,7 +1240,8 @@ public function barangmasukupdate(Request $request, $id)
             'qty' => 'required|array',
             'qty.*' => 'required|numeric|min:1',
             'foto' => 'required|array|min:1',
-            'foto.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',            'dp' => 'nullable|numeric|min:0',
+            'foto.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',         
+            'dp' => 'nullable|numeric|min:0',
             'metode_pembayaran' => 'required|string',
             'status_pembayaran' => 'required|in:DP,Lunas',
             'hpp_estimasi_admin' => 'required|array',
@@ -1437,31 +1438,77 @@ public function barangmasukupdate(Request $request, $id)
     {
         $po = Po::findOrFail($id);
 
-        $status = $request->status;
+        // Konfirmasi pembayaran lunas
+        if ($request->status_pembayaran == 'Lunas') {
 
-        if ($status == 'Dikirim') {
+            if ($po->status != 'Dikirim') {
+                return back()->with(
+                    'error',
+                    'PO harus berstatus Dikirim sebelum pelunasan.'
+                );
+            }
+
+            $po->update([
+                'status_pembayaran' => 'Lunas'
+            ]);
+
+            return redirect('admin/po')->with(
+                'success',
+                'Pembayaran berhasil dikonfirmasi. Klik tombol "Selesaikan PO" untuk menyelesaikan pesanan.'
+            );
+        }
+
+        // Status Diambil -> Dikirim
+        if ($request->status == 'Dikirim') {
+
+            if ($po->status != 'Diambil') {
+                return back()->with(
+                    'error',
+                    'PO harus berstatus Diambil terlebih dahulu.'
+                );
+            }
+
+            $po->update([
+                'status' => 'Dikirim',
+                '  tanggal_dikirim' => now()
+            ]);
+
+            return redirect('admin/po')
+                ->with(
+                    'success',
+                    'Status PO berhasil berubah menjadi Dikirim.'
+                );
+        }
+
+        // Status Dikirim -> Selesai
+        if ($request->status == 'Selesai') {
+
+            if ($po->status != 'Dikirim') {
+                return back()->with(
+                    'error',
+                    'PO harus berstatus Dikirim.'
+                );
+            }
 
             if ($po->status_pembayaran != 'Lunas') {
                 return back()->with(
                     'error',
-                    'PO tidak dapat dikirim karena pembayaran belum lunas.'
+                    'Pembayaran harus Lunas terlebih dahulu.'
                 );
             }
 
-            $po->tanggal_dikirim = now();
+            $po->update([
+                'status' => 'Selesai',
+                'tanggal_selesai' => now(),
+            ]);
+
+            return redirect('admin/po')->with(
+                'success',
+                'PO berhasil diselesaikan. Invoice sekarang dapat dicetak.'
+            );
         }
 
-        if ($status == 'Selesai') {
-            $po->tanggal_selesai = now();
-        }
-
-        $po->status = $status;
-        $po->save();
-
-        return back()->with(
-            'success',
-            'Status PO berhasil diperbarui.'
-        );
+        return back();
     }
 
     public function poHapus($id)

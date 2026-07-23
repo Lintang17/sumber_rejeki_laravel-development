@@ -57,6 +57,45 @@
                         </div>
                     </div>
 
+                    {{-- Info Pembayaran Saat Status Dikirim --}}
+                    @php
+                        $poMenungguLunas = $po->where('status', 'Dikirim')
+                                ->where('status_pembayaran', '!=', 'Lunas')
+                                ->count();
+                    @endphp
+                    @if($poMenungguLunas > 0)
+                    <div class="alert alert-warning d-flex align-items-center shadow-sm mb-4" role="alert">
+                        <div>
+                            <strong>Ada PO yang menunggu pelunasan pembayaran.</strong>
+                            <br>
+                            Terdapat <strong>{{ $poMenungguLunas }} PO</strong> dengan status 
+                            <span class="badge badge-orange">Dikirim</span>
+                            Silakan buka 
+                            <strong>Lihat Detail</strong> pada data customer untuk mengubah 
+                            <strong>Status Pembayaran menjadi Lunas</strong> setelah pembayaran diterima.
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Info Pelunasan dan ubah Status menjadi Selesai --}}
+                    @php
+                        $poSiapSelesai = $po->where('status', 'Dikirim')
+                            ->where('status_pembayaran', 'Lunas')
+                            ->count();
+                    @endphp
+
+                    @if($poSiapSelesai > 0)
+                    <div class="alert alert-success shadow-sm mb-4">
+                        <strong>Ada {{ $poSiapSelesai }} PO yang siap diselesaikan.</strong>
+                        <br>
+                        Pembayaran customer sudah <strong>Lunas</strong>.
+                        Silakan klik tombol
+                        <strong>Selesaikan PO</strong>
+                        pada kolom <strong>Aksi</strong> agar status berubah menjadi
+                        <strong>Selesai</strong> dan <strong>Invoice dapat dicetak</strong>.
+                    </div>
+                    @endif
+
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" id="table">
                             <thead class="bg-light">
@@ -200,9 +239,63 @@
                                                     <i class="fas fa-lock mr-1"></i> Terkunci
                                                 </button>
                                             @endif
-                                            @if($item->status == 'Dikirim' || $item->status == 'Selesai')                                                <a href="{{ url('admin/po/print/'.$item->id) }}" 
-                                                   class="btn btn-success">
-                                                    <i class="fas fa-print mr-1"></i> Print
+                            
+                                            @if($item->status == 'Diambil')
+                                                <form id="form-kirim-{{ $item->id }}"
+                                                      action="{{ url('admin/po/status/'.$item->id) }}"
+                                                       method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden"
+                                                            name="status"
+                                                            value="Dikirim">
+                                                    <button type="button"
+                                                            class="btn btn-primary"
+                                                            onclick="ubahStatusDikirim({{ $item->id }})">
+                                                        Ubah Status
+                                                    </button>
+                                                </form>
+                                            @elseif($item->status == 'Dikirim')
+                                                <a href="{{ url('admin/po/print/'.$item->id) }}"
+                                                    class="btn btn-info">
+                                                    Surat Jalan
+                                                </a>
+                                                @if(strtolower($item->status_pembayaran ?? '') != 'lunas')
+                                                <form id="form-lunas-table-{{ $item->id }}"
+                                                      action="{{ url('admin/po/status/'.$item->id) }}"
+                                                      method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden"
+                                                            name="status_pembayaran"
+                                                            value="Lunas">
+                                                    <button type="button"
+                                                            class="btn btn-success"
+                                                            onclick="konfirmasiLunasTable({{ $item->id }})">
+                                                        Lunas
+                                                    </button>
+                                                </form>
+                                                @else
+                                                <form id="form-selesai-{{ $item->id }}"
+                                                      action="{{ url('admin/po/status/'.$item->id) }}"
+                                                      method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden"
+                                                           name="status"
+                                                           value="Selesai">
+                                                    <button type="button"
+                                                            class="btn btn-success"
+                                                            style="padding:11px 10px;"
+                                                            onclick="konfirmasiSelesai({{ $item->id }})">
+                                                        Selesaikan PO
+                                                    </button>
+                                                </form>
+                                                @endif
+                                            @elseif($item->status == 'Selesai')
+                                                <a href="{{ url('admin/po/print/'.$item->id) }}"
+                                                    class="btn btn-success">
+                                                    Invoice
                                                 </a>
                                             @endif
                                         </div>
@@ -225,7 +318,7 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title text-white">
-                    <i class="fas fa-user mr-2"></i> Detail Customer
+                    Detail Customer
                 </h5>
                 <button type="button" class="close text-white" data-dismiss="modal">
                     <span>&times;</span>
@@ -332,21 +425,54 @@
                             </p>
                         </div>
                     </div>
-
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="font-weight-bold">Status Pembayaran</label>
-
-                            @if($item->status_pembayaran == 'DP')
+                  
+                    <div class="mt-3 p-3 rounded border" style="background:#f8f9fa;">
+                        <label class="font-weight-bold d-block mb-2">
+                            Status Pembayaran
+                        </label>
+                        @if($item->status_pembayaran == 'DP')
+                            <div class="d-flex align-items-center justify-content-between">
                                 <span class="badge badge-warning badge-lg">
-                                    <i class="fas fa-wallet mr-1"></i> DP
+                                    DP
                                 </span>
-                            @elseif($item->status_pembayaran == 'Lunas')
-                                <span class="badge badge-success badge-lg">
-                                    <i class="fas fa-check-circle mr-1"></i> Lunas
+                                <span class="text-danger font-weight-bold">
+                                    Belum Lunas
                                 </span>
+                            </div>
+                            @if($item->status == 'Dikirim')
+                                <div class="alert alert-warning mt-3 mb-0 py-2">
+                                    <small>
+                                        Customer belum melakukan pelunasan.
+                                        Silakan konfirmasi setelah pembayaran diterima.
+                                    </small>
+                                </div>
+                                <form id="form-lunas-{{ $item->id }}"
+                                      action="{{ url('admin/po/status/'.$item->id) }}"
+                                      method="POST"
+                                      class="mt-3">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden"
+                                            name="status_pembayaran"
+                                            value="Lunas">
+                                    
+                                    <button type="button"
+                                            onclick="konfirmasiLunas({{ $item->id }})"
+                                            class="btn btn-success btn-sm btn-block">
+                                        Konfirmasi Pembayaran Lunas
+                                    </button>
+                                </form>
                             @endif
-                        </div>
+                        @elseif($item->status_pembayaran == 'Lunas')
+                            <div class="d-flex align-items-center">
+                                <span class="badge badge-success badge-lg">
+                                    Lunas
+                                </span>
+                                <small class="text-success ml-2">
+                                    Pembayaran sudah diterima
+                                </small>
+                            </div>
+                        @endif
                     </div>
 
                     @php
@@ -377,11 +503,12 @@
                         @endif
                     </div>
 
-                    <div class="mt-3 p-3 rounded" style="background:#f8f9fa;">
-                        <label class="font-weight-bold mb-1">
-                            Sisa Pembayaran
-                        </label>
-
+                    <div class="row mt-3">
+                        <div class="col-md-8">
+                            <div class="p-3 rounded h-100" style="background:#f8f9fa;">
+                                <label class="font-weight-bold mb-1">
+                                    Sisa Pembayaran
+                                </label>
                         @if($hargaBelumAda)
                             <p class="mb-0 text-muted">
                                 <i class="fas fa-clock mr-1"></i>
@@ -395,41 +522,41 @@
                             </p>
                         @endif
                     </div>
-
                 </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="font-weight-bold">Status</label>
-                            <p>
-                               @if($item->status == 'Pending')
-                                    <span class="badge badge-warning badge-lg">
-                                        <i class="fas fa-clock mr-1"></i> Pending
-                                    </span>
-                                @elseif($item->status == 'Disetujui')
-                                    <span class="badge badge-primary badge-lg">
-                                        <i class="fas fa-check-circle mr-1"></i> Disetujui
-                                    </span>
-                                @elseif($item->status == 'Diproses')
-                                    <span class="badge badge-info badge-lg">
-                                        <i class="fas fa-cogs mr-1"></i> Diproses
-                                    </span>
-                                @elseif($item->status == 'Diambil')
-                                    <span class="badge badge-secondary badge-lg">
-                                        <i class="fas fa-box mr-1"></i> Diambil
-                                    </span>
-                                @elseif($item->status == 'Dikirim')
-                                    <span class="badge badge-dark badge-lg">
-                                        <i class="fas fa-truck mr-1"></i> Dikirim
-                                    </span>
-                                @elseif($item->status == 'Selesai')
-                                    <span class="badge badge-success badge-lg">
-                                        <i class="fas fa-check-double mr-1"></i> Selesai
-                                    </span>
-                                @endif
-                            </p>
-                        </div>
+                <div class="col-md-4">
+                    <div class="p-3 rounded h-100" style="background:#f8f9fa;">
+                        <label class="font-weight-bold mb-2">
+                            Status
+                        </label>  
+                        <p class="mb-0">                    
+                            @if($item->status == 'Pending')
+                                <span class="badge badge-warning badge-lg">
+                                    Pending
+                                </span>
+                            @elseif($item->status == 'Disetujui')
+                                <span class="badge badge-primary badge-lg">
+                                    Disetujui
+                                </span>
+                            @elseif($item->status == 'Diproses')
+                                <span class="badge badge-info badge-lg">
+                                    Diproses
+                                </span>
+                            @elseif($item->status == 'Diambil')
+                                <span class="badge badge-secondary badge-lg">
+                                    Diambil
+                                </span>
+                            @elseif($item->status == 'Dikirim')
+                                <span class="badge badge-dark badge-lg">
+                                    Dikirim
+                                </span>
+                            @elseif($item->status == 'Selesai')
+                                <span class="badge badge-success badge-lg">
+                                    Selesai
+                                </span>
+                            @endif
+                        </p>
                     </div>
+                </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -593,6 +720,17 @@
     .mb-1 {
         margin-bottom: 0.25rem !important;
     }
+    .alert-warning {
+        background-color: #fff8e1;
+        border-left: 5px solid #F59E0B;
+        color: #856404;
+    }
+    .alert-warning strong {
+        color: #6c4b00;
+    }
+    .swal2-container {
+        z-index: 999999 !important;
+    }
 </style>
 
 @endsection
@@ -679,5 +817,106 @@ function hapusPo(id) {
         }
     });
 }
+
+function ubahStatusDikirim(id) {
+    Swal.fire({
+        title: 'Ubah Status?',
+        text: 'Status Purchase Order akan diubah menjadi Dikirim.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('form-kirim-' + id).submit();
+        }
+    });
+}
+
+function konfirmasiLunas(id){
+    Swal.fire({
+        title: 'Konfirmasi Pelunasan',
+        html:
+        'Pastikan pembayaran customer sudah diterima.<br>'+
+        '<strong>Status pembayaran menjadi Lunas dan PO akan berubah menjadi Selesai.</strong>',
+        icon:'warning',
+
+        showCancelButton:true,
+        confirmButtonColor:'#28a745',
+        cancelButtonColor:'#6c757d',
+
+        confirmButtonText:
+        '<i class="fas fa-check"></i> Ya, Lunas',
+        cancelButtonText:
+        '<i class="fas fa-times"></i> Batal',
+
+        allowOutsideClick:false,
+        allowEscapeKey:false
+
+    }).then((result)=>{
+        if(result.isConfirmed){
+            document
+            .getElementById('form-lunas-'+id)
+            .submit();
+
+        }
+    });
+}
+
+function konfirmasiLunasTable(id){
+    Swal.fire({
+        title: 'Konfirmasi Pelunasan',
+        html:
+        'Pastikan pembayaran customer sudah diterima.<br>'+
+        '<strong>Status akan berubah menjadi Selesai dan Invoice dapat dicetak.</strong>',
+        icon:'warning',
+
+        showCancelButton:true,
+        confirmButtonColor:'#28a745',
+        cancelButtonColor:'#6c757d',
+
+        confirmButtonText:
+        '<i class="fas fa-check"></i> Ya, Lunas',
+        cancelButtonText:
+        'Batal'
+
+    }).then((result)=>{
+        if(result.isConfirmed){
+            document
+            .getElementById('form-lunas-table-'+id)
+            .submit();
+
+        }
+    });
+}
+
+function konfirmasiSelesai(id){
+    Swal.fire({
+        title: 'Selesaikan Purchase Order?',
+        html:
+        'Status Purchase Order akan berubah menjadi <b>Selesai</b>.<br>'+
+        'Invoice akan dapat dicetak setelah proses ini.',
+        icon:'question',
+
+        showCancelButton:true,
+        confirmButtonColor:'#28a745',
+        cancelButtonColor:'#6c757d',
+        confirmButtonText:
+        '<i class="fas fa-check"></i> Ya, Selesaikan',
+
+        cancelButtonText:'Batal'
+
+    }).then((result)=>{
+        if(result.isConfirmed){
+            document
+            .getElementById('form-selesai-'+id)
+            .submit();
+
+        }
+    });
+}
+
 </script>
 @endsection

@@ -150,7 +150,8 @@
     .po-heading{
         color:#333;
         font-size:18px;
-        font-weight:700;
+        font-weight:800 !important;
+        letter-spacing:.3px;
     }
 
     .po-card{
@@ -185,10 +186,14 @@
 
     .po-code{
         color:#5A3D2B;
+        font-weight:700;
+        font-size:15px;
     }
 
     .po-date{
         color:#8A6B55;
+        font-weight:700;
+        font-size:15px;
     }
 
     .badge-status{
@@ -245,30 +250,24 @@
 <div class="main-panel">
     <div class="content-wrapper">
         <div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm"
-            style="background:linear-gradient(135deg,#A7727D,#8B5E5E); border-radius:20px;">
-
-            <div class="card-body py-4 px-4">
-
-                <div class="d-flex align-items-center flex-wrap">
-
-                    <div class="ml-3">
-                        <h3 class="text-white font-weight-bold mb-1">
-                            Dashboard Admin
-                        </h3>
-
-                        <p class="mb-0 text-white-50">
-                            Selamat datang di Sistem Informasi UD Sumber Rejeki.
-                        </p>
+            <div class="col-12">
+                <div class="card border-0 shadow-sm"
+                    style="background:linear-gradient(135deg,#A7727D,#8B5E5E); border-radius:20px;">
+                    <div class="card-body py-4 px-4">
+                        <div class="d-flex align-items-center flex-wrap">
+                            <div class="ml-3">
+                                <h3 class="text-white font-weight-bold mb-1">
+                                    Dashboard Admin
+                                </h3>
+                                <p class="mb-0 text-white-50">
+                                    Selamat datang di Sistem Informasi UD Sumber Rejeki.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
-
             </div>
         </div>
-    </div>
-</div>
 
         <div class="card shadow-sm po-card mb-4">
             <div class="card-body">

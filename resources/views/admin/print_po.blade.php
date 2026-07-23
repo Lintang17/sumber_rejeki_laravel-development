@@ -220,10 +220,21 @@
             </tr>
 
             <tr>
-                <td class="label">PO Number</td>
+                <td class="label">Kode PO</td>
                 <td>:</td>
                 <td>
                     {{ $po->kode_po }}
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Tanggal Selesai</td>
+                <td>:</td>
+                <td>
+                    @if($po->tanggal_selesai)
+                        {{ \Carbon\Carbon::parse($po->tanggal_selesai)->translatedFormat('d F Y, H:i') }} WIB
+                    @else
+                        -
+                    @endif
                 </td>
             </tr>
         </table>
@@ -238,8 +249,9 @@
                 </div>
 
                 <div class="party-box">
-                    {{ strtoupper($po->customer) }} <br>
-                    Jember
+                    <strong>{{ strtoupper($po->customer) }}</strong><br>
+                    {{ $po->alamat ?? '-' }}<br>
+                    {{ $po->no_hp ?? '-' }}
                 </div>
             </td>
 
@@ -266,9 +278,6 @@
                 </th>
                 <th width="80">
                     QTY
-                </th>
-                <th width="70">
-                    SAT
                 </th>
                 <th width="120">
                     Harga
@@ -300,10 +309,6 @@
                 </td>
 
                 <td class="text-center">
-                    PCS
-                </td>
-
-                <td class="text-center">
                     Rp {{ number_format($detail->harga_jual,0,',','.') }}
                 </td>
 
@@ -317,7 +322,7 @@
 
         <tfoot>
             <tr class="total-row">
-                <td colspan="4" class="text-right">
+                <td colspan="3" class="text-left">
                     TOTAL
                 </td>
 

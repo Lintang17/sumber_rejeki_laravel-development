@@ -138,6 +138,7 @@ Route::middleware(['auth'])->controller(AdminController::class)->group(function 
 
     Route::get('admin/po/edit/{id}', 'poEdit');
     Route::put('admin/po/update/{id}', 'poUpdate');
+    Route::put('admin/po/status/{id}', 'updateStatusPo');
     Route::delete('admin/po/hapus/{id}', 'poHapus');
     Route::get('admin/po/print/{id}', 'poPrint');
 });

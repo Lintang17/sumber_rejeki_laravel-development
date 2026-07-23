@@ -91,10 +91,21 @@
                                             @endif
 
                                             @if (auth()->user()->role != 'Owner')
-                                                <td class="text-center">
-                                                    <button class="btn btn-success text-white mb-1" data-toggle="modal" data-target="#detail{{ $item->notajual }}">Detail</button>
-                                                    <a class="btn btn-info text-white mb-1" href="{{ url('kasir/cetakfaktur', $item->notajual) }}" target="_blank">Faktur</a>
-                                                    <a class="btn btn-info text-white mb-1" href="{{ url('kasir/cetaknota', $item->notajual) }}" target="_blank">Nota</a>
+                                                <td class="text-center align-middle" style="width:240px;">
+                                                    <div class="btn-group" role="group">
+                                                        <button type="button" data-toggle="modal" data-target="#detail{{ $item->notajual }}" class="btn text-white"
+                                                            style="background:#8B5E5E; border:none; min-width:75px; height:42px; font-size:13px; font-weight:600; border-radius:8px 0 0 8px;">
+                                                            Detail
+                                                        </button>
+                                                        <a href="{{ url('kasir/cetakfaktur',$item->notajual) }}" target="_blank" class="btn text-white" 
+                                                            style="background:#D89A2B; border:none; min-width:75px; height:42px; font-size:13px; font-weight:600;">
+                                                            Faktur
+                                                        </a>
+                                                        <a href="{{ url('kasir/cetaknota',$item->notajual) }}" target="_blank" class="btn text-white"
+                                                            style="background:#2F8F83; border:none; min-width:75px; height:42px; font-size:13px; font-weight:600; border-radius:0 8px 8px 0;">
+                                                            Nota
+                                                        </a>
+                                                    </div>
                                                     {{-- <a href="{{ url('kasir/barangkeluarhapus', $item->notajual) }}" class="btn btn-danger mb-1" onclick="return confirm('Yakin Mau di Hapus?')">Hapus</a> --}}
                                                 </td>
                                             @endif
