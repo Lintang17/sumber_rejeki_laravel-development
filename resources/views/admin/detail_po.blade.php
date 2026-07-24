@@ -56,9 +56,7 @@
 
                     {{-- Info Pembayaran Saat Status Dikirim --}}
                     @php
-                        $poMenungguLunas = $po->where('status', 'Dikirim')
-                                ->where('status_pembayaran', '!=', 'Lunas')
-                                ->count();
+                        $poMenungguLunas = $po->where('status_pembayaran','!=','Lunas')->count();
                     @endphp
                     @if($poMenungguLunas > 0)
                     <div class="alert alert-warning d-flex align-items-center shadow-sm mb-4" role="alert">
@@ -89,7 +87,23 @@
                         Silakan klik tombol
                         <strong>Selesaikan PO</strong>
                         pada kolom <strong>Aksi</strong> agar status berubah menjadi
-                        <strong>Selesai</strong> dan <strong>Invoice dapat dicetak</strong>.
+                        <strong>Selesai</strong>.
+                    </div>
+                    @endif
+
+                    @php
+                        $poBelumSelesai = $po->where('status','Dikirim')->count();
+                    @endphp
+
+                    @if($poBelumSelesai > 0)
+                    <div class="alert alert-info shadow-sm mb-4">
+                        <strong>
+                            Ada {{ $poBelumSelesai }} PO yang sudah dikirim.
+                        </strong>
+                        <br>
+                        Jangan lupa ubah status menjadi 
+                        <strong>Selesai</strong>
+                        setelah pesanan selesai agar data PO tersimpan dengan lengkap.
                     </div>
                     @endif
 
@@ -257,37 +271,40 @@
                                                     class="btn btn-info">
                                                     Surat Jalan
                                                 </a>
+                                                <a href="{{ url('admin/po/print/'.$item->id.'?invoice=true') }}"
+                                                    class="btn btn-success">
+                                                    Invoice
+                                                </a>
                                                 @if(strtolower($item->status_pembayaran ?? '') != 'lunas')
-                                                <form id="form-lunas-table-{{ $item->id }}"
-                                                      action="{{ url('admin/po/status/'.$item->id) }}"
-                                                      method="POST">
-                                                    @csrf
-                                                    @method('PUT')
-                                                    <input type="hidden"
+                                                    <form id="form-lunas-table-{{ $item->id }}"
+                                                        action="{{ url('admin/po/status/'.$item->id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden"
                                                             name="status_pembayaran"
                                                             value="Lunas">
-                                                    <button type="button"
-                                                            class="btn btn-success"
+                                                        <button type="button"
+                                                            class="btn btn-warning"
                                                             onclick="konfirmasiLunasTable({{ $item->id }})">
-                                                        Lunas
-                                                    </button>
-                                                </form>
+                                                            Lunas
+                                                        </button>
+                                                    </form>
                                                 @else
-                                                <form id="form-selesai-{{ $item->id }}"
-                                                      action="{{ url('admin/po/status/'.$item->id) }}"
-                                                      method="POST">
-                                                    @csrf
-                                                    @method('PUT')
-                                                    <input type="hidden"
-                                                           name="status"
-                                                           value="Selesai">
-                                                    <button type="button"
+                                                    <form id="form-selesai-{{ $item->id }}"
+                                                        action="{{ url('admin/po/status/'.$item->id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden"
+                                                            name="status"
+                                                            value="Selesai">
+                                                        <button type="button"
                                                             class="btn btn-success"
-                                                            style="padding:11px 10px;"
                                                             onclick="konfirmasiSelesai({{ $item->id }})">
-                                                        Selesaikan PO
-                                                    </button>
-                                                </form>
+                                                            Selesaikan PO
+                                                        </button>
+                                                    </form>
                                                 @endif
                                             @elseif($item->status == 'Selesai')
                                                 <a href="{{ url('admin/po/print/'.$item->id) }}"
@@ -436,7 +453,7 @@
                                     Belum Lunas
                                 </span>
                             </div>
-                            @if($item->status == 'Dikirim')
+                            @if($item->status != 'Selesai')
                                 <div class="alert alert-warning mt-3 mb-0 py-2">
                                     <small>
                                         Customer belum melakukan pelunasan.
@@ -479,7 +496,9 @@
                         $totalHargaJual = $item->detail->sum(function($d){
                             return $d->qty * ($d->harga_jual ?? 0);
                         });
-                        $sisa = $totalHargaJual - ($item->dp ?? 0);
+                        $sisa = $item->status_pembayaran == 'Lunas'
+                            ? 0
+                            : max($totalHargaJual - ($item->dp ?? 0), 0);
                     @endphp
 
                     <div class="mt-3 p-3 rounded" style="background:#fff8e1;">
@@ -513,8 +532,8 @@
                             </p>
                         @else
                             <p class="mb-0">
-                                <strong>
-                                    Rp {{ number_format(max($sisa,0),0,',','.') }}
+                                <strong class="{{ $sisa <= 0 ? 'text-success' : 'text-danger' }}">
+                                    Rp {{ number_format($sisa, 0, ',', '.') }}
                                 </strong>
                             </p>
                         @endif
@@ -837,7 +856,7 @@ function konfirmasiLunas(id){
         title: 'Konfirmasi Pelunasan',
         html:
         'Pastikan pembayaran customer sudah diterima.<br>'+
-        '<strong>Status pembayaran menjadi Lunas dan PO akan berubah menjadi Selesai.</strong>',
+        '<strong>Status pembayaran akan berubah menjadi Lunas.</strong>',
         icon:'warning',
 
         showCancelButton:true,
@@ -867,7 +886,7 @@ function konfirmasiLunasTable(id){
         title: 'Konfirmasi Pelunasan',
         html:
         'Pastikan pembayaran customer sudah diterima.<br>'+
-        '<strong>Status akan berubah menjadi Selesai dan Invoice dapat dicetak.</strong>',
+        '<strong>Status pembayaran akan berubah menjadi Lunas.</strong>',
         icon:'warning',
 
         showCancelButton:true,

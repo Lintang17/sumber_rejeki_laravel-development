@@ -296,9 +296,6 @@ public function ubahStatusTransaksi(Request $request)
 }
 
 
-
-
-
 public function produkdaftar()
     {
         $data['produk'] = ProdukModel::all();
@@ -558,7 +555,6 @@ public function barangmasukupdate(Request $request, $id)
     if (!$request->tanggalpembelian || $request->tanggalpembelian === '0000-00-00') {
         return back()->with('error', 'Tanggal pembelian tidak valid atau kosong.');
     }
-    
 
 
     DB::beginTransaction();
@@ -587,8 +583,6 @@ public function barangmasukupdate(Request $request, $id)
             $stokTerbaru = PembelianModel::where('namabarang', $produkNama)->sum('jumlah');
             ProdukModel::where('namaproduk', $produkNama)->update(['stok' => $stokTerbaru]);
         }
-
-       
 
 
         DB::commit();
@@ -1449,24 +1443,20 @@ public function barangmasukupdate(Request $request, $id)
         // Konfirmasi pembayaran lunas
         if ($request->status_pembayaran == 'Lunas') {
 
-            if ($po->status != 'Dikirim') {
-                return back()->with(
-                    'error',
-                    'PO harus berstatus Dikirim sebelum pelunasan.'
-                );
-            }
-
             $po->update([
-                'status_pembayaran' => 'Lunas'
+                'status_pembayaran' => 'Lunas',
+                'sisa_pembayaran' => 0,
             ]);
 
-            return redirect('admin/po')->with(
-                'success',
-                'Pembayaran berhasil dikonfirmasi. Klik tombol "Selesaikan PO" untuk menyelesaikan pesanan.'
-            );
+            return redirect('admin/po')
+                ->with(
+                    'success',
+                    'Pembayaran berhasil dikonfirmasi menjadi Lunas.'
+                );
         }
 
-        // Status Diambil -> Dikirim
+        // Wajib Lunas saat Dikirim
+
         if ($request->status == 'Dikirim') {
 
             if ($po->status != 'Diambil') {
@@ -1476,15 +1466,22 @@ public function barangmasukupdate(Request $request, $id)
                 );
             }
 
+            if ($po->status_pembayaran != 'Lunas') {
+                return back()->with(
+                    'error',
+                    'Pembayaran harus Lunas sebelum PO dikirim.'
+                );
+            }
+
             $po->update([
                 'status' => 'Dikirim',
-                '  tanggal_dikirim' => now()
+                'tanggal_dikirim' => now()
             ]);
 
             return redirect('admin/po')
                 ->with(
                     'success',
-                    'Status PO berhasil berubah menjadi Dikirim.'
+                    'PO berhasil dikirim. Surat Jalan dan Invoice sudah dapat dicetak.'
                 );
         }
 
@@ -1494,14 +1491,7 @@ public function barangmasukupdate(Request $request, $id)
             if ($po->status != 'Dikirim') {
                 return back()->with(
                     'error',
-                    'PO harus berstatus Dikirim.'
-                );
-            }
-
-            if ($po->status_pembayaran != 'Lunas') {
-                return back()->with(
-                    'error',
-                    'Pembayaran harus Lunas terlebih dahulu.'
+                    'PO harus berstatus Dikirim terlebih dahulu.'
                 );
             }
 
@@ -1512,7 +1502,7 @@ public function barangmasukupdate(Request $request, $id)
 
             return redirect('admin/po')->with(
                 'success',
-                'PO berhasil diselesaikan. Invoice sekarang dapat dicetak.'
+                'PO berhasil diselesaikan.'
             );
         }
 
@@ -1544,24 +1534,38 @@ public function barangmasukupdate(Request $request, $id)
         }
     }
 
-    public function poPrint($id)
+    public function poPrint(Request $request, $id)
     {
         $po = Po::with('detail')->findOrFail($id);
 
-        // Status Dikirim -> Cetak Surat Jalan
-        if (strtolower(trim($po->status)) == 'dikirim') {
-            return view('admin.surat_jalan', compact('po'));
+        // Belum boleh print sebelum Dikirim
+        if (!in_array($po->status, ['Dikirim','Selesai'])) {
+
+            return redirect('admin/po')
+                ->with(
+                    'error',
+                    'Dokumen belum dapat dicetak karena PO belum dikirim.'
+                );
         }
 
-        // Status Selesai -> Cetak Invoice Perusahaan
-        if (strtolower(trim($po->status)) == 'selesai') {
+        // Invoice
+        if ($request->invoice == true || $po->status == 'Selesai') {
 
-            $redirectUrl = url('admin/po');
-
-            return view('admin.print_po', compact('po', 'redirectUrl'));
+            return view(
+                'admin.print_po',
+                compact('po')
+            );
         }
 
-        return redirect('admin/po')
-            ->with('error', 'Dokumen belum dapat dicetak.');
+        // CETAK SURAT JALAN
+        if ($po->status == 'Dikirim') {
+
+            return view(
+                'admin.surat_jalan',
+                compact('po')
+            );
+        }
+
+        return redirect('admin/po');
     }
 }
