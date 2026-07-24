@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -1142,23 +1143,30 @@ public function barangmasukupdate(Request $request, $id)
 
     public function internalhapus($id)
     {
-        // 1. Cegah admin menghapus diri sendiri
-        if ($id == auth()->user()->id) {
-            return redirect('admin/internaldaftar')->with('error', 'Anda tidak dapat menghapus akun sendiri!');
-        }
-
-        // 2. Cegah admin menghapus Owner
         $user = User::findOrFail($id);
+
+        // Admin tidak boleh menghapus Owner
         if ($user->role == 'Owner') {
             return redirect('admin/internaldaftar')->with('error', 'Anda tidak memiliki izin untuk menghapus akun Owner!');
         }
 
-        // 3. Hapus file profile jika ada
+        $hapusAkunSendiri = auth()->id() == $user->id;
+
+        // Hapus file profile jika ada
         if ($user->file) {
             Storage::disk('public')->delete($user->file);
         }
     
         $user->delete();
+
+        if ($hapusAkunSendiri) {
+            Auth::logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+
+            return redirect('/login')
+                ->with('success', 'Akun Anda berhasil dihapus.');
+        }
 
         return redirect('admin/internaldaftar')->with('success', 'User berhasil dihapus');
     }

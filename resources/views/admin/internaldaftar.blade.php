@@ -95,7 +95,7 @@
                                         <td class="text-center">
                                             @if($user->role == 'Owner')
                                                 <span style="background: #27ae60; color: white; padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 500;">
-                                                    <i class="mdi mdi-shield-accoun" style="font-size: 12px;"></i> Owner
+                                                    <i class="mdi mdi-shield-account" style="font-size: 12px;"></i> Owner
                                                 </span>
                                             @elseif($user->role == 'Admin')
                                                 <span style="background: #3498db; color: white; padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 500;">
@@ -112,7 +112,7 @@
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <div class="btn-group" role="group" style="gap:4px;">
+                                            <div class="d-flex justify-content-center align-items-center" style="gap:4px;">
                                                 {{-- Tombol Edit --}}
                                                 @if(auth()->user()->role == 'Admin' && $user->role == 'Owner')
                                                     <button class="btn btn-sm btn-secondary"
@@ -140,16 +140,18 @@
                                                             title="Owner tidak dapat dihapus">
                                                         <i class="mdi mdi-lock"></i>
                                                     </button>
-                                            @elseif($user->id == auth()->user()->id)
-                                                <button class="btn btn-sm btn-secondary"
-                                                        style="width:32px; height:32px; padding:0; border-radius:6px; cursor:not-allowed;"
-                                                        disabled
-                                                        data-toggle="tooltip"
-                                                        title="Tidak dapat menghapus akun sendiri">
-                                                    <i class="mdi mdi-lock"></i>
-                                                </button>
-                                            @else
-                                                <button type="button"
+                                                @elseif($user->id == auth()->user()->id)
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-danger btn-delete"
+                                                            data-id="{{ $user->id }}"
+                                                            data-name="{{ $user->name }} (Akun Saya)"
+                                                            style="width:32px;height:32px;padding:0;border-radius:6px;display:flex;align-items:center;justify-content:center;"
+                                                            data-toggle="tooltip"
+                                                            title="Hapus akun saya">
+                                                        <i class="mdi mdi-delete"></i>
+                                                    </button>
+                                                @else
+                                                    <button type="button"
                                                         class="btn btn-sm btn-danger btn-delete"
                                                         data-id="{{ $user->id }}"
                                                         data-name="{{ $user->name }}"

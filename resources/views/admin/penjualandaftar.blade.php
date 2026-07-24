@@ -84,15 +84,42 @@
                                                 </button>
                                             @endif
                                         </td>
-                                        <td class="text-center">
-                                            @if($item->statuspembayaran == 'DP' && $item->sisabayar > 0)
-                                            <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#edit{{ $item->idpenjualan }}">Pelunasan</button>
-                                            @else
-                                            <span class="badge badge-success">Tuntas</span>
-                                            @endif
-                                            <div class="mt-2">
-                                                <a href="{{ url('admin/nota', $item->notajual) }}" target="_blank" class="btn btn-info btn-sm mr-1 mb-1">Nota</a>
-                                                <a href="{{ url('admin/faktur', $item->notajual) }}" target="_blank" class="btn btn-primary btn-sm mb-1">Faktur</a>
+                                        <td class="text-center" style="min-width:140px;">
+                                            <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+                                                @if($item->statuspembayaran == 'DP' && $item->sisabayar > 0)
+                                                    <button
+                                                        data-toggle="modal"
+                                                        data-target="#edit{{ $item->idpenjualan }}"
+                                                        class="btn btn-sm"
+                                                        style="width:120px; background:#f59e0b; color:#fff; border:none; border-radius:8px; font-weight:600; box-shadow:0 2px 8px rgba(245,158,11,.25);">
+                                                        <i class="mdi mdi-cash-fast mr-1"></i>
+                                                        Pelunasan
+                                                    </button>
+                                                @else
+                                                    <button
+                                                        class="btn btn-sm"
+                                                        disabled
+                                                        style="width:120px; background:#22c55e; color:#fff; border:none; border-radius:8px; font-weight:600; opacity:1;">
+                                                        <i class="mdi mdi-check-circle mr-1"></i>
+                                                        Tuntas
+                                                    </button>
+                                                @endif
+                                                <a href="{{ url('admin/nota',$item->notajual) }}"
+                                                   target="_blank"
+                                                   class="btn btn-sm"
+                                                   style="width:120px; background:#0ea5e9; color:#fff; border:none; border-radius:8px; font-weight:600; box-shadow:0 2px 8px rgba(14,165,233,.25); display:flex; justify-content:center; align-items:center; gap:6px;">
+                                                   <span style="transform:translateX(-5px);display:flex;align-items:center;">
+                                                        <i class="mdi mdi-receipt mr-1"></i> Nota
+                                                   </span>
+                                                </a>
+                                                </a>
+                                                <a href="{{ url('admin/faktur',$item->notajual) }}"
+                                                   target="_blank"
+                                                   class="btn btn-sm"
+                                                   style="width:120px; background:#2563eb; color:#fff; border:none; border-radius:8px; font-weight:600; box-shadow:0 2px 8px rgba(37,99,235,.25);">
+                                                   <i class="mdi mdi-file-document mr-1"></i>
+                                                   Faktur
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
