@@ -89,7 +89,6 @@
                                 <label class="font-weight-bold text-secondary mb-1">&nbsp;</label>
                                 <button id="resetFilter"
                                         class="btn btn-primary btn-block" style="height:38px;">
-                                    <i class="fas fa-undo mr-2"></i>
                                     Reset
                                 </button>
                             </div>
@@ -481,8 +480,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times mr-1"></i> Tutup
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" style="background-color: #6f42c1; color: #fff; border-color: #6f42c1;">
+                    Tutup
                 </button>
             </div>
         </div>

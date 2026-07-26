@@ -15,11 +15,9 @@
             margin:0;
             padding:25px;
         }
-
         .container{
             width:100%;
         }
-
         .header{
             display:flex;
             align-items:flex-start;
@@ -29,94 +27,76 @@
             margin-bottom:25px;
             position:relative;
         }
-
         .logo{
             position:absolute;
             left:0;
             top:0;
         }
-
         .logo img{
             width:80px;
         }
-
         .company{
             text-align:center;
         }
-
         .company-name{
             font-size:26px;
             font-weight:800;
             color:#1780c4;
             margin-bottom:3px;
         }
-
         .company-sub{
             color:#1780c4;
             font-size:12px;
             font-weight:bold;
             margin-bottom:2px;
         }
-
         .company-address{
             color:#666;
             font-size:12px;
             margin-bottom:2px;
         }
-
         .company-contact{
             color:#1780c4;
             font-size:12px;
         }
-
         .po-title{
             text-align:center;
             font-size:32px;
             font-weight:700;
             margin:15px 0 30px;
         }
-
         .order-info{
             margin-bottom:25px;
         }
-
         .order-info table{
             width:100%;
         }
-
         .order-info td{
             padding:2px 0;
         }
-
         .label{
             width:140px;
             font-weight:bold;
         }
-
         .party-table{
             width:100%;
             margin-bottom:35px;
         }
-
         .party-table td{
             vertical-align:top;
         }
-
         .party-title{
             font-weight:700;
             text-decoration:underline;
             margin-bottom:8px;
         }
-
         .party-box{
             line-height:1.6;
         }
-
         .product-table{
             width:100%;
             border-collapse:collapse;
         }
-
         .product-table thead th{
             background:#d9d9d9;
             padding:12px;
@@ -124,31 +104,25 @@
             font-weight:700;
             text-align:center;
         }
-
         .product-table td{
             padding:12px;
             border-bottom:1px solid #ddd;
             font-size:12px;
         }
-
         .text-center{
             text-align:center;
         }
-
         .text-right{
             text-align:right;
         }
-
         .product-name{
             font-weight:bold;
         }
-
         .desc{
             font-size:11px;
             color:#666;
             margin-top:4px;
         }
-
         .total-row td{
             font-weight:bold;
             background:#f5f5f5;
@@ -159,7 +133,6 @@
         }
 
         @media print{
-
             html, body{
                 margin:0;
                 padding:0;
@@ -179,7 +152,6 @@
 <div class="container">
 
     <div class="header">
-
         <div class="logo">
             <img src="{{ public_path('assets/logo.png') }}" alt="logo">
         </div>
@@ -206,7 +178,7 @@
     </div>
 
     <div class="po-title">
-        Purchase Order
+        Invoice
     </div>
 
     <div class="order-info">
@@ -226,22 +198,17 @@
                     {{ $po->kode_po }}
                 </td>
             </tr>
+            @if($po->tanggal_dikirim)
             <tr>
-                <td class="label">Tanggal Selesai</td>
+                <td class="label">Tanggal Pengiriman</td>
                 <td>:</td>
-                <td>
-                    @if($po->tanggal_selesai)
-                        {{ \Carbon\Carbon::parse($po->tanggal_selesai)->translatedFormat('d F Y, H:i') }} WIB
-                    @else
-                        -
-                    @endif
-                </td>
+                <td>{{ \Carbon\Carbon::parse($po->tanggal_dikirim)->format('d-m-Y') }}</td>
             </tr>
+            @endif
         </table>
     </div>
 
     <table class="party-table">
-
         <tr>
             <td width="50%">
                 <div class="party-title">
@@ -262,15 +229,14 @@
 
                 <div class="party-box">
                     UD. SUMBER REJEKI <br>
-                    Jl. Gajahmada 197 <br>
-                    Kec. Rambipuji Kab. Jember
+                    Jl. Gajah Mada No. 197 <br>
+                    Kec. Rambipuji, Kab. Jember
                 </div>
             </td>
         </tr>
     </table>
 
     <table class="product-table">
-
         <thead>
             <tr>
                 <th style="text-align:left;">
@@ -340,7 +306,7 @@ window.onload = function () {
 }
 
 window.onafterprint = function () {
-    window.location.href = "{{ $redirectUrl }}";
+    window.location.href = "{{ url('admin/po') }}";
 }
 </script>
 

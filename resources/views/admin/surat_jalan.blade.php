@@ -209,9 +209,8 @@
         <tr>
             <th width="50">No</th>
             <th>Nama Barang</th>
+            <th>Deskripsi</th>
             <th width="80">Qty</th>
-            <th width="140">Harga</th>
-            <th width="150">Total</th>
         </tr>
         </thead>
 
@@ -224,51 +223,20 @@
             </td>
 
             <td>
-                <b>{{ $item->produk }}</b>
-
-                @if($item->deskripsi)
-                    <br>
-                    <small>{{ $item->deskripsi }}</small>
-                @endif
+                <strong>{{ $item->produk }}</strong>
             </td>
+
+            <td>
+                {{ $item->deskripsi ?? '-' }}
+            </td>
+            
             <td class="text-center">
                 {{ $item->qty }}
-            </td>
-            <td class="text-right">
-                Rp {{ number_format($item->harga_jual,0,',','.') }}
-            </td>
-            <td class="text-right">
-                Rp {{ number_format($item->qty * $item->harga_jual,0,',','.') }}
             </td>
         </tr>
 
         @endforeach
         </tbody>
-       <tfoot>
-            @php
-                $grandTotal = $po->detail->sum(function ($d) {
-                    return $d->qty * $d->harga_jual;
-                });
-            @endphp
-
-            <tr style="background:#f3f3f3;font-weight:bold;">
-                <td colspan="4"
-                    style="
-                        text-align:center;
-                        padding:12px;
-                        border:1px solid #ccc;
-                        font-size:14px;">
-                    TOTAL KESELURUHAN
-                </td>
-                <td style="
-                        text-align:left;
-                        padding:12px;
-                        border:1px solid #ccc;
-                        font-size:14px;">
-                    Rp {{ number_format($grandTotal,0,',','.') }}
-                </td>
-            </tr>
-        </tfoot>
     </table>
 
     <div class="footer">

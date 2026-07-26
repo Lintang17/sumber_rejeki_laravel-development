@@ -399,8 +399,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times mr-1"></i> Tutup
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" style="background-color: #6f42c1; color: #fff; border-color: #6f42c1;">
+                    Tutup
                 </button>
             </div>
         </div>

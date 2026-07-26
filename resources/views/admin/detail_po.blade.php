@@ -73,7 +73,7 @@
                     @endif
 
                     {{-- Info Pelunasan dan ubah Status menjadi Selesai --}}
-                    @php
+                    <!-- @php
                         $poSiapSelesai = $po->where('status', 'Dikirim')
                             ->where('status_pembayaran', 'Lunas')
                             ->count();
@@ -89,21 +89,18 @@
                         pada kolom <strong>Aksi</strong> agar status berubah menjadi
                         <strong>Selesai</strong>.
                     </div>
-                    @endif
+                    @endif -->
 
                     @php
-                        $poBelumSelesai = $po->where('status','Dikirim')->count();
+                        $poDikirim = $po->where('status', 'Dikirim')->count();
                     @endphp
-
-                    @if($poBelumSelesai > 0)
+                    @if($poDikirim > 0)
                     <div class="alert alert-info shadow-sm mb-4">
-                        <strong>
-                            Ada {{ $poBelumSelesai }} PO yang sudah dikirim.
-                        </strong>
+                        <strong>Ada {{ $poDikirim }} PO sedang dalam proses pengiriman.</strong>
                         <br>
-                        Jangan lupa ubah status menjadi 
-                        <strong>Selesai</strong>
-                        setelah pesanan selesai agar data PO tersimpan dengan lengkap.
+                        Jika pesanan telah diterima oleh customer, silakan klik
+                        <strong>Selesaikan PO</strong> pada kolom <strong>Aksi</strong> agar status Purchase Order berubah menjadi
+                        <strong>Selesai</strong>.
                     </div>
                     @endif
 
@@ -261,14 +258,15 @@
                                                             name="status"
                                                             value="Dikirim">
                                                     <button type="button"
-                                                            class="btn btn-primary"
+                                                            class="btn btn-primary btn-block" style="height: 32px;"
                                                             onclick="ubahStatusDikirim({{ $item->id }})">
                                                         Ubah Status
                                                     </button>
                                                 </form>
                                             @elseif($item->status == 'Dikirim')
                                                 <a href="{{ url('admin/po/print/'.$item->id) }}"
-                                                    class="btn btn-info">
+                                                    class="btn btn-info btn-block"
+                                                    style="line-height:1.0;">
                                                     Surat Jalan
                                                 </a>
                                                 <a href="{{ url('admin/po/print/'.$item->id.'?invoice=true') }}"
@@ -276,20 +274,7 @@
                                                     Invoice
                                                 </a>
                                                 @if(strtolower($item->status_pembayaran ?? '') != 'lunas')
-                                                    <form id="form-lunas-table-{{ $item->id }}"
-                                                        action="{{ url('admin/po/status/'.$item->id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <input type="hidden"
-                                                            name="status_pembayaran"
-                                                            value="Lunas">
-                                                        <button type="button"
-                                                            class="btn btn-warning"
-                                                            onclick="konfirmasiLunasTable({{ $item->id }})">
-                                                            Lunas
-                                                        </button>
-                                                    </form>
+                                                    
                                                 @else
                                                     <form id="form-selesai-{{ $item->id }}"
                                                         action="{{ url('admin/po/status/'.$item->id) }}"
@@ -300,7 +285,10 @@
                                                             name="status"
                                                             value="Selesai">
                                                         <button type="button"
-                                                            class="btn btn-success"
+                                                            class="btn btn-block"
+                                                            style="background-color:#6f42c1; border-color:#6f42c1; color:#fff;"
+                                                            onmouseover="this.style.backgroundColor='#5a32a3';this.style.borderColor='#5a32a3';"
+                                                            onmouseout="this.style.backgroundColor='#6f42c1';this.style.borderColor='#6f42c1';"
                                                             onclick="konfirmasiSelesai({{ $item->id }})">
                                                             Selesaikan PO
                                                         </button>
@@ -576,8 +564,11 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times mr-1"></i> Tutup
+                <button type="button"
+                        class="btn"
+                        data-dismiss="modal"
+                        style="background-color: #6f42c1; color: #fff; border-color: #6f42c1;">
+                    Tutup
                 </button>
             </div>
         </div>
@@ -892,39 +883,12 @@ function konfirmasiLunas(id){
     });
 }
 
-function konfirmasiLunasTable(id){
-    Swal.fire({
-        title: 'Konfirmasi Pelunasan',
-        html:
-        'Pastikan pembayaran customer sudah diterima.<br>'+
-        '<strong>Status pembayaran akan berubah menjadi Lunas.</strong>',
-        icon:'warning',
-
-        showCancelButton:true,
-        confirmButtonColor:'#28a745',
-        cancelButtonColor:'#6c757d',
-
-        confirmButtonText:
-        '<i class="fas fa-check"></i> Ya, Lunas',
-        cancelButtonText:
-        'Batal'
-
-    }).then((result)=>{
-        if(result.isConfirmed){
-            document
-            .getElementById('form-lunas-table-'+id)
-            .submit();
-
-        }
-    });
-}
-
 function konfirmasiSelesai(id){
     Swal.fire({
         title: 'Selesaikan Purchase Order?',
         html:
         'Status Purchase Order akan berubah menjadi <b>Selesai</b>.<br>'+
-        'Invoice akan dapat dicetak setelah proses ini.',
+        'Pastikan barang telah diterima oleh customer.',
         icon:'question',
 
         showCancelButton:true,
