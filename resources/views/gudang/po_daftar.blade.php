@@ -24,6 +24,24 @@
                         </div>
                     @endif
 
+                    <!-- Alert Jika Status Disetujui -- -->
+                    @php
+                        $poDisetujui = $po->where('status', 'Disetujui')->count();
+                    @endphp
+                    @if($poDisetujui > 0)
+                    <div class="alert alert-info alert-dismissible fade show mb-4" role="alert"
+                         style="border-left:5px solid #17a2b8;">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <strong>Informasi:</strong>
+                        Terdapat <strong>{{ $poDisetujui }} Purchase Order</strong> yang telah berstatus
+                        <strong>Disetujui</strong>.
+                        Silakan klik tombol <strong>Proses</strong> pada kolom <strong>Aksi</strong> untuk memulai proses produksi sehingga status berubah menjadi <strong>Diproses</strong>.
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    @endif
+                    
                     <div class="row mb-4">
                         <div class="col-md-3">
                             <label class="font-weight-bold text-secondary mb-1">Status</label>

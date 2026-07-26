@@ -152,6 +152,10 @@
         background:#FFF8F3;
         border:1px solid #E9D5C5;
         color:#333;
+        margin-bottom:12px;
+        padding:16px 20px;
+        border-radius:14px;
+        transition:.3s;
     }
     .po-item:hover{
         background:#FDF1E8;

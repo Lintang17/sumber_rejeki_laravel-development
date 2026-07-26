@@ -46,10 +46,12 @@
                                 <input type="text" id="searchPO" class="form-control" placeholder="Cari kode PO atau customer...">
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-2 d-flex flex-column">
                             <label class="font-weight-bold text-secondary mb-1">&nbsp;</label>
-                            <button id="resetFilter" class="btn btn-primary btn-block">
-                                <i class="fas fa-undo mr-2"></i> Reset
+                            <button id="resetFilter"
+                                    class="btn btn-primary btn-block"
+                                    style="height:37px; margin-top:4px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:500; white-space:nowrap;">
+                                    Reset
                             </button>
                         </div>
                     </div>
@@ -63,8 +65,6 @@
                         <div>
                             <strong>Ada PO yang menunggu pelunasan pembayaran.</strong>
                             <br>
-                            Terdapat <strong>{{ $poMenungguLunas }} PO</strong> dengan status 
-                            <span class="badge badge-orange">Dikirim</span>
                             Silakan buka 
                             <strong>Lihat Detail</strong> pada data customer untuk mengubah 
                             <strong>Status Pembayaran menjadi Lunas</strong> setelah pembayaran diterima.
@@ -421,9 +421,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="row">
+                <div class="row mt-3">
                     <div class="col-md-4">
-                        <div class="form-group">
+                        <div class="border rounded p-3 h-100 bg-light"> 
                             <label class="font-weight-bold">DP Customer</label>
                             <p class="form-control-static">
                                 Rp {{ number_format($item->dp ?? 0, 0, ',', '.') }}
@@ -432,7 +432,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <div class="form-group">
+                        <div class="border rounded p-3 h-100 bg-light">
                             <label class="font-weight-bold">Metode Pembayaran</label>
                             <p class="form-control-static">
                                 {{ $item->metode_pembayaran ?? '-' }}
@@ -440,54 +440,50 @@
                         </div>
                     </div>
                   
-                    <div class="mt-3 p-3 rounded border" style="background:#f8f9fa;">
-                        <label class="font-weight-bold d-block mb-2">
-                            Status Pembayaran
-                        </label>
-                        @if($item->status_pembayaran == 'DP')
-                            <div class="d-flex align-items-center justify-content-between">
-                                <span class="badge badge-warning badge-lg">
-                                    DP
-                                </span>
-                                <span class="text-danger font-weight-bold">
-                                    Belum Lunas
-                                </span>
-                            </div>
-                            @if($item->status != 'Selesai')
-                                <div class="alert alert-warning mt-3 mb-0 py-2">
-                                    <small>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 bg-light d-flex flex-column justify-content-between" style="min-height:190px;">
+                            <label class="font-weight-bold d-block mb-3">
+                                Status Pembayaran
+                            </label>
+                            @if($item->status_pembayaran == 'DP')
+                                    <span class="badge badge-warning align-self-start">
+                                        DP
+                                    </span>
+                                    <div class="text-danger mt-2 font-weight-bold">
+                                        Belum Lunas
+                                    </div>
+                                @if($item->status != 'Selesai')
+                                    <small class="text-danger d-block mt-2">
                                         Customer belum melakukan pelunasan.
-                                        Silakan konfirmasi setelah pembayaran diterima.
                                     </small>
-                                </div>
-                                <form id="form-lunas-{{ $item->id }}"
-                                      action="{{ url('admin/po/status/'.$item->id) }}"
-                                      method="POST"
-                                      class="mt-3">
-                                    @csrf
-                                    @method('PUT')
-                                    <input type="hidden"
-                                            name="status_pembayaran"
-                                            value="Lunas">
+                                    <form id="form-lunas-{{ $item->id }}"
+                                          action="{{ url('admin/po/status/'.$item->id) }}"
+                                          method="POST"
+                                          class="mt-3">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden"
+                                                name="status_pembayaran"
+                                                value="Lunas">
                                     
-                                    <button type="button"
-                                            onclick="konfirmasiLunas({{ $item->id }})"
-                                            class="btn btn-success btn-sm btn-block">
-                                        Konfirmasi Pembayaran Lunas
-                                    </button>
-                                </form>
-                            @endif
-                        @elseif($item->status_pembayaran == 'Lunas')
-                            <div class="d-flex align-items-center">
-                                <span class="badge badge-success badge-lg">
+                                        <button type="button"
+                                                onclick="konfirmasiLunas({{ $item->id }})"
+                                                class="btn btn-success btn-sm btn-block">
+                                            Konfirmasi Pembayaran Lunas
+                                        </button>
+                                    </form>
+                                @endif
+                            @elseif($item->status_pembayaran == 'Lunas')
+                                <span class="badge badge-success align-self-start">
                                     Lunas
                                 </span>
-                                <small class="text-success ml-2">
+                                <small class="text-success mt-2">
                                     Pembayaran sudah diterima
                                 </small>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
+                </div>
 
                     @php
                         $hargaBelumAda = $item->detail->contains(function($d){
@@ -501,22 +497,26 @@
                             : max($totalHargaJual - ($item->dp ?? 0), 0);
                     @endphp
 
-                    <div class="mt-3 p-3 rounded" style="background:#fff8e1;">
-                        <label class="font-weight-bold mb-1">
-                            Total Harga Jual
-                        </label>
-                        @if($hargaBelumAda)
-                            <p class="mb-0 text-muted">
-                                <i class="fas fa-clock mr-1"></i>
-                                Menunggu Owner mengisi harga jual
-                            </p>
-                        @else
-                            <p class="mb-0">
-                                <strong class="text-success">
-                                    Rp {{ number_format($totalHargaJual,0,',','.') }}
-                                </strong>
-                            </p>
-                        @endif
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="mt-3 p-3 rounded" style="background:#fff8e1;">
+                                <label class="font-weight-bold mb-1">
+                                    Total Harga Jual
+                                </label>
+                                @if($hargaBelumAda)
+                                    <p class="mb-0 text-muted">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        Menunggu Owner mengisi harga jual
+                                    </p>
+                                @else
+                                    <p class="mb-0">
+                                        <strong class="text-success">
+                                            Rp {{ number_format($totalHargaJual,0,',','.') }}
+                                        </strong>
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row mt-3">
@@ -722,6 +722,17 @@
     .modal-header .close:hover {
         color: white;
         opacity: 0.8;
+    }
+    .modal .border.rounded.bg-light{
+        min-height:190px;
+        display:flex;
+        flex-direction:column;
+    }
+    .modal .badge{
+        width:fit-content;
+    }
+    .modal .btn-block{
+        margin-top:auto;
     }
     label {
         font-size: 13px;

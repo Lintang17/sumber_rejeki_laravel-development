@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="content-wrapper">
-    <div style="background:white;padding:22px 28px;border-radius:18px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;box-shadow:0 4px 15px rgba(0,0,0,.05);border:1px solid #7a2323;">
+   <div style="background:white;padding:22px 28px;border-radius:18px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;box-shadow:0 4px 15px rgba(0,0,0,.05);border:1px solid #7a2323;">
         <div>
             <h2 style="font-weight:700;margin-bottom:5px;color:#2c2c2c;">
                 Edit Purchase Order
@@ -11,18 +11,27 @@
                 Perbarui data PO selama status masih Pending.
             </p>
         </div>
-        <a href="{{ url('admin/po') }}"
-            class="btn"
-            style="background:#6c757d;color:white;border-radius:12px;padding:11px 20px;font-weight:600;">
-            <i class="mdi mdi-arrow-left mr-1"></i>
-            Kembali ke Daftar PO
-        </a>
+        <div class="d-flex" style="gap:10px;">
+            <a href="{{ url('admin/po') }}"
+                class="btn btn-light"
+                style="height:46px;min-width:120px;background:#7a2323;color:#fff;border-radius:12px;font-weight:600;display:flex;align-items:center;justify-content:center;">
+                <i class="mdi mdi-arrow-left mr-1"></i>
+                Kembali
+            </a>
+            <button type="submit"
+                    form="formEditPO"
+                    class="btn"
+                    style="height:46px;background:#16a34a;color:white;border-radius:12px;font-weight:600;padding:0 22px;">
+                <i class="mdi mdi-content-save-outline mr-1"></i>
+                Update Purchase Order
+            </button>
+        </div>
     </div>
 
-    <form action="{{ url('admin/po/update/' . $po->id) }}"
-          method="POST"
-          enctype="multipart/form-data">
-
+    <form id="formEditPO"
+          action="{{ url('admin/po/update/' . $po->id) }}"
+        method="POST"
+        enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -86,7 +95,6 @@
                                    class="form-control input-custom"
                                    value="{{ $po->estimasi_akhir }}">
                         </div>
-
                     </div>
                 </div>
 
@@ -204,7 +212,6 @@
                                       rows="4"
                                       placeholder="Masukkan deskripsi produk">{{ $detail->deskripsi }}</textarea>
                         </div>
-
                     </div>
                 </div>
                 @endforeach
@@ -212,7 +219,6 @@
 
             <div class="col-lg-4">
                 <div class="summary-card">
-
                     <h5 class="fw-bold mb-4">
                         Informasi Tambahan
                     </h5>
@@ -303,12 +309,6 @@
                                value="{{ $po->status }}"
                                readonly>
                     </div>
-
-                    <button type="submit"
-                            class="btn-save">
-                        <i class="mdi mdi-content-save-outline"></i>
-                        Update Purchase Order
-                    </button>
                 </div>
             </div>
         </div>
