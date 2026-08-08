@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\PenjualanDetailModel;
-use App\models\ProduksiModel;
-use App\models\ShowroomModel;
+use App\Models\ProduksiModel;
+use App\Models\ShowroomModel;
 use App\Models\PembelianModel;
 use App\Models\PenjualanModel;
 use App\Models\StokOpnameModel;
