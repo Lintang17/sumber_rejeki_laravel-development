@@ -303,6 +303,8 @@ Route::middleware(['auth'])->controller(GudangController::class)->group(function
     Route::post('gudang/produksiupdate/{id}', [GudangController::class, 'produksiupdate'])->name('produksi.update');
     Route::get('gudang/produksitambahjumlah/{id}', [GudangController::class, 'produksitambahjumlah']);
     Route::post('gudang/produksitambahjumlah/{id}', [GudangController::class, 'produksisimpanjumlah']);
+    Route::delete('gudang/produksihapus/{id}', [GudangController::class, 'produksihapus'])
+    ->name('produksi.hapus');
 
     // showroom
     Route::get('gudang/showroomdaftar', [GudangController::class, 'showroomdaftar']);

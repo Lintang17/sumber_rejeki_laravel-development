@@ -161,6 +161,27 @@ public function produksiupdate(Request $request, $id)
     return redirect('gudang/produksidaftar')->with('success', 'Data produksi berhasil diperbarui.');
 }
 
+// Hapus Daftar Produksi
+
+public function produksihapus($id)
+{
+    $produksi = ProduksiModel::findOrFail($id);
+
+    // Hapus file foto jika ada
+    if (
+        $produksi->fotoproduk &&
+        file_exists(public_path('uploads/foto_produk/' . $produksi->fotoproduk))
+    ) {
+        unlink(public_path('uploads/foto_produk/' . $produksi->fotoproduk));
+    }
+
+    // Hapus data produksi
+    $produksi->delete();
+
+    return redirect('gudang/produksidaftar')
+        ->with('success', 'Data produksi berhasil dihapus.');
+}
+
 // Form untuk tambah jumlah produksi
 public function produksitambahjumlah($id)
 {
