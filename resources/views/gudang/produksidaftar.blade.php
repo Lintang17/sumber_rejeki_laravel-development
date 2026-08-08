@@ -5,9 +5,13 @@
     <div class="row">
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center"> 
+                    <h4 class="mb-0 font-weight-bold"> Data Produksi Barang </h4> 
+                    <a href="{{ url('gudang/produksitambah') }}" class="btn text-white" style="background-color: #6f42c1;">
+                        <i class="bi bi-plus-circle mr-2"></i> Tambah Produksi Barang 
+                    </a> 
+                </div>
                 <div class="card-body">
-                    <h4 class="card-title">Daftar Produksi Barang</h4>
-
                     @if (session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
