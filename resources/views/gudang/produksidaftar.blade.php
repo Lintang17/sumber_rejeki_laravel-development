@@ -90,21 +90,6 @@
                                                         <i class="bi bi-pencil-fill me-1"></i> Edit
                                                     </a>
                                                     </div>
-
-                                                    {{-- Hapus --}}
-                                                    <form action="{{ route('produksi.hapus', $item->idproduksi) }}"
-                                                            method="POST"
-                                                            class="form-hapus-produksi m-0">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="button" 
-                                                            class="btn btn-sm btn-danger" 
-                                                            style="min-width: 93px;"
-                                                            onclick="konfirmasiHapus(this)" 
-                                                            data-toggle="tooltip" title="Hapus Produksi">
-                                                            <i class="bi bi-trash-fill me-1"></i> Hapus 
-                                                        </button>
-                                                    </form>
                                                 @else
                                                     <a href="{{ url('gudang/produksitambahjumlah/' . $item->idproduksi) }}"
                                                         class="btn btn-sm btn-success"
@@ -112,6 +97,20 @@
                                                         <i class="bi bi-plus-circle me-1"></i> Tambah
                                                     </a>
                                                 @endif
+                                                {{-- Hapus --}}
+                                                <form action="{{ route('produksi.hapus', $item->idproduksi) }}"
+                                                        method="POST"
+                                                        class="form-hapus-produksi m-0">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button" 
+                                                        class="btn btn-sm btn-danger" 
+                                                        style="min-width: 93px;"
+                                                        onclick="konfirmasiHapus(this)" 
+                                                        data-toggle="tooltip" title="Hapus Produksi">
+                                                        <i class="bi bi-trash-fill me-1"></i> Hapus 
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>
