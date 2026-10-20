@@ -28,7 +28,7 @@ class AdminController extends Controller
     {
         $data['jumlahbarangshowroom'] = ShowroomModel::count();
         $data['jumlahproduk'] = ProduksiModel::count();
-        $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
+        $data['menungguKonfirmasi'] = PenjualanModel::where('statuspengiriman','Menunggu Konfirmasi')->distinct('notajual')->count('notajual');
         $data['poBaru'] = Po::whereIn('status', [
                 'Pending',
                 'Disetujui',

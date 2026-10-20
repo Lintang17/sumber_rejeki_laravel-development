@@ -29,7 +29,7 @@ class GudangController extends Controller
     {
         $data['jumlahproduk'] = ProduksiModel::count();
         $data['totalstokopname'] = StokOpnameModel::count();
-        $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
+        $data['menungguKonfirmasi'] = PenjualanModel::where('statuspengiriman','Menunggu Konfirmasi')->distinct('notajual')->count('notajual');
         $data['poBaru'] = Po::whereIn('status', [
                 'Pending',
                 'Disetujui',

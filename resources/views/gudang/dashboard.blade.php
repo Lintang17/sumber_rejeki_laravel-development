@@ -348,14 +348,14 @@
                     style="background:linear-gradient(135deg,#4E342E,#2E1F1B);">
                     <div class="card-body">
                         <div class="dashboard-icon">
-                            <i class="mdi mdi-cash-multiple"></i>                        
+                            <i class="mdi mdi-truck-delivery"></i>                        
                         </div>
-                        <div class="count-number count-uang"
-                            data-target="{{ $totalpenjualan }}">
+                        <div class="count-number count-produk"
+                            data-target="{{ $menungguKonfirmasi }}">
                             0
                         </div>
                         <div class="dashboard-title">
-                            Pemasukan Bulan Ini
+                            Menunggu Konfirmasi
                         </div>
                         <a href="{{ url('gudang/penjualandaftar') }}"
                             class="btn btn-light">
