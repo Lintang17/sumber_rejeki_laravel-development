@@ -6,7 +6,106 @@
             <div class="col-lg-12 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title">Daftar Penjualan</h4>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3"
+                            style="gap: 12px;">
+                            <h4 class="card-title font-weight-bold mb-0">
+                                Daftar Penjualan
+                            </h4>
+                            @php
+                                $tahunSekarang = (int) date('Y');
+                                $tahunAwal = 2025;
+                                $tahunAkhir = $tahunSekarang + 5;
+                                $tahunDipilih = request('tahun', $tahunSekarang);
+
+                                $daftarBulan = [
+                                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
+                                    4 => 'April', 5 => 'Mei', 6 => 'Juni',
+                                    7 => 'Juli', 8 => 'Agustus', 9 => 'September',
+                                    10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+                                ];
+
+                                $bulanDipilih = (int) request('bulan', 0);
+                            @endphp
+
+                            <form method="GET"
+                                  action="{{ url()->current() }}"
+                                  id="formFilterPeriode"
+                                  class="d-flex align-items-center flex-wrap mb-0"
+                                  style="gap: 8px; max-width: 100%;">
+
+                                {{-- FILTER BULAN --}}
+                                <div class="dropdown">
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
+                                            data-toggle="dropdown"
+                                            aria-haspopup="true"
+                                            aria-expanded="false">
+                                        <i class="mdi mdi-calendar-month"></i>
+                                        Bulan{{ isset($daftarBulan[$bulanDipilih]) ? ': ' . substr($daftarBulan[$bulanDipilih], 0, 3) : '' }}
+                                    </button>
+
+                                    <div class="dropdown-menu p-2"
+                                        style="width: 220px; max-width: 90vw;">
+                                        <div class="row no-gutters">
+                                            @foreach($daftarBulan as $angka => $nama)
+                                                <div class="col-4 p-1">
+                                                    <label class="btn btn-sm btn-block mb-0 font-weight-bold
+                                                        {{ $bulanDipilih === $angka ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                                        <input type="radio"
+                                                                name="bulan"
+                                                                value="{{ $angka }}"
+                                                                class="d-none"
+                                                                {{ $bulanDipilih === $angka ? 'checked' : '' }}>
+                                                        {{ substr($nama, 0, 3) }}
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- FILTER TAHUN --}}
+                                <div class="dropdown">
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
+                                            data-toggle="dropdown"
+                                            aria-haspopup="true"
+                                            aria-expanded="false">
+                                        <i class="mdi mdi-calendar"></i>
+                                        Tahun: {{ $tahunDipilih }}
+                                    </button>
+
+                                    <div class="dropdown-menu p-2"
+                                        style="width: 220px; max-width: 90vw;">
+                                        <div class="row no-gutters">
+                                            @for($tahun = $tahunAwal; $tahun <= $tahunAkhir; $tahun++)
+                                                <div class="col-4 p-1">
+                                                    <label class="btn btn-sm btn-block mb-0 font-weight-bold
+                                                        {{ (string) $tahunDipilih === (string) $tahun
+                                                            ? 'btn-primary'
+                                                            : 'btn-outline-secondary' }}">
+                                                        <input type="radio"
+                                                                name="tahun"
+                                                                value="{{ $tahun }}"
+                                                                class="d-none"
+                                                                {{ (string) $tahunDipilih === (string) $tahun ? 'checked' : '' }}>
+                                                        {{ $tahun }}
+                                                    </label>
+                                                </div>
+                                            @endfor
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- RESET --}}
+                                <a href="{{ url()->current() }}"
+                                    class="btn btn-light btn-sm font-weight-bold">
+                                    <i class="mdi mdi-refresh"></i>
+                                    Reset
+                                </a>
+                            </form>
+                        </div>
+
                         <div class="table-responsive">
                             <table class="table" id="table">
                                 <thead>
@@ -192,4 +291,39 @@
             </div>
         </div>
     </div>
+
+<script>
+    function tandaiPilihanFilter() {
+        document.querySelectorAll(
+            '#formFilterPeriode input[type="radio"]'
+        ).forEach(function (input) {
+            input.addEventListener('change', function () {
+                const form = this.form;
+                const nama = this.name;
+
+                document.querySelectorAll(
+                    '#formFilterPeriode input[name="' + nama + '"]'
+                ).forEach(function (radio) {
+                    const label = radio.closest('label');
+                    if (!label) return;
+
+                    label.classList.toggle('btn-primary', radio.checked);
+                    label.classList.toggle(
+                        'btn-outline-secondary',
+                        !radio.checked
+                    );
+                });
+
+                if (form) {
+                    form.submit();
+                }
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        tandaiPilihanFilter();
+    });
+</script>
+
 @endsection

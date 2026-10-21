@@ -5,16 +5,102 @@
     <div class="row">
         <div class="col-lg-12 grid-margin stretch-card">
             <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Daftar Penjualan</h4>
+                <div class="card-body"> 
+                    <h4 class="card-title font-weight-bold mb-3">Daftar Penjualan</h4>
+                    @php
+                        $tahunSekarang = (int) date('Y');
+                        $tahunAwal = 2025;
+                        $tahunAkhir = $tahunSekarang + 5;
+                        $tahunDipilih = request('tahun', $tahunSekarang);
+                        $daftarBulan = [
+                            1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
+                            4 => 'April', 5 => 'Mei', 6 => 'Juni',
+                            7 => 'Juli', 8 => 'Agustus', 9 => 'September',
+                            10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+                        ];
+                        
+                        $bulanDipilih = (int) request('bulan', 0);
+                    @endphp
 
+                    <form method="GET"
+                          action="{{ url()->current() }}"
+                          id="formFilterPeriode"
+                          class="d-flex align-items-center flex-wrap mb-2 mr-2">
+
+                        {{-- FILTER BULAN --}}
+                        <div class="dropdown mr-2 mb-2">
+                            <button type="button"
+                                    class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false">
+                                <i class="mdi mdi-calendar-month"></i>
+                                Bulan{{ isset($daftarBulan[$bulanDipilih]) ? ': ' . substr($daftarBulan[$bulanDipilih], 0, 3) : '' }}
+                            </button>
+
+                            <div class="dropdown-menu p-2">
+                                <div class="row no-gutters" style="width: 180px; max-width: 80vw;">
+                                    @foreach($daftarBulan as $angka => $nama)
+                                        <div class="col-4 p-1">
+                                            <label class="btn btn-sm btn-block mb-0 font-weight-bold
+                                                {{ $bulanDipilih === $angka ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                                <input type="radio"
+                                                        name="bulan"
+                                                        value="{{ $angka }}"
+                                                        class="d-none"
+                                                        {{ $bulanDipilih === $angka ? 'checked' : '' }}>
+                                                {{ substr($nama, 0, 3) }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- FILTER TAHUN --}}
+                        <div class="dropdown mr-2 mb-2">
+                            <button type="button"
+                                    class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false">
+                                <i class="mdi mdi-calendar"></i>
+                                Tahun: {{ $tahunDipilih }}
+                            </button>
+
+                            <div class="dropdown-menu p-2">
+                                <div class="row no-gutters" style="width: 180px; max-width: 80vw;">
+                                    @for($tahun = $tahunAwal; $tahun <= $tahunAkhir; $tahun++)
+                                        <div class="col-4 p-1">
+                                                <label class="btn btn-sm btn-block mb-0 font-weight-bold
+                                                {{ (string) $tahunDipilih === (string) $tahun
+                                                    ? 'btn-primary'
+                                                    : 'btn-outline-secondary' }}">
+                                                <input type="radio"
+                                                    name="tahun"
+                                                    value="{{ $tahun }}"
+                                                    class="d-none"
+                                                    {{ (string) $tahunDipilih === (string) $tahun ? 'checked' : '' }}>
+                                                {{ $tahun }}
+                                            </label>
+                                        </div>
+                                    @endfor
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{{ url()->current() }}"
+                            class="btn btn-light btn-sm font-weight-bold mb-2">
+                            <i class="mdi mdi-refresh"></i> Reset
+                        </a>
+                    </form>
+                    
                     @if(session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
 
                     <div class="table-responsive">
-                        <table class="table" id="table">
-                            <thead>
+                        <table class="table font-weight-bold" id="table">
+                            <thead class="font-weight-bold">
                                 <tr>
                                     <th class="text-center">No</th>
                                     <th class="text-center">No. Nota</th>
@@ -193,5 +279,122 @@
         let value = input.value.replace(/\D/g, '');
         input.value = new Intl.NumberFormat('id-ID').format(value);
     }
+
+    // Menandai kotak bulan dan tahun yang dipilih
+    function rapikanFilterPeriode() {
+        const searchBox = document.querySelector('#table_filter');
+        const filterForm = document.querySelector('#formFilterPeriode');
+        if (!searchBox || !filterForm) return;
+
+        if (filterForm.parentElement !== searchBox) {
+            const searchLabel = searchBox.querySelector('label');
+            searchBox.insertBefore(filterForm, searchLabel || searchBox.firstChild);
+        }
+
+        const searchLabel = searchBox.querySelector('label');
+        const searchInput = searchLabel
+            ? searchLabel.querySelector('input')
+            : null;
+
+        function aturResponsif() {
+            const layarKecil = window.matchMedia('(max-width: 767.98px)').matches;
+
+            searchBox.classList.add('d-flex', 'flex-wrap');
+            searchBox.style.gap = '8px';
+            searchBox.style.width = '100%';
+            searchBox.style.boxSizing = 'border-box';
+
+            //Responsif
+            searchBox.style.flexDirection = layarKecil ? 'column' : 'row';
+            searchBox.style.alignItems = layarKecil ? 'stretch' : 'center';
+            searchBox.style.justifyContent = layarKecil ? 'flex-start' : 'flex-end';
+
+            filterForm.classList.add('d-flex', 'flex-wrap', 'mb-0');
+            filterForm.style.width = layarKecil ? '100%' : 'auto';
+            filterForm.style.maxWidth = '100%';
+            filterForm.style.gap = '6px';
+            filterForm.style.marginRight = '0';
+
+            if (searchLabel) {
+                searchLabel.classList.add('font-weight-bold', 'mb-0');
+                searchLabel.style.display = 'flex';
+                searchLabel.style.alignItems = 'center';
+                searchLabel.style.flexWrap = 'wrap';
+                searchLabel.style.gap = '6px';
+                searchLabel.style.width = layarKecil ? '100%' : 'auto';
+                searchLabel.style.maxWidth = '100%';
+            }
+
+            if (searchInput) {
+                searchInput.classList.add('font-weight-bold');
+                searchInput.style.maxWidth = '100%';
+                searchInput.style.width = layarKecil ? '100%' : 'auto';
+                searchInput.style.minWidth = '0';
+                searchInput.style.boxSizing = 'border-box';
+            }
+
+            filterForm.querySelectorAll('.dropdown').forEach(function (dropdown) {
+                dropdown.style.maxWidth = '100%';
+            });
+        }
+
+        aturResponsif();
+
+        if (!window._filterPeriodeResizeTerpasang) {
+            window.addEventListener('resize', function () {
+                rapikanFilterPeriode();
+            });
+
+            window._filterPeriodeResizeTerpasang = true;
+        }
+    }
+
+    function tandaiPilihanFilter() {
+        document.querySelectorAll(
+            '#formFilterPeriode input[type="radio"]'
+        ).forEach(function (input) {
+            input.addEventListener('change', function () {
+                const form = this.form;
+                const nama = this.name;
+
+                document.querySelectorAll(
+                    '#formFilterPeriode input[name="' + nama + '"]'
+                ).forEach(function (radio) {
+                    const label = radio.closest('label');
+                    if (!label) return;
+
+                    label.classList.toggle('btn-primary', radio.checked);
+                    label.classList.toggle(
+                        'btn-outline-secondary',
+                        !radio.checked
+                    );
+                });
+
+                if (form) {
+                    form.submit();
+                }
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        rapikanFilterPeriode();
+        tandaiPilihanFilter();
+    });
+
+    if (window.jQuery) {
+        jQuery(document).on('init.dt', function (event, settings) {
+            if (settings.nTable && settings.nTable.id === 'table') {
+                rapikanFilterPeriode();
+            }
+        });
+
+        jQuery(document).on('draw.dt', function (event, settings) {
+            if (settings.nTable && settings.nTable.id === 'table') {
+                rapikanFilterPeriode();
+            }
+        });
+    }
+
 </script>
 @endsection

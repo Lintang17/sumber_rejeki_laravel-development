@@ -247,9 +247,24 @@ public function showroomdaftar()
     return view('gudang.showroomdaftar', $data);
 }
 
-public function penjualandaftar()
+public function penjualandaftar(Request $request)
 {
-    $data['penjualan'] = PenjualanModel::with('penjualandetail')->orderBy('tanggalpenjualan', 'desc')->get();
+    // $data['penjualan'] = PenjualanModel::with('penjualandetail')->orderBy('tanggalpenjualan', 'desc')->get();
+    // return view('gudang.penjualandaftar', $data);
+     $query = PenjualanModel::with('penjualandetail');
+
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggalpenjualan', $request->bulan);
+    }
+
+    if ($request->filled('tahun')) {
+        $query->whereYear('tanggalpenjualan', $request->tahun);
+    }
+
+    $data['penjualan'] = $query
+        ->orderBy('tanggalpenjualan', 'desc')
+        ->get();
+
     return view('gudang.penjualandaftar', $data);
 }
 
