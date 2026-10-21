@@ -12,6 +12,14 @@
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
 
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            @foreach ($errors->all() as $error)
+                                <div>{{ $error }}</div>
+                            @endforeach
+                        </div>
+                    @endif
+
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped" id="table">
                             <thead class="thead-light">
@@ -23,6 +31,7 @@
                                     <th>Stok Terjual</th>
                                     <th>Sisa Stok</th>
                                     <th>Harga Jual</th>
+                                    <th>Discount</th>
                                     <th>Foto</th> 
                                     {{-- <th>Barcode</th> --}}
                                     <th>Tanggal Masuk</th>
@@ -42,6 +51,32 @@
                                                 Rp {{ number_format($item->produksi->hargajual, 0, ',', '.') }}
                                             @else
                                                 -
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if(auth()->check() && auth()->user()->role === 'Owner')
+                                                <form action="{{ route('showroom.discount', $item->idshowroom) }}" method="POST">
+                                                    @csrf
+
+                                                    <div class="input-group input-group-sm" style="max-width: 100px;">
+                                                        <input type="text"
+                                                                name="discount"
+                                                                class="form-control"
+                                                                value="{{ $item->discount == 0 ? '' : $item->discount }}"
+                                                                placeholder="-"
+                                                                required>
+
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text">%</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <button type="submit" class="btn btn-sm btn-primary mt-1">
+                                                        Simpan
+                                                    </button>
+                                                </form>
+                                            @else
+                                                {{ $item->discount == 0 ? 'Tidak ada discount' : $item->discount . '%' }}
                                             @endif
                                         </td>
                                         <td>

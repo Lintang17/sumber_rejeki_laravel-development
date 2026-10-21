@@ -101,7 +101,11 @@ public function produksireviewproses(Request $request, $id)
 
 public function showroomdaftar()
 {
-    $data['showroom'] = ShowroomModel::with('produksi')->orderBy('tanggalmasuk', 'desc')->get();
+    $data['showroom'] = ShowroomModel::whereHas('produksi')
+        ->with('produksi')
+        ->orderBy('tanggalmasuk', 'desc')
+        ->get();
+
     return view('owner.showroomdaftar', $data);
 }
 
@@ -760,5 +764,23 @@ public function opnameriwayat()
 
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    // DISCOUNT
+    public function updateDiscount(Request $request, $id)
+    {
+        if (!auth()->check() || auth()->user()->role !== 'Owner') {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
+
+        $request->validate([
+            'discount' => 'required|integer|min:0|max:100',
+        ]);
+
+        $item = ShowroomModel::findOrFail($id);
+        $item->discount = $request->discount;
+        $item->save();
+
+        return redirect()->back()->with('success', 'Discount berhasil disimpan.');
     }
 }

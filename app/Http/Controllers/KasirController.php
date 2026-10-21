@@ -36,10 +36,14 @@ class KasirController extends Controller
     }
 
     public function showroomdaftar()
-{
-    $data['showroom'] = ShowroomModel::with('produksi')->orderBy('tanggalmasuk', 'desc')->get();
-    return view('kasir.showroomdaftar', $data);
-}
+    {
+        $data['showroom'] = ShowroomModel::whereHas('produksi')
+            ->with('produksi')
+            ->orderBy('tanggalmasuk', 'desc')
+            ->get();
+
+        return view('kasir.showroomdaftar', $data);
+    }
 
     //public function produkdaftar()
     //{

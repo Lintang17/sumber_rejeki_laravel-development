@@ -180,36 +180,50 @@ public function showroomsimpan(Request $request)
 // Menampilkan daftar barang showroom
 public function showroomdaftar()
 {
-    $showrooms = ShowroomModel::with('produksi')->orderBy('tanggalmasuk', 'desc')->get();
+    $showrooms = ShowroomModel::whereHas('produksi')
+        ->with('produksi')
+        ->orderBy('tanggalmasuk', 'desc')
+        ->get();
 
-    foreach ($showrooms as $item) {
-        if ($item->produksi) {
-            $stokProduksi = $item->produksi->stok; // stok total terbaru dari produksi
-            $stokAwal = $item->stok_awal ?? 0;
-            $stokTerjual = $item->stok_terjual ?? 0;
+    // foreach ($showrooms as $item) {
+    //     if ($item->produksi) {
+    //         $stokProduksi = $item->produksi->stok; // stok total terbaru dari produksi
+    //         $stokAwal = $item->stok_awal ?? 0;
+    //         $stokTerjual = $item->stok_terjual ?? 0;
             
 
-            //$stokTambahan = max(0, $stokProduksi - $stokAwal);
-            //$stokTotal = $stokAwal + $stokTambahan;
-            $stokSisa = $stokAwal - $stokTerjual;
+    //         //$stokTambahan = max(0, $stokProduksi - $stokAwal);
+    //         //$stokTotal = $stokAwal + $stokTambahan;
+    //         $stokSisa = $stokAwal - $stokTerjual;
 
-            // Sinkronisasi ke database showroom jika data berubah
-            if (
-                //$item->stok_tambahan != $stokTambahan ||
-                //$item->stok_total != $stokTotal ||
-                $item->stok_sisa != $stokSisa
-            ) {
-                //$item->stok_tambahan = $stokTambahan;
-                //$item->stok_total = $stokTotal;
-                $item->stok_sisa = $stokSisa;
-                $item->save();
+    //         // Sinkronisasi ke database showroom jika data berubah
+    //         if (
+    //             //$item->stok_tambahan != $stokTambahan ||
+    //             //$item->stok_total != $stokTotal ||
+    //             $item->stok_sisa != $stokSisa
+    //         ) {
+    //             //$item->stok_tambahan = $stokTambahan;
+    //             //$item->stok_total = $stokTotal;
+    //             $item->stok_sisa = $stokSisa;
+    //             $item->save();
     
+    //     }
+    // } 
+
+    foreach ($showrooms as $item) {
+        $stokAwal = $item->stok_awal ?? 0;
+        $stokTerjual = $item->stok_terjual ?? 0;
+        $stokSisa = $stokAwal - $stokTerjual;
+
+        if ($item->stok_sisa != $stokSisa) {
+            $item->stok_sisa = $stokSisa;
+            $item->save();
         }
-    } 
-}
-
-    return view('admin.showroomdaftar', ['showroom' => $showrooms]);
+    }
     
+    return view('admin.showroomdaftar', [
+        'showroom' => $showrooms
+    ]);
 }
 
 public function penjualandaftar(Request $request)

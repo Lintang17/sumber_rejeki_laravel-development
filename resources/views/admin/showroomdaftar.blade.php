@@ -24,6 +24,7 @@
                                     <th>Stok Terjual</th>
                                     <th>Sisa Stok</th>
                                     <th>Harga Jual</th>
+                                    <th class="text-center" style="width: 80px;">Discount</th>
                                     <th>Foto</th>
                                     <th>Barcode</th>
                                     <th>Tanggal Masuk</th>
@@ -45,6 +46,9 @@
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
+                                        </td>
+                                        <td class="text-center" style="width: 80px;">
+                                            {{ empty($item->discount) || $item->discount == 0 ? '-' : $item->discount . '%' }}
                                         </td>
                                         <td>
                                             @if($item->produksi && $item->produksi->fotoproduk)
@@ -89,7 +93,7 @@
                                     @endif
                                 @empty
                                     <tr>
-                                        <td colspan="11" class="text-center">Belum ada barang masuk showroom.</td>
+                                        <td colspan="10" class="text-center">Belum ada barang masuk showroom.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
