@@ -42,7 +42,9 @@
             </table>
 
             <br>
-            <table cellspacing="0" cellpadding="0" style="width:350px; font-size:12pt; font-family:calibri; border-collapse: collapse;" border="1">
+            <table cellspacing="0" cellpadding="3"
+                style="width:100%; font-size:10pt; font-family:calibri; border-collapse:collapse;"
+                border="1">
                 <thead>
                     <tr>
                         <th>No</th>
@@ -50,45 +52,77 @@
                         <th>Nama Produk</th>
                         <th>Harga</th>
                         <th>Jumlah</th>
+                        <th>Diskon (%)</th>
                         <th>Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @php $nobelanja = 1; @endphp
+                    @php
+                        $nobelanja = 1;
+                        $totalDiskon = 0;
+                        $subtotal = 0;
+                    @endphp
+
                     @foreach ($penjualan as $detail)
+                        @php
+                            $hargaSatuan = (float) ($detail->harga ?? 0);
+                            $jumlah = (int) ($detail->jumlah_pembelian ?? 0);
+                            $persenDiskon = (float) ($detail->discount ?? 0);
+
+                            $subtotalItem = $hargaSatuan * $jumlah;
+                            $totalItem = (float) ($detail->total ?? 0);
+
+                            $subtotal += $subtotalItem;
+                            $totalDiskon += max(0, $subtotalItem - $totalItem);
+                        @endphp
+
                         <tr>
                             <td align="center">{{ $nobelanja++ }}</td>
                             <td align="center">{{ $detail->showroom->barcode ?? '-' }}</td>
                             <td align="center">{{ $detail->namaproduk }}</td>
-                            <td align="right">{{ number_format($detail->harga, 0, ',', '.') }}</td>
-                            <td align="center">{{ $detail->jumlah_pembelian }}</td>
-                            <td align="right">{{ number_format($detail->total, 0, ',', '.') }}</td>
+                            <td align="right">{{ number_format($hargaSatuan, 0, ',', '.') }}</td>
+                            <td align="center">{{ $jumlah }}</td>
+                            <td align="center">
+                                {{ $persenDiskon > 0 ? number_format($persenDiskon, 0, ',', '.') . '%' : '-' }}
+                            </td>
+                            <td align="right">{{ number_format($totalItem, 0, ',', '.') }}</td>
                         </tr>
                     @endforeach
+
                     <tr>
-                        <td colspan="5" align="right"><strong>Grand Total</strong></td>
+                        <td colspan="6" align="right"><strong>Subtotal</strong></td>
+                        <td align="right">{{ number_format($subtotal, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" align="right"><strong>Total Diskon</strong></td>
+                        <td align="right">{{ number_format($totalDiskon, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" align="right"><strong>Grand Total</strong></td>
                         <td align="right">{{ number_format($pecah->grandtotal, 0, ',', '.') }}</td>
                     </tr>
+
                     @if ($pecah->dp > 0)
                         <tr>
-                            <td colspan="5" align="right"><strong>DP</strong></td>
+                            <td colspan="6" align="right"><strong>DP</strong></td>
                             <td align="right">{{ number_format($pecah->dp, 0, ',', '.') }}</td>
                         </tr>
                         <tr>
-                            <td colspan="5" align="right"><strong>Sisa Pembayaran</strong></td>
+                            <td colspan="6" align="right"><strong>Sisa Pembayaran</strong></td>
                             <td align="right">{{ number_format($pecah->sisabayar ?? 0, 0, ',', '.') }}</td>
                         </tr>
                     @endif
+
                     <tr>
-                        <td colspan="5" align="right"><strong>Uang Pembeli</strong></td>
+                        <td colspan="6" align="right"><strong>Uang Pembeli</strong></td>
                         <td align="right">{{ number_format($pecah->bayar ?? 0, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
-                        <td colspan="5" align="right"><strong>Kembalian</strong></td>
+                        <td colspan="6" align="right"><strong>Kembalian</strong></td>
                         <td align="right">{{ number_format($pecah->kembali ?? 0, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
-                        <td colspan="5" align="right"><strong>Status Pembayaran</strong></td>
+                        <td colspan="6" align="right"><strong>Status Pembayaran</strong></td>
                         <td align="right">{{ $pecah->statuspembayaran }}</td>
                     </tr>
                 </tbody>
@@ -103,8 +137,11 @@
             </table>
 
             <br>
-            <button class="no-print" onclick="location.href='{{ url('kasir/penjualandaftar') }}'"
-                style="margin: 5px; padding: 8px 15px; font-size: 12pt; cursor: pointer;">Kembali</button>
+            <button class="no-print"
+                onclick="location.href='{{ url('kasir/penjualandaftar') }}'"
+                style="margin:5px; padding:8px 15px; font-size:12pt; cursor:pointer;">
+                Kembali
+            </button>
         </div>
     </center>
 

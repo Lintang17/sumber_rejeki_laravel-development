@@ -359,54 +359,227 @@
 
                         {{-- MODAL DETAIL --}}
                         @foreach ($penjualan as $item)
-                            <div class="modal fade" id="detail{{ $item->notajual }}" tabindex="-1" role="dialog">
-                                <div class="modal-dialog modal-lg" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">
-                                                Detail Penjualan - Nota: {{ $item->notajual }}
-                                            </h5>
-                                            <button type="button" class="close" data-dismiss="modal">
-                                                <span>&times;</span>
+                            <div class="modal fade" id="detail{{ $item->notajual }}" tabindex="-1" role="dialog"
+                                aria-labelledby="judulDetail{{ $item->notajual }}" aria-hidden="true">
+
+                                <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+                                    <div class="modal-content"
+                                        style="border: none; border-radius: 8px; overflow: hidden;">
+                                        <div class="modal-header"
+                                            style="background: #A97474; color: #fff; border-bottom: none; padding: 18px 22px;">
+                                            <div>
+                                                <h5 class="modal-title font-weight-bold mb-1"
+                                                    id="judulDetail{{ $item->notajual }}" style="color: #fff;">
+                                                    Detail Penjualan
+                                                </h5>
+                                                <small style="color: #fff; opacity: .9;">
+                                                    Nomor Nota: {{ $item->notajual }}
+                                                </small>
+                                            </div>
+
+                                            <button type="button" class="close ml-3"
+                                                data-dismiss="modal" aria-label="Tutup"
+                                                style="color: #fff; opacity: 1; text-shadow: none;">
+                                                <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
 
-                                        <div class="modal-body">
-                                            <table class="table table-bordered">
-                                                <thead>
-                                                    <tr>
-                                                        <th>No</th>
-                                                        <th>Nama Produk</th>
-                                                        <th>Harga</th>
-                                                        <th>Jumlah</th>
-                                                        <th>Total</th>
-                                                    </tr>
-                                                </thead>
+                                        <div class="modal-body" style="padding: 22px; background: #fff;">
+                                            @php
+                                                $no = 1;
+                                                $subtotalModal = 0;
+                                                $totalDiskonModal = 0;
+                                            @endphp
+                        
+                                            <h6 class="font-weight-bold mb-3" style="color: #444;">
+                                                Rincian Produk
+                                            </h6>
 
-                                                <tbody>
-                                                    @php $no = 1; @endphp
+                                            <div class="table-responsive mb-4"
+                                                    style="border: 1px solid #e5e5e5; border-radius: 6px;">
+                                                    <table class="table table-hover table-sm mb-0"
+                                                        style="min-width: 850px; font-size: 13px;">
 
-                                                    @foreach ($item->penjualandetail as $detail)
-                                                        <tr>
-                                                            <td>{{ $no++ }}</td>
-                                                            <td>{{ $detail->namaproduk }}</td>
-                                                            <td>{{ rupiah($detail->harga) }}</td>
-                                                            <td>{{ $detail->jumlah_pembelian }}</td>
-                                                            <td>{{ rupiah($detail->total) }}</td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                        <thead>
+                                                            <tr style="background: #f5f3f3; color: #444;">
+                                                                <th class="text-center py-3">No</th>
+                                                                <th class="py-3">Nama Produk</th>
+                                                                <th class="text-right py-3">Harga</th>
+                                                                <th class="text-center py-3">Jumlah</th>
+                                                                <th class="text-center py-3">Jenis Diskon</th>
+                                                                <th class="text-center py-3">Diskon (%)</th>
+                                                                <th class="text-right py-3">Total Diskon</th>
+                                                                <th class="text-right py-3">Grand Total</th>
+                                                            </tr>
+                                                        </thead>
 
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                                Tutup
-                                            </button>
+                                                        <tbody>
+                                                            @forelse ($item->penjualandetail as $detail)
+                                                                @php
+                                                                    $harga = (float) ($detail->harga ?? 0);
+                                                                    $jumlah = (int) ($detail->jumlah_pembelian ?? 0);
+                                                                    $totalBaris = (float) ($detail->total ?? 0);
+
+                                                                    // Subtotal sebelum diskon
+                                                                    $subtotalBaris = $harga * $jumlah;
+
+                                                                    // Nominal diskon per produk    
+                                                                    $diskonBaris = max(0, $subtotalBaris - $totalBaris);
+
+                                                                    // Persentase diskon aktual
+                                                                    $persenDiskon = $subtotalBaris > 0
+                                                                        ? round(($diskonBaris / $subtotalBaris) * 100, 2)
+                                                                        : 0;
+
+                                                                    // Jenis diskon dari detail transaksi
+                                                                    $jenisDiskon = strtolower(
+                                                                        trim((string) ($detail->jenis_diskon ?? ''))
+                                                                    );
+
+                                                                    if ($jenisDiskon === 'non_partai') {
+                                                                        $jenisDiskon = 'Non-Partai';
+                                                                    } elseif ($jenisDiskon === 'partai') {
+                                                                        $jenisDiskon = 'Partai';
+                                                                    } elseif ($jenisDiskon === '') {
+                                                                        $jenisDiskon = '-';
+                                                                    } else {
+                                                                        $jenisDiskon = ucwords(
+                                                                            str_replace('_', ' ', $jenisDiskon)
+                                                                        );
+                                                                    }
+
+                                                                    $subtotalModal += $subtotalBaris;
+                                                                    $totalDiskonModal += $diskonBaris;
+                                                                @endphp
+
+                                                                <tr>
+                                                                    <td class="text-center align-middle">
+                                                                        {{ $no++ }}
+                                                                    </td>
+
+                                                                    <td class="align-middle" style="min-width: 150px;">
+                                                                        {{ $detail->namaproduk }}
+                                                                    </td>
+
+                                                                    <td class="text-right align-middle text-nowrap">
+                                                                        {{ rupiah($harga) }}
+                                                                    </td>
+
+                                                                    <td class="text-center align-middle">
+                                                                        {{ $jumlah }}
+                                                                    </td>
+
+                                                                    <td class="text-center align-middle">
+                                                                        {{ $jenisDiskon }}
+                                                                    </td>
+
+                                                                    <td class="text-center align-middle text-nowrap">
+                                                                        {{ rtrim(rtrim(number_format($persenDiskon, 2, ',', '.'), '0'), ',') }}%
+                                                                    </td>
+
+                                                                    <td class="text-right align-middle text-nowrap">
+                                                                        {{ rupiah($diskonBaris) }}
+                                                                    </td>
+
+                                                                    <td class="text-right align-middle text-nowrap font-weight-bold">
+                                                                        {{ rupiah($totalBaris) }}
+                                                                    </td>
+                                                                </tr>
+                                                            @empty
+                                                                <tr>
+                                                                    <td colspan="8" class="text-center text-muted py-4">
+                                                                        Belum ada rincian produk.
+                                                                    </td>
+                                                                </tr>
+                                                            @endforelse
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                {{-- HITUNG GRAND TOTAL --}}
+                                                @php
+                                                    $grandTotalModal = (float) (
+                                                        $item->grandtotal ?? ($subtotalModal - $totalDiskonModal)
+                                                    );
+                                                @endphp
+
+                                                {{-- INFORMASI DAN RINGKASAN --}}
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <div style="border: 1px solid #e5e5e5; border-radius: 6px; padding: 16px; height: 100%;">
+                                                            <h6 class="font-weight-bold mb-3" style="color: #444;">
+                                                                Informasi Transaksi
+                                                            </h6>
+                                                            <div class="row mb-2">
+                                                                <div class="col-5 text-muted">Tanggal</div>
+                                                                <div class="col-7 text-right">
+                                                                    {{ $item->tanggalpenjualan
+                                                                        ? date('d-m-Y H:i', strtotime($item->tanggalpenjualan))
+                                                                        : '-' }}
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row mb-2">
+                                                                <div class="col-5 text-muted">Nama Pembeli</div>
+                                                                <div class="col-7 text-right">
+                                                                    {{ $item->namapembeli ?? '-' }}
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-5 text-muted">Status</div>
+                                                                <div class="col-7 text-right">
+                                                                    {{ $item->statustransaksi ?? '-' }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- RINGKASAN PEMBAYARAN --}}
+                                                    <div class="col-md-6 mb-3">
+                                                        <div style="border: 1px solid #e5e5e5; border-radius: 6px; padding: 16px; height: 100%;">
+                                                            <h6 class="font-weight-bold mb-3" style="color: #444;">
+                                                                Ringkasan Pembayaran
+                                                            </h6>
+                                                            <div class="d-flex justify-content-between mb-2">
+                                                                <span class="text-dark">Subtotal</span>
+                                                                <span class="text-nowrap ml-2">
+                                                                    {{ rupiah($subtotalModal) }}
+                                                                </span>
+                                                            </div>
+
+                                                            <div class="d-flex justify-content-between mb-2">
+                                                                <span class="text-dark">Total Diskon</span>
+                                                                <span class="text-nowrap ml-2">
+                                                                    {{ rupiah($totalDiskonModal) }}
+                                                                </span>
+                                                            </div>
+
+                                                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3"
+                                                                style="border-top: 1px solid #e5e5e5;">
+                                                                <span class="font-weight-bold" style="color: #444;">
+                                                                    Grand Total
+                                                                </span>
+                                                                <span class="font-weight-bold text-nowrap ml-2"
+                                                                    style="font-size: 18px; color: #795858;">
+                                                                    {{ rupiah($grandTotalModal) }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer"
+                                                style="background: #fff; border-top: 1px solid #e5e5e5; padding: 12px 22px;">
+                                                <button type="button" class="btn text-white"
+                                                    data-dismiss="modal"
+                                                    style="background: #A97474; border: 1px solid #A97474; border-radius: 5px; padding: 8px 24px; font-weight: 600;">
+                                                    Tutup
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
                             {{-- MODAL UBAH STATUS --}}
                             <div class="modal fade" id="ubahStatus{{ $item->idpenjualan }}" tabindex="-1" role="dialog">
