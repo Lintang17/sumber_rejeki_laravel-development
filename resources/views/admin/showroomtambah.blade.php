@@ -51,7 +51,7 @@
 
                         <div class="form-group">
                             <label for="tanggalmasuk">Tanggal Masuk Showroom</label>
-                            <input type="date" class="form-control" name="tanggalmasuk" required>
+                            <input type="date" class="form-control" name="tanggalmasuk" id="tanggalmasuk" min="{{ date('Y-m-d') }}" value="{{ old('tanggalmasuk', date('Y-m-d')) }}" required>
                         </div>
 
                         <button type="submit" class="btn btn-success" id="btnSimpan">Simpan</button>

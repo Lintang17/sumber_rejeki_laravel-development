@@ -101,7 +101,7 @@ public function showroomsimpan(Request $request)
 {
     $request->validate([
         'idproduksi' => 'required|exists:produksi,idproduksi',
-        'tanggalmasuk' => 'required|date',
+        'tanggalmasuk' => 'required|date|after_or_equal:today',
     ]);
 
     $produksi = ProduksiModel::find($request->idproduksi);

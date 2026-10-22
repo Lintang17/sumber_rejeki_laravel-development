@@ -51,7 +51,7 @@
                                     <td>
                                         <select name="idproduk[]" class="form-control produkselect" required>
                                             <option value="">Pilih Produk</option>
-                                            @foreach ($produk as $item)
+                                            <!-- @foreach ($produk as $item)
                                                 @php
                                                      $stokSisa = ($item->stok_awal + $item->stok_tambahan) - $item->stok_terjual;
                                                 @endphp
@@ -62,7 +62,23 @@
                                                     data-barcode="{{ $item->barcode }}">
                                                     {{ $item->produksi->namaproduk }} - {{ $stokSisa }} pcs
                                                 </option>
+                                            @endforeach -->
+                                            @foreach ($produk as $item)
+                                                @if ($item->produksi)
+                                                    @php
+                                                        $stokSisa = ($item->stok_awal + $item->stok_tambahan) - $item->stok_terjual;
+                                                    @endphp
+
+                                                    <option value="{{ $item->idshowroom }}"
+                                                        data-nama="{{ $item->produksi->namaproduk }}"
+                                                        data-harga="{{ $item->produksi->hargajual }}"
+                                                        data-stok="{{ $stokSisa }}"
+                                                        data-barcode="{{ $item->barcode }}">
+                                                        {{ $item->produksi->namaproduk }} - {{ $stokSisa }} pcs
+                                                    </option>
+                                                @endif
                                             @endforeach
+
                                         </select>
                                     </td>
                                     <td><input type="text" class="form-control stoktersedia" readonly></td>
