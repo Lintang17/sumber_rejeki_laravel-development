@@ -41,7 +41,8 @@
                                     <th>Nama Produk</th>
                                     <th>Stok</th>
                                     <th>Harga</th>
-                                    <th>Discount</th>
+                                    <th>Jenis Diskon</th>
+                                    <th>Discount (%)</th>
                                     <th>Jumlah</th>
                                     <th>Total</th>
                                     <th>Aksi</th>
@@ -75,6 +76,7 @@
                                                         data-harga="{{ $item->produksi->hargajual }}"
                                                         data-stok="{{ $stokSisa }}"
                                                         data-discount="{{ $item->discount ?? 0 }}"
+                                                        data-discount-partai="{{ $item->discount_partai ?? 0 }}"
                                                         data-barcode="{{ $item->barcode }}">
                                                         {{ $item->produksi->namaproduk }} - {{ $stokSisa }} pcs
                                                     </option>
@@ -85,8 +87,18 @@
                                     </td>
                                     <td><input type="text" class="form-control stoktersedia" readonly></td>
                                     <td><input type="text" name="harga[]" class="form-control harga" readonly></td>
-                                    <td><input type="text" class="form-control discount" readonly disabled></td>
-                                    <td><input type="number" name="jumlahpembelian[]" class="form-control jumlah" min="1" value="1" required></td>
+                                    <td>
+                                        <select name="jenis_diskon[]" class="form-control jenis-diskon">
+                                            <option value="non_partai">Non-Partai</option>
+                                            <option value="partai">Partai</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control discount" value="0%" readonly>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="jumlahpembelian[]" class="form-control jumlah" min="1" value="1" required>
+                                    </td>
                                     <td><input type="text" name="total[]" class="form-control total" readonly></td>
                                     <td><button type="button" class="btn btn-success add-row">+</button></td>
                                 </tr>
@@ -155,6 +167,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const formatRibuan = angka => angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     const parseNumber = str => parseFloat(str.replace(/\./g, '')) || 0;
 
+    function getDiscountForRow(row) {
+        const produk = row.querySelector('.produkselect');
+        const selected = produk.selectedOptions[0];
+        const jenisDiskon = row.querySelector('.jenis-diskon').value;
+
+        if (!selected || !selected.value) return 0;
+
+        const nilai = jenisDiskon === 'partai'
+            ? selected.dataset.discountPartai
+            : selected.dataset.discount;
+
+        return Math.max(0, Math.min(100, parseFloat(nilai) || 0));
+    }
+
     const dpInput = document.getElementById('dp');
     const bayarInput = document.getElementById('uangpembeli');
     const sisaField = document.getElementById('sisabayar');
@@ -171,7 +197,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const harga = parseNumber(row.querySelector('.harga').value);
             const jumlah = parseInt(row.querySelector('.jumlah').value) || 0;
-            const discount = parseFloat(selected?.dataset.discount) || 0;
+            const discount = getDiscountForRow(row);
+
+            row.querySelector('.discount').value = discount + '%';
 
             // Harga seluruh barang sebelum diskon
             const subtotalBaris = harga * jumlah;
@@ -244,34 +272,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Event: pilih produk
+    // Event: pilih produk atau ubah jenis diskon
     document.querySelector('#tabelform tbody').addEventListener('change', function (e) {
-        if (e.target.classList.contains('produkselect')) {
-            const row = e.target.closest('tr');
-            const selected = e.target.selectedOptions[0];
+        const row = e.target.closest('tr');
 
-            const stok = selected.dataset.stok ?? 0;
-            const harga = selected.dataset.harga ?? 0;
-            const discount = parseFloat(selected.dataset.discount) || 0;
+        if (
+            e.target.classList.contains('produkselect') ||
+            e.target.classList.contains('jenis-diskon')
+        ) {
+            if (e.target.classList.contains('produkselect')) {
+                const selected = e.target.selectedOptions[0];
 
-            row.querySelector('input.stoktersedia').value = stok;
-            row.querySelector('.harga').value = formatRibuan(harga);
+                const stok = selected.dataset.stok ?? 0;
+                const harga = selected.dataset.harga ?? 0;
+                row.querySelector('.stoktersedia').value =
+                    selected.value ? stok : '';
 
-            // Tampilkan discount otomatis dari showroom
-            const discountInput = row.querySelector('.discount');
-
-            if (discount > 0) {
-                discountInput.value = discount + ' %';
-                discountInput.disabled = false;
-            } else {
-                discountInput.value = '';
-                discountInput.disabled = true;
+                row.querySelector('.harga').value =
+                    selected.value ? formatRibuan(harga) : '';
             }
 
             updateTotal();
         }
     });
-
+        
    // Event: input jumlah produk
     document.querySelector('#tabelform tbody').addEventListener('input', function (e) {
         if (e.target.classList.contains('jumlah')) {
@@ -301,10 +325,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const clone = row.cloneNode(true);
 
         clone.querySelector('.produkselect').selectedIndex = 0;
+        clone.querySelector('.jenis-diskon').value = 'non_partai';
         clone.querySelector('.stoktersedia').value = '';
         clone.querySelector('.harga').value = '';
-        clone.querySelector('.discount').value = '';
-        clone.querySelector('.discount').disabled = true;
+        clone.querySelector('.discount').value = '0%';
+        clone.querySelector('.discount').disabled = false;
         clone.querySelector('.jumlah').value = 1;
         clone.querySelector('.total').value = '';
 

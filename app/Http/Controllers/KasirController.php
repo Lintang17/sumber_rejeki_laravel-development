@@ -106,7 +106,8 @@ public function penjualandaftar(Request $request)
 {
     // $data['penjualan'] = PenjualanModel::with('penjualandetail')->orderBy('tanggalpenjualan', 'desc')->get();
     // return view('kasir.penjualandaftar', $data);
-     $query = PenjualanModel::with('penjualandetail');
+
+    $query = PenjualanModel::with('penjualandetail.showroom');
 
     if ($request->filled('bulan')) {
         $query->whereMonth('tanggalpenjualan', $request->bulan);
@@ -131,36 +132,39 @@ public function penjualantambah()
     return view('kasir.penjualantambah', $data);
 }
 
+
 public function penjualansimpan(Request $request)
 {
-    // Sanitasi input angka
-    $stripDot = fn($val) => str_replace('.', '', $val);
-    $stripArray = fn($arr) => array_map(fn($v) => str_replace('.', '', $v), $arr);
-
-    $request->merge([
-        'grandtotal' => $stripDot($request->grandtotal),
-        'dp' => $stripDot($request->dp),
-        'bayar' => $stripDot($request->bayar),
-        'kembali' => $stripDot($request->kembali),
-        'harga' => $stripArray($request->harga),
-        'total' => $stripArray($request->total),
-    ]);
-
     $request->validate([
         'tanggalpenjualan' => 'required|date',
         'namapembeli' => 'nullable|string|max:100',
         'notelp' => 'nullable|string|max:20',
         'alamat' => 'nullable|string',
         'metodepembayaran' => 'required|string|max:50',
-        'grandtotal' => 'required|numeric',
-        'dp' => 'nullable|numeric',
-        'bayar' => 'nullable|numeric',
-        'kembali' => 'nullable|numeric',
-        'idproduk' => 'required|array',
-        'jumlahpembelian' => 'required|array',
-        'harga' => 'required|array',
-        'total' => 'required|array',
+        'dp' => 'nullable|string',
+        'bayar' => 'nullable|string',
+        'idproduk' => 'required|array|min:1',
+        'idproduk.*' => 'required|integer',
+        'jumlahpembelian' => 'required|array|min:1',
+        'jumlahpembelian.*' => 'required|integer|min:1',
+        'jenis_diskon' => 'required|array|min:1',
+        'jenis_diskon.*' => 'required|in:non_partai,partai',
     ]);
+
+    if (
+        count($request->idproduk) !== count($request->jumlahpembelian) ||
+        count($request->idproduk) !== count($request->jenis_diskon)
+    ) {
+        return back()->withInput()->with(
+            'error',
+            'Data produk, jumlah, dan jenis diskon tidak sesuai.'
+        );
+    }
+
+    // Ubah format rupiah menjadi angka.
+    $angka = function ($nilai) {
+        return (int) str_replace('.', '', $nilai ?? '0');
+    };
 
     DB::beginTransaction();
 
@@ -168,9 +172,9 @@ public function penjualansimpan(Request $request)
         $notajual = now()->format('YmdHis');
         $kodenota = $this->getKodeNota($request->tanggalpenjualan);
 
-        $dp = (int) ($request->dp ?? 0);
+        $dp = $angka($request->dp);
+        $bayar = $angka($request->bayar);
         $grandtotal = 0;
-        $sisabayar = 0;
 
         $penjualan = PenjualanModel::create([
             'notajual' => $notajual,
@@ -180,75 +184,112 @@ public function penjualansimpan(Request $request)
             'alamat' => $request->alamat,
             'grandtotal' => 0,
             'dp' => $dp,
-            'bayar' => (int) ($request->bayar ?? 0),
-            'kembali' => (int) ($request->kembali ?? 0),
+            'bayar' => $bayar,
+            'kembali' => 0,
             'tanggalpenjualan' => $request->tanggalpenjualan,
             'statuspengiriman' => 'Menunggu Konfirmasi',
-            'statuspembayaran' => $request->dp > 0 ? 'DP' : 'Lunas',
+            'statuspembayaran' => $dp > 0 ? 'DP' : 'Lunas',
             'metodepembayaran' => $request->metodepembayaran,
-            'sisabayar' => $sisabayar,
+            'sisabayar' => 0,
         ]);
 
         foreach ($request->idproduk as $i => $idproduk) {
-            $showroom = ShowroomModel::with('produksi')->findOrFail($idproduk);
-            $jumlahPembelian = (int) $request->jumlahpembelian[$i];
+            $showroom = ShowroomModel::with('produksi')
+                ->where('idshowroom', $idproduk)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (!$showroom->produksi) {
+                throw new \Exception('Data produk tidak ditemukan.');
+            }
+
+            $jumlah = (int) $request->jumlahpembelian[$i];
+
+            $stok = (int) $showroom->stok_awal
+                + (int) $showroom->stok_tambahan
+                - (int) $showroom->stok_terjual;
+
+            if ($jumlah > $stok) {
+                DB::rollBack();
+
+                return back()->withInput()->with(
+                    'error',
+                    'Stok tidak cukup untuk produk '
+                    . $showroom->produksi->namaproduk
+                );
+            }
+
+            // Ambil jenis diskon yang dipilih kasir.
+            $jenisDiskon = $request->jenis_diskon[$i];
+
+            if ($jenisDiskon === 'partai') {
+                $persenDiskon = (int) ($showroom->discount_partai ?? 0);
+            } else {
+                $persenDiskon = (int) ($showroom->discount ?? 0);
+            }
 
             $harga = (int) $showroom->produksi->hargajual;
-            $discount = (float) ($showroom->discount ?? 0);
 
-            // Sub Total sebelum diskon
-            $subtotalBaris = $harga * $jumlahPembelian;
-
-            // Diskon setiap unit dikalikan jumlah pembelian
-            $diskonPerUnit = round($harga * $discount / 100);
-            $totalDiskonBaris = $diskonPerUnit * $jumlahPembelian;
-
-            // Total setelah diskon
-            $total = $subtotalBaris - $totalDiskonBaris;
+            // Hitung diskon berdasarkan jenis pilihan kasir.
+            $subtotal = $harga * $jumlah;
+            $diskonPerBarang = (int) round(
+                $harga * $persenDiskon / 100
+            );
+            $totalDiskon = $diskonPerBarang * $jumlah;
+            $total = max(0, $subtotal - $totalDiskon);
 
             $grandtotal += $total;
 
-            // Hitung stok sisa saat ini
-            $stokTersedia = ($showroom->stok_awal + $showroom->stok_tambahan) - $showroom->stok_terjual;
-
-            // Validasi stok
-            if ($jumlahPembelian > $stokTersedia) {
-                DB::rollBack();
-                return back()->with('error', 'Stok tidak cukup untuk produk "' . $showroom->produksi->namaproduk. '"');
-            }
-
-            // Simpan detail penjualan
             PenjualanDetailModel::create([
                 'idpenjualan' => $penjualan->idpenjualan,
                 'idproduk' => $idproduk,
                 'namaproduk' => $showroom->produksi->namaproduk,
                 'harga' => $harga,
-                'jumlah_pembelian' => $jumlahPembelian,
+                'jumlah_pembelian' => $jumlah,
+                'jenis_diskon' => $jenisDiskon,
+                'discount' => $persenDiskon,
                 'total' => $total,
             ]);
 
-            // Update showroom: tambah terjual dan hitung ulang sisa
-            $showroom->stok_terjual += $jumlahPembelian;
-            $showroom->stok_sisa = ($showroom->stok_awal + $showroom->stok_tambahan) - $showroom->stok_terjual;
+            // Perbarui stok showroom.
+            $showroom->stok_terjual =
+                (int) $showroom->stok_terjual + $jumlah;
+
+            $showroom->stok_sisa =
+                (int) $showroom->stok_awal
+                + (int) $showroom->stok_tambahan
+                - (int) $showroom->stok_terjual;
+
             $showroom->save();
         }
 
-        $sisabayar = max(0, $grandtotal - $dp);
-
         $penjualan->update([
             'grandtotal' => $grandtotal,
-            'sisabayar' => $sisabayar,
+            'sisabayar' => max(0, $grandtotal - $dp),
+            'kembali' => max(
+                0,
+                $bayar - ($dp > 0 ? $dp : $grandtotal)
+            ),
             'statuspembayaran' => $dp > 0 ? 'DP' : 'Lunas',
         ]);
 
         DB::commit();
 
-        return redirect('kasir/penjualandaftar/' . $notajual)->with('success', 'Transaksi berhasil disimpan.');
-    } catch (\Exception $e) {
+        return redirect('kasir/penjualandaftar/' . $notajual)
+            ->with('success', 'Transaksi berhasil disimpan.');
+
+    } catch (\Throwable $e) {
         DB::rollBack();
-        return back()->with('error', 'Gagal menyimpan transaksi: ' . $e->getMessage());
+
+        report($e);
+
+        return back()->withInput()->with(
+            'error',
+            'Transaksi gagal disimpan. Periksa data produk dan stok.'
+        );
     }
 }
+
 
 private function getKodeNota($tanggal)
 {

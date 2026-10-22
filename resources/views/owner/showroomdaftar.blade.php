@@ -52,86 +52,107 @@
                                             @else
                                                 -
                                             @endif
-                                        </td>                                
+                                        </td>                                             
+                                        
                                         <td class="align-middle">
                                             @if(auth()->check() && auth()->user()->role === 'Owner')
                                                 <form id="formDiskon{{ $item->idshowroom }}"
-                                                        action="{{ route('showroom.discount', $item->idshowroom) }}"
-                                                        method="POST">
-                                                    @csrf
-                                                
-                                                    {{-- Diskon Non-Partai --}}
-                                                    <div class="d-flex align-items-center mb-3">
+                                                      action="{{ route('showroom.discount', $item->idshowroom) }}"
+                                                      method="POST">
+                                                      @csrf
+
+                                                    <div class="mb-2">
+                                                        <label class="font-weight-bold mb-1">Jenis Diskon</label>
+                                                        <select name="jenis_diskon"
+                                                            class="form-control form-control-sm pilih-jenis-diskon"
+                                                            required>
+                                                            <option value="">-- Pilih Jenis --</option>
+                                                            <option value="non_partai">Non-Partai</option>
+                                                            <option value="partai">Partai</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="d-flex align-items-center mb-2">
                                                         <label class="font-weight-bold mb-0 mr-2"
-                                                                style="width: 90px; min-width: 90px;">
+                                                            style="width:90px; min-width:90px;">
                                                             Non-Partai
                                                         </label>
 
                                                         <div class="input-group input-group-sm"
-                                                            style="width: 110px; flex-shrink: 0;">
+                                                            style="width:110px; flex-shrink:0;">
                                                             <input type="text"
-                                                                    name="discount"
-                                                                    class="form-control text-center"
-                                                                    inputmode="numeric"
-                                                                    pattern="[0-9]{1,3}"
-                                                                    maxlength="3"
-                                                                    value="{{ ($item->discount ?? 0) == 0 ? '' : $item->discount }}"
-                                                                    placeholder="-"
-                                                                    required>
+                                                                name="discount"
+                                                                class="form-control text-center input-diskon"
+                                                                inputmode="numeric"
+                                                                pattern="[0-9]{1,3}"
+                                                                maxlength="3"
+                                                                value="{{ ($item->discount ?? 0) == 0 ? '' : $item->discount }}"
+                                                                placeholder="-"
+                                                                disabled>
                                                             <div class="input-group-append">
                                                                 <span class="input-group-text">%</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    {{-- Diskon Partai --}}
                                                     <div class="d-flex align-items-center mb-3">
                                                         <label class="font-weight-bold mb-0 mr-2"
-                                                                style="width: 90px; min-width: 90px;">
+                                                            style="width:90px; min-width:90px;">
                                                             Partai
                                                         </label>
 
                                                         <div class="input-group input-group-sm"
-                                                            style="width: 110px; flex-shrink: 0;">
+                                                            style="width:110px; flex-shrink:0;">
                                                             <input type="text"
-                                                                    name="discount_partai"
-                                                                    class="form-control text-center"
-                                                                    inputmode="numeric"
-                                                                    pattern="[0-9]{1,3}"
-                                                                    maxlength="3"
-                                                                    value="{{ ($item->discount_partai ?? 0) == 0 ? '' : $item->discount_partai }}"
-                                                                    placeholder="-">
-
+                                                                name="discount_partai"
+                                                                class="form-control text-center input-diskon"
+                                                                inputmode="numeric"
+                                                                pattern="[0-9]{1,3}"
+                                                                maxlength="3"
+                                                                value="{{ ($item->discount_partai ?? 0) == 0 ? '' : $item->discount_partai }}"
+                                                                placeholder="-"
+                                                                disabled>
                                                             <div class="input-group-append">
                                                                 <span class="input-group-text">%</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    {{-- Jenis diskon yang aktif --}}
-                                                    <input type="hidden"
-                                                            name="jenis_diskon"
-                                                            value="{{ $item->jenis_diskon ?? 'non_partai' }}">
-
-                                                    <button type="submit"
-                                                            class="btn btn-sm btn-primary px-3">
+                                                    <button type="submit" class="btn btn-sm btn-primary px-3">
                                                         <i class="mdi mdi-content-save-outline"></i>
                                                         Simpan
                                                     </button>
                                                 </form>
                                             @else
                                                 @php
-                                                    $jenisDiskon = $item->jenis_diskon ?? 'non_partai';
-                                                    $diskonAktif = $jenisDiskon === 'partai'
-                                                        ? $item->discount_partai
-                                                        : $item->discount;
+                                                    $diskonNonPartai = (int) ($item->discount ?? 0);
+                                                    $diskonPartai = (int) ($item->discount_partai ?? 0);
+
+                                                    if ($diskonNonPartai > 0 && $diskonPartai > 0) {
+                                                        $jenisTampilan = 'Keduanya';
+                                                    } elseif ($diskonNonPartai > 0) {
+                                                        $jenisTampilan = 'Non-Partai';
+                                                    } elseif ($diskonPartai > 0) {
+                                                        $jenisTampilan = 'Partai';
+                                                    } else {
+                                                        $jenisTampilan = '-';
+                                                    }
                                                 @endphp
 
                                                 <div class="d-flex flex-column">
-                                                    <strong>{{ $jenisDiskon === 'partai' ? 'Partai' : 'Non-Partai' }}</strong>
-                                                    <span class="mt-1">
-                                                        {{ $diskonAktif ? $diskonAktif . '%' : '-' }}
-                                                    </span>
+                                                    <strong>{{ $jenisTampilan }}</strong>
+
+                                                    @if($diskonNonPartai > 0)
+                                                        <span class="mt-1">Non-Partai: {{ $diskonNonPartai }} %</span>
+                                                    @endif
+
+                                                    @if($diskonPartai > 0)
+                                                        <span class="mt-1">Partai: {{ $diskonPartai }} %</span>
+                                                    @endif
+
+                                                    @if($diskonNonPartai <= 0 && $diskonPartai <= 0)
+                                                        <span class="mt-1">-</span>
+                                                    @endif
                                                 </div>
                                             @endif
                                         </td>
@@ -193,21 +214,25 @@
         </div>
     </div>
 </div>
-@endsection
 
-@push('scripts')
 <script>
-    $(document).ready(function () {
-        $('#table').DataTable({
-            language: {
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ entri",
-                zeroRecords: "Tidak ditemukan data",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-                infoEmpty: "Menampilkan 0 dari 0 entri",
-                infoFiltered: "(difilter dari _MAX_ total entri)"
-            }
-        });
+(function () {
+    document.querySelectorAll('.pilih-jenis-diskon').forEach(function (select) {
+        var form = select.closest('form');
+        if (!form) return;
+
+        var nonPartai = form.querySelector('[name="discount"]');
+        var partai = form.querySelector('[name="discount_partai"]');
+
+        function aturInputDiskon() {
+            nonPartai.disabled = select.value !== 'non_partai';
+            partai.disabled = select.value !== 'partai';
+        }
+
+        select.addEventListener('change', aturInputDiskon);
+        aturInputDiskon();
     });
+})();
 </script>
-@endpush
+
+@endsection

@@ -15,6 +15,8 @@ class PenjualanDetailModel extends Model
         'namaproduk',
         'harga',
         'jumlah_pembelian',
+        'jenis_diskon',
+        'discount',
         'total',
     ];
 
