@@ -41,6 +41,7 @@
                                     <th>Nama Produk</th>
                                     <th>Stok</th>
                                     <th>Harga</th>
+                                    <th>Discount</th>
                                     <th>Jumlah</th>
                                     <th>Total</th>
                                     <th>Aksi</th>
@@ -73,6 +74,7 @@
                                                         data-nama="{{ $item->produksi->namaproduk }}"
                                                         data-harga="{{ $item->produksi->hargajual }}"
                                                         data-stok="{{ $stokSisa }}"
+                                                        data-discount="{{ $item->discount ?? 0 }}"
                                                         data-barcode="{{ $item->barcode }}">
                                                         {{ $item->produksi->namaproduk }} - {{ $stokSisa }} pcs
                                                     </option>
@@ -83,6 +85,7 @@
                                     </td>
                                     <td><input type="text" class="form-control stoktersedia" readonly></td>
                                     <td><input type="text" name="harga[]" class="form-control harga" readonly></td>
+                                    <td><input type="text" class="form-control discount" readonly disabled></td>
                                     <td><input type="number" name="jumlahpembelian[]" class="form-control jumlah" min="1" value="1" required></td>
                                     <td><input type="text" name="total[]" class="form-control total" readonly></td>
                                     <td><button type="button" class="btn btn-success add-row">+</button></td>
@@ -93,6 +96,12 @@
                         <div class="form-group">
                             <label>Sub Total</label>
                             <input class="form-control" id="subtotal" type="text" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Total Diskon</label>
+                            <input class="form-control" id="total_diskon_display" type="text" readonly>
+                            <input type="hidden" id="total_diskon" name="total_diskon">
                         </div>
 
                         <div class="form-group">
@@ -151,23 +160,56 @@ document.addEventListener('DOMContentLoaded', function () {
     const sisaField = document.getElementById('sisabayar');
     const kembaliField = document.getElementById('kembalian');
 
+    
     function updateTotal() {
         let subtotal = 0;
-        document.querySelectorAll('.total').forEach(el => subtotal += parseNumber(el.value));
+        let totalDiskon = 0;
+
+        document.querySelectorAll('#tabelform tbody tr').forEach(row => {
+            const select = row.querySelector('.produkselect');
+            const selected = select.selectedOptions[0];
+
+            const harga = parseNumber(row.querySelector('.harga').value);
+            const jumlah = parseInt(row.querySelector('.jumlah').value) || 0;
+            const discount = parseFloat(selected?.dataset.discount) || 0;
+
+            // Harga seluruh barang sebelum diskon
+            const subtotalBaris = harga * jumlah;
+
+            // Diskon per unit dikalikan jumlah barang
+            const diskonPerUnit = Math.round(harga * discount / 100);
+            const diskonBaris = diskonPerUnit * jumlah;
+
+            // Total baris setelah diskon
+            const totalBaris = Math.max(0, subtotalBaris - diskonBaris);
+
+            row.querySelector('.total').value = formatRibuan(totalBaris);
+
+            subtotal += subtotalBaris;
+            totalDiskon += diskonBaris;
+        });
+
+        const grandtotal = Math.max(0, subtotal - totalDiskon);
+
         document.getElementById('subtotal').value = formatRibuan(subtotal);
-        document.getElementById('grandtotal_display').value = formatRibuan(subtotal);
-        document.getElementById('grandtotal').value = subtotal;
+        document.getElementById('total_diskon_display').value = formatRibuan(totalDiskon);
+        document.getElementById('total_diskon').value = totalDiskon;
+
+        document.getElementById('grandtotal_display').value = formatRibuan(grandtotal);
+        document.getElementById('grandtotal').value = grandtotal;
 
         const dp = parseNumber(dpInput.value);
         const bayar = parseNumber(bayarInput.value);
 
-        if (dp > 0) {
-            sisaField.value = formatRibuan(Math.max(subtotal - dp, 0));
-            kembaliField.value = formatRibuan(Math.max(bayar - dp, 0));
-        } else {
-            sisaField.value = '';
-            kembaliField.value = formatRibuan(Math.max(bayar - subtotal, 0));
-        }
+        sisaField.value = dp > 0
+            ? formatRibuan(Math.max(grandtotal - dp, 0))
+            : '';
+
+        // Jika memakai DP, kembalian dihitung dari uang yang diterima
+        // dikurangi DP yang dibayarkan saat ini.
+        kembaliField.value = formatRibuan(
+            Math.max(bayar - (dp > 0 ? dp : grandtotal), 0)
+        );
     }
 
     function validateInputs() {
@@ -210,45 +252,67 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const stok = selected.dataset.stok ?? 0;
             const harga = selected.dataset.harga ?? 0;
+            const discount = parseFloat(selected.dataset.discount) || 0;
 
             row.querySelector('input.stoktersedia').value = stok;
             row.querySelector('.harga').value = formatRibuan(harga);
-            
-            const jumlah = row.querySelector('.jumlah').value || 1;
-            row.querySelector('.total').value = formatRibuan(parseNumber(selected.dataset.harga) * jumlah);
+
+            // Tampilkan discount otomatis dari showroom
+            const discountInput = row.querySelector('.discount');
+
+            if (discount > 0) {
+                discountInput.value = discount + ' %';
+                discountInput.disabled = false;
+            } else {
+                discountInput.value = '';
+                discountInput.disabled = true;
+            }
+
             updateTotal();
         }
     });
 
-    // Event: input jumlah produk
+   // Event: input jumlah produk
     document.querySelector('#tabelform tbody').addEventListener('input', function (e) {
         if (e.target.classList.contains('jumlah')) {
             const row = e.target.closest('tr');
-            const harga = parseNumber(row.querySelector('.harga').value);
-            const jumlah = parseInt(e.target.value) || 0;
             const stok = parseInt(row.querySelector('.stoktersedia').value) || 0;
+            let jumlah = parseInt(e.target.value) || 0;
 
             if (jumlah > stok) {
                 alert('Jumlah melebihi stok tersedia');
+                jumlah = stok;
                 e.target.value = stok;
             }
 
-            row.querySelector('.total').value = formatRibuan(harga * jumlah);
+            if (jumlah < 0) {
+                jumlah = 0;
+                e.target.value = 0;
+            }
+
             updateTotal();
         }
     });
+            
 
     document.querySelector('#tabelform').addEventListener('click', function(e) {
     if (e.target.classList.contains('add-row')) {
         const row = e.target.closest('tr');
         const clone = row.cloneNode(true);
-        clone.querySelectorAll('input').forEach(input => {
-            input.value = '';
-        });
+
+        clone.querySelector('.produkselect').selectedIndex = 0;
+        clone.querySelector('.stoktersedia').value = '';
+        clone.querySelector('.harga').value = '';
+        clone.querySelector('.discount').value = '';
+        clone.querySelector('.discount').disabled = true;
+        clone.querySelector('.jumlah').value = 1;
+        clone.querySelector('.total').value = '';
+
         clone.querySelector('.btn').classList.remove('btn-success', 'add-row');
         clone.querySelector('.btn').classList.add('btn-danger', 'remove-row');
         clone.querySelector('.btn').innerText = '-';
         row.parentNode.appendChild(clone);
+        updateTotal();
     } else if (e.target.classList.contains('remove-row')) {
         const row = e.target.closest('tr');
         row.remove();

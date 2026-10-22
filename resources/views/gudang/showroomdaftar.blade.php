@@ -23,7 +23,7 @@
                                     <th>Stok Terjual</th>
                                     <th>Sisa Stok</th>
                                     <th>Harga Jual</th>
-                                    <th class="text-center" style="width: 80px;">Discount</th>
+                                    <th class="text-center" style="min-width: 130px;">Jenis & Diskon</th>
                                     <th>Foto</th>
                                     {{-- <th>Barcode</th> --}}
                                     <th>Tanggal Masuk</th>
@@ -45,9 +45,30 @@
                                                 -
                                             @endif
                                         </td>
-                                        <td class="text-center" style="width: 80px;">
-                                            {{ empty($item->discount) || $item->discount == 0 ? '-' : $item->discount . '%' }}
+                          
+                                        <td class="text-center align-middle">
+                                            <div class="d-flex flex-column align-items-center">
+                                                @if((int) ($item->discount ?? 0) > 0)
+                                                    <div class="mb-2">
+                                                        <strong>Non-Partai</strong>
+                                                        <div>{{ $item->discount }}%</div>
+                                                    </div>
+                                                @endif
+
+                                                @if((int) ($item->discount_partai ?? 0) > 0)
+                                                    <div>
+                                                        <strong>Partai</strong>
+                                                        <div>{{ $item->discount_partai }}%</div>
+                                                    </div>
+                                                @endif
+
+                                                @if((int) ($item->discount ?? 0) === 0
+                                                    && (int) ($item->discount_partai ?? 0) === 0)
+                                                    <span>-</span>
+                                                @endif
+                                            </div>
                                         </td>
+
                                         <td>
                                             @if($item->produksi && $item->produksi->fotoproduk)
                                                 <button type="button" class="btn btn-link p-0" data-toggle="modal" data-target="#fotoModal{{ $item->idshowroom }}">

@@ -767,20 +767,45 @@ public function opnameriwayat()
     }
 
     // DISCOUNT
+    
     public function updateDiscount(Request $request, $id)
     {
         if (!auth()->check() || auth()->user()->role !== 'Owner') {
             abort(403, 'Anda tidak memiliki akses.');
         }
 
+        $request->merge([
+            'discount' => $request->filled('discount')
+                ? $request->input('discount')
+                : 0,
+
+            'discount_partai' => $request->filled('discount_partai')
+                ? $request->input('discount_partai')
+                : 0,
+        ]);
+
         $request->validate([
             'discount' => 'required|integer|min:0|max:100',
+            'discount_partai' => 'required|integer|min:0|max:100',
+        ], [
+            'discount.integer' => 'Diskon Non-Partai harus berupa bilangan bulat.',
+            'discount.min' => 'Diskon Non-Partai minimal 0%.',
+            'discount.max' => 'Diskon Non-Partai maksimal 100%.',
+            'discount_partai.integer' => 'Diskon Partai harus berupa bilangan bulat.',
+            'discount_partai.min' => 'Diskon Partai minimal 0%.',
+            'discount_partai.max' => 'Diskon Partai maksimal 100%.',
         ]);
 
         $item = ShowroomModel::findOrFail($id);
-        $item->discount = $request->discount;
+
+        $item->discount = $request->input('discount');
+        $item->discount_partai = $request->input('discount_partai');
+
         $item->save();
 
-        return redirect()->back()->with('success', 'Discount berhasil disimpan.');
+        return redirect()->back()->with(
+            'success',
+            'Pengaturan diskon berhasil disimpan.'
+        );
     }
 }

@@ -31,7 +31,7 @@
                                     <th>Stok Terjual</th>
                                     <th>Sisa Stok</th>
                                     <th>Harga Jual</th>
-                                    <th>Discount</th>
+                                    <th style="min-width: 75px;">Discount (%)</th>
                                     <th>Foto</th> 
                                     {{-- <th>Barcode</th> --}}
                                     <th>Tanggal Masuk</th>
@@ -52,33 +52,90 @@
                                             @else
                                                 -
                                             @endif
-                                        </td>
-                                        <td>
+                                        </td>                                
+                                        <td class="align-middle">
                                             @if(auth()->check() && auth()->user()->role === 'Owner')
-                                                <form action="{{ route('showroom.discount', $item->idshowroom) }}" method="POST">
+                                                <form id="formDiskon{{ $item->idshowroom }}"
+                                                        action="{{ route('showroom.discount', $item->idshowroom) }}"
+                                                        method="POST">
                                                     @csrf
+                                                
+                                                    {{-- Diskon Non-Partai --}}
+                                                    <div class="d-flex align-items-center mb-3">
+                                                        <label class="font-weight-bold mb-0 mr-2"
+                                                                style="width: 90px; min-width: 90px;">
+                                                            Non-Partai
+                                                        </label>
 
-                                                    <div class="input-group input-group-sm" style="max-width: 100px;">
-                                                        <input type="text"
-                                                                name="discount"
-                                                                class="form-control"
-                                                                value="{{ $item->discount == 0 ? '' : $item->discount }}"
-                                                                placeholder="-"
-                                                                required>
-
-                                                        <div class="input-group-append">
-                                                            <span class="input-group-text">%</span>
+                                                        <div class="input-group input-group-sm"
+                                                            style="width: 110px; flex-shrink: 0;">
+                                                            <input type="text"
+                                                                    name="discount"
+                                                                    class="form-control text-center"
+                                                                    inputmode="numeric"
+                                                                    pattern="[0-9]{1,3}"
+                                                                    maxlength="3"
+                                                                    value="{{ ($item->discount ?? 0) == 0 ? '' : $item->discount }}"
+                                                                    placeholder="-"
+                                                                    required>
+                                                            <div class="input-group-append">
+                                                                <span class="input-group-text">%</span>
+                                                            </div>
                                                         </div>
                                                     </div>
 
-                                                    <button type="submit" class="btn btn-sm btn-primary mt-1">
+                                                    {{-- Diskon Partai --}}
+                                                    <div class="d-flex align-items-center mb-3">
+                                                        <label class="font-weight-bold mb-0 mr-2"
+                                                                style="width: 90px; min-width: 90px;">
+                                                            Partai
+                                                        </label>
+
+                                                        <div class="input-group input-group-sm"
+                                                            style="width: 110px; flex-shrink: 0;">
+                                                            <input type="text"
+                                                                    name="discount_partai"
+                                                                    class="form-control text-center"
+                                                                    inputmode="numeric"
+                                                                    pattern="[0-9]{1,3}"
+                                                                    maxlength="3"
+                                                                    value="{{ ($item->discount_partai ?? 0) == 0 ? '' : $item->discount_partai }}"
+                                                                    placeholder="-">
+
+                                                            <div class="input-group-append">
+                                                                <span class="input-group-text">%</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Jenis diskon yang aktif --}}
+                                                    <input type="hidden"
+                                                            name="jenis_diskon"
+                                                            value="{{ $item->jenis_diskon ?? 'non_partai' }}">
+
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-primary px-3">
+                                                        <i class="mdi mdi-content-save-outline"></i>
                                                         Simpan
                                                     </button>
                                                 </form>
                                             @else
-                                                {{ $item->discount == 0 ? 'Tidak ada discount' : $item->discount . '%' }}
+                                                @php
+                                                    $jenisDiskon = $item->jenis_diskon ?? 'non_partai';
+                                                    $diskonAktif = $jenisDiskon === 'partai'
+                                                        ? $item->discount_partai
+                                                        : $item->discount;
+                                                @endphp
+
+                                                <div class="d-flex flex-column">
+                                                    <strong>{{ $jenisDiskon === 'partai' ? 'Partai' : 'Non-Partai' }}</strong>
+                                                    <span class="mt-1">
+                                                        {{ $diskonAktif ? $diskonAktif . '%' : '-' }}
+                                                    </span>
+                                                </div>
                                             @endif
                                         </td>
+
                                         <td>
                                             @if($item->produksi && $item->produksi->fotoproduk)
                                                 <button type="button" class="btn btn-link p-0" data-toggle="modal" data-target="#fotoModal{{ $item->idshowroom }}">

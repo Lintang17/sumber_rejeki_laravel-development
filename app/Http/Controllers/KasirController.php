@@ -169,8 +169,8 @@ public function penjualansimpan(Request $request)
         $kodenota = $this->getKodeNota($request->tanggalpenjualan);
 
         $dp = (int) ($request->dp ?? 0);
-        $grandtotal = (int) $request->grandtotal;
-        $sisabayar = max(0, $grandtotal - $dp);
+        $grandtotal = 0;
+        $sisabayar = 0;
 
         $penjualan = PenjualanModel::create([
             'notajual' => $notajual,
@@ -178,10 +178,10 @@ public function penjualansimpan(Request $request)
             'namapembeli' => $request->namapembeli,
             'notelp' => $request->notelp,
             'alamat' => $request->alamat,
-            'grandtotal' => $request->grandtotal,
-            'dp' => $request->dp,
-            'bayar' => $request->bayar,
-            'kembali' => $request->kembali,
+            'grandtotal' => 0,
+            'dp' => $dp,
+            'bayar' => (int) ($request->bayar ?? 0),
+            'kembali' => (int) ($request->kembali ?? 0),
             'tanggalpenjualan' => $request->tanggalpenjualan,
             'statuspengiriman' => 'Menunggu Konfirmasi',
             'statuspembayaran' => $request->dp > 0 ? 'DP' : 'Lunas',
@@ -192,6 +192,21 @@ public function penjualansimpan(Request $request)
         foreach ($request->idproduk as $i => $idproduk) {
             $showroom = ShowroomModel::with('produksi')->findOrFail($idproduk);
             $jumlahPembelian = (int) $request->jumlahpembelian[$i];
+
+            $harga = (int) $showroom->produksi->hargajual;
+            $discount = (float) ($showroom->discount ?? 0);
+
+            // Sub Total sebelum diskon
+            $subtotalBaris = $harga * $jumlahPembelian;
+
+            // Diskon setiap unit dikalikan jumlah pembelian
+            $diskonPerUnit = round($harga * $discount / 100);
+            $totalDiskonBaris = $diskonPerUnit * $jumlahPembelian;
+
+            // Total setelah diskon
+            $total = $subtotalBaris - $totalDiskonBaris;
+
+            $grandtotal += $total;
 
             // Hitung stok sisa saat ini
             $stokTersedia = ($showroom->stok_awal + $showroom->stok_tambahan) - $showroom->stok_terjual;
@@ -207,9 +222,9 @@ public function penjualansimpan(Request $request)
                 'idpenjualan' => $penjualan->idpenjualan,
                 'idproduk' => $idproduk,
                 'namaproduk' => $showroom->produksi->namaproduk,
-                'harga' => $request->harga[$i],
+                'harga' => $harga,
                 'jumlah_pembelian' => $jumlahPembelian,
-                'total' => $request->total[$i],
+                'total' => $total,
             ]);
 
             // Update showroom: tambah terjual dan hitung ulang sisa
@@ -217,6 +232,14 @@ public function penjualansimpan(Request $request)
             $showroom->stok_sisa = ($showroom->stok_awal + $showroom->stok_tambahan) - $showroom->stok_terjual;
             $showroom->save();
         }
+
+        $sisabayar = max(0, $grandtotal - $dp);
+
+        $penjualan->update([
+            'grandtotal' => $grandtotal,
+            'sisabayar' => $sisabayar,
+            'statuspembayaran' => $dp > 0 ? 'DP' : 'Lunas',
+        ]);
 
         DB::commit();
 
