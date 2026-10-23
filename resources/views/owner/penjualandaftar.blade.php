@@ -108,8 +108,10 @@
                                     <th class="text-center">Nama Pembeli</th>
                                     <th class="text-center">No. Telp</th>
                                     <th class="text-center">Alamat</th>
-                                    <th width="30%" class="text-center">Daftar Produk</th>
-                                    <th class="text-center">Total</th>
+                                    <th width="35%" class="text-center">Daftar Produk</th>
+                                    <th class="text-center">Subtotal</th>
+                                    <th class="text-center">Total Diskon</th>
+                                    <th class="text-center">Grand Total</th>
                                     <th class="text-center">DP</th>
                                     <th class="text-center">Bayar</th>
                                     <th class="text-center">Sisa Bayar</th>
@@ -123,6 +125,30 @@
                             <tbody>
                                 @php $no = 1; @endphp
                                 @foreach ($penjualan as $item)
+                                    @php
+                                        $subtotalTransaksi = 0;
+                                        $totalDiskonTransaksi = 0;
+                                    @endphp
+
+                                    @foreach ($item->penjualandetail ?? [] as $detail)
+                                        @php
+                                            $harga = (float) ($detail->harga ?? 0);
+                                            $jumlah = (int) ($detail->jumlah_pembelian ?? 0);
+                                            $subtotalBaris = $harga * $jumlah;
+                                            $totalBaris = (float) ($detail->total ?? 0);
+                                            $diskonBaris = max(0, $subtotalBaris - $totalBaris);
+
+                                            $subtotalTransaksi += $subtotalBaris;
+                                            $totalDiskonTransaksi += $diskonBaris;
+                                        @endphp
+                                    @endforeach
+
+                                    @php
+                                        $grandTotalTransaksi = (float) (
+                                            $item->grandtotal ?? ($subtotalTransaksi - $totalDiskonTransaksi)
+                                        );
+                                    @endphp
+
                                     <tr class="{{ $item->sisabayar > 0 ? 'table-warning' : '' }}">
                                         <td class="text-center">{{ $no++ }}</td>
                                         <td class="text-center">{{ $item->notajual }}</td>
@@ -130,27 +156,85 @@
                                         <td class="text-center">{{ $item->namapembeli ?? '-' }}</td>
                                         <td class="text-center">{{ $item->notelp ?? '-' }}</td>
                                         <td class="text-center">{{ $item->alamat ?? '-' }}</td>
+                                        {{-- DAFTAR PRODUK --}}
                                         <td>
-                                            <table style="width: 100%;">
+                                            <table class="table table-sm table-bordered mb-0"
+                                                style="width: 100%; font-size: 12px; min-width: 500px;">
                                                 <thead>
                                                     <tr>
                                                         <th>Nama Produk</th>
-                                                        <th>Jumlah</th>
-                                                        <th>Harga</th>
+                                                        <th class="text-right">Harga</th>
+                                                        <th class="text-center">Jumlah</th>
+                                                        <th>Jenis Diskon</th>
+                                                        <th class="text-center">Diskon (%)</th>
+                                                        <th class="text-right">Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @foreach ($item->penjualandetail as $detail)
-                                                        <tr>
-                                                            <td>{{ $detail->namaproduk }}</td>
-                                                            <td>{{ $detail->jumlah_pembelian }}</td>
-                                                            <td>{{ rupiah($detail->harga) }}</td>
-                                                        </tr>
-                                                    @endforeach
+                                                    @forelse ($item->penjualandetail as $detail)
+                                                    @php
+                                                        $harga = (float) ($detail->harga ?? 0);
+                                                        $jumlah = (int) ($detail->jumlah_pembelian ?? 0);
+
+                                                        $subtotalBaris = $harga * $jumlah;
+                                                        $totalBaris = (float) ($detail->total ?? 0);
+                                                        $diskonBaris = max(0, $subtotalBaris - $totalBaris);
+
+                                                        $persenDiskon = $subtotalBaris > 0
+                                                            ? ($diskonBaris / $subtotalBaris) * 100
+                                                            : 0;
+
+                                                        $jenisDiskon = strtolower(
+                                                            trim((string) ($detail->jenis_diskon ?? ''))
+                                                        );
+                                                        if ($jenisDiskon === 'non_partai') {
+                                                            $jenisDiskon = 'Non-Partai';
+                                                        } elseif ($jenisDiskon === 'partai') {
+                                                            $jenisDiskon = 'Partai';
+                                                        } elseif ($jenisDiskon === '') {
+                                                            $jenisDiskon = '-';
+                                                        } else {
+                                                            $jenisDiskon = ucwords(
+                                                                str_replace('_', ' ', $jenisDiskon)
+                                                            );
+                                                        }
+                                                    @endphp
+
+                                                    <tr>
+                                                        <td>{{ $detail->namaproduk }}</td>
+                                                        <td class="text-right text-nowrap"> {{ rupiah($harga) }}</td>
+                                                        <td class="text-center">
+                                                            {{ $jumlah }}
+                                                        </td>
+                                                        <td class="text-center text-nowrap">
+                                                            {{ $jenisDiskon }}
+                                                        </td>
+                                                        <td class="text-center text-nowrap">
+                                                            {{ rtrim(rtrim(number_format($persenDiskon, 2, ',', '.'), '0'), ',') }}%
+                                                        </td>
+                                                        <td class="text-right text-nowrap">
+                                                            {{ rupiah($totalBaris) }}
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="6" class="text-center">
+                                                            Tidak ada data
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
                                                 </tbody>
                                             </table>
                                         </td>
-                                        <td class="text-center">{{ rupiah($item->grandtotal) }}</td>
+                                        <td class="text-center text-nowrap">
+                                            {{ rupiah($subtotalTransaksi) }}
+                                        </td>
+                                        <td class="text-center text-nowrap">
+                                            {{ rupiah($totalDiskonTransaksi) }}
+                                        </td>
+                                        <td class="text-center text-nowrap font-weight-bold">
+                                            {{ rupiah($grandTotalTransaksi) }}
+                                        </td>
                                         <td class="text-center">{{ rupiah($item->dp ?? 0) }}</td>
                                         <td class="text-center">{{ rupiah($item->bayar ?? 0) }}</td>
                                         <td class="text-center">{{ rupiah($item->sisabayar ?? 0) }}</td>
