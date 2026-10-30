@@ -165,6 +165,8 @@ Route::middleware(['auth'])->controller(OwnerController::class)->group(function 
     // showroom
     Route::get('owner/showroomdaftar', [OwnerController::class, 'showroomdaftar']);
     Route::post('owner/showroom/{id}/discount', [OwnerController::class,'updateDiscount'])->name('showroom.discount');
+    Route::delete('owner/showroomhapus/{id}', [OwnerController::class, 'showroomhapus'])
+        ->name('owner.showroomhapus');
    
     // transaksi penjualan
     Route::get('owner/penjualandaftar', [OwnerController::class, 'penjualandaftar']);

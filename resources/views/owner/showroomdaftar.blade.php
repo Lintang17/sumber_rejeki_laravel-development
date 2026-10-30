@@ -35,6 +35,7 @@
                                     <th>Foto</th> 
                                     {{-- <th>Barcode</th> --}}
                                     <th>Tanggal Masuk</th>
+                                    <th class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -178,6 +179,19 @@
                                             @endif
                                         </td> --}}
                                         <td>{{ \Carbon\Carbon::parse($item->tanggalmasuk)->format('d-m-Y') }}</td>
+                                        <td class="text-center">
+                                            <form action="{{ route('owner.showroomhapus', $item->idshowroom) }}"
+                                                  method="POST"
+                                                  class="form-hapus-showroom">
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button type="button"
+                                                        class="btn btn-danger btn-sm btn-konfirmasi-hapus">
+                                                    <i class="mdi mdi-delete"></i> Hapus
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
 
                                     {{-- Modal Zoom Foto --}}
@@ -202,7 +216,7 @@
                                     @endif
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center">Belum ada barang masuk showroom.</td>
+                                        <td colspan="10" class="text-center">Belum ada barang masuk showroom.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -233,6 +247,30 @@
         aturInputDiskon();
     });
 })();
+</script>
+
+<script>
+document.addEventListener('click', function (e) {
+    const tombol = e.target.closest('.btn-konfirmasi-hapus');
+    if (!tombol) return;
+    e.preventDefault();
+    const form = tombol.closest('form');
+    Swal.fire({
+        title: 'Yakin mau hapus?',
+        text: 'Data barang showroom akan dihapus secara permanen!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Tidak',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
+});
 </script>
 
 @endsection
