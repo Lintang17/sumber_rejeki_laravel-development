@@ -226,6 +226,17 @@ public function showroomdaftar()
     ]);
 }
 
+// Showroom Hapus
+
+public function showroomhapus($id)
+{
+    $showroom = ShowroomModel::findOrFail($id);
+    $showroom->forceDelete();
+
+    return redirect('admin/showroomdaftar')
+        ->with('success', 'Barang showroom berhasil dihapus.');
+}
+
 public function penjualandaftar(Request $request)
 {
     // $data['penjualan'] = PenjualanModel::with('penjualandetail')->orderBy('tanggalpenjualan', 'desc')->get();

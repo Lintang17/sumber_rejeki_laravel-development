@@ -28,6 +28,8 @@ Route::middleware(['auth'])->controller(AdminController::class)->group(function 
     Route::get('admin/showroomtambah', [AdminController::class, 'showroomtambah']);
     Route::post('admin/showroomsimpan', [AdminController::class, 'showroomsimpan']);
     Route::get('admin/showroomdaftar', [AdminController::class, 'showroomdaftar']);
+    Route::delete('admin/showroomhapus/{id}', [AdminController::class, 'showroomhapus'])
+        ->name('admin.showroomhapus');
 
     // transaksi penjualan
     Route::get('admin/penjualandaftar', [AdminController::class, 'penjualandaftar']);
