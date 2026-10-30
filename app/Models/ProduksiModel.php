@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProduksiModel extends Model
 {
+    use SoftDeletes;
     protected $table = 'produksi'; // Nama tabel (karena tidak jamak)
 
     protected $primaryKey = 'idproduksi'; // Primary key

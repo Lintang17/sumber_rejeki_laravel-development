@@ -13,6 +13,7 @@ use App\Models\StockopnameModel;
 use App\Models\User;
 use App\Models\Po;
 use App\Models\PoDetail;
+use App\Models\HistoryHapus;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -816,5 +817,132 @@ public function opnameriwayat()
             'Diskon ' . ($jenisDiskon === 'partai' ? 'Partai' : 'Non-Partai')
             . ' berhasil disimpan.'
         );
+    }
+
+    // HISTORY HAPUS PRODUKSI
+
+    public function historyhapus(Request $request)
+    {
+        if (!auth()->check() || auth()->user()->role !== 'Owner') {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
+
+        $request->validate([
+            'bulan' => 'nullable|integer|min:1|max:12',
+            'tahun' => 'nullable|integer|min:2000|max:2100',
+        ]);
+
+        $query = HistoryHapus::where('jenis_data', 'Produksi');
+
+        if ($request->filled('bulan')) {
+            $query->whereMonth('dihapus_pada', $request->bulan);
+        }
+
+        if ($request->filled('tahun')) {
+            $query->whereYear('dihapus_pada', $request->tahun);
+        }
+
+        $history = $query
+            ->orderBy('dihapus_pada', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('owner.historyhapus', compact('history'));
+    }
+
+    // PULIHKAN DATA PRODUKSI
+
+    public function historyhapusPulihkan($id)
+    {
+        if (!auth()->check() || auth()->user()->role !== 'Owner') {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $history = HistoryHapus::where('jenis_data', 'Produksi')
+                ->findOrFail($id);
+
+            if ($history->dipulihkan_pada || $history->dihapus_permanen_pada) {
+                DB::rollBack();
+
+                return redirect()->route('owner.historyhapus')
+                    ->with('error', 'Data ini sudah dipulihkan atau dihapus permanen.');
+            }
+
+            $produksi = ProduksiModel::withTrashed()
+                ->findOrFail($history->data_id);
+
+            if (!$produksi->trashed()) {
+                return redirect()->route('owner.historyhapus')
+                    ->with('error', 'Data produksi sudah tidak berada di tempat sampah.');
+            }
+
+            $produksi->restore();
+
+            $history->dipulihkan_pada = now();
+            $history->save();
+
+            DB::commit();
+
+            return redirect()->route('owner.historyhapus')
+                ->with('success', 'Data produksi berhasil dipulihkan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()->route('owner.historyhapus')
+                ->with('error', 'Gagal memulihkan data: ' . $e->getMessage());
+        }
+    }
+
+    // HAPUS PERMANEN DATA PRODUKSI
+
+    public function historyhapusPermanen($id)
+    {
+        if (!auth()->check() || auth()->user()->role !== 'Owner') {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $history = HistoryHapus::where('jenis_data', 'Produksi')
+                ->findOrFail($id);
+
+            if ($history->dipulihkan_pada || $history->dihapus_permanen_pada) {
+                return redirect()->route('owner.historyhapus')
+                    ->with('error', 'Data ini sudah dipulihkan atau dihapus permanen.');
+            }
+
+            if (!$history->dihapus_pada ||
+                $history->dihapus_pada->gt(now()->subDays(30))) {
+                return redirect()->route('owner.historyhapus')
+                    ->with('error', 'Data belum melewati masa penyimpanan 30 hari.');
+            }
+
+            $produksi = ProduksiModel::withTrashed()
+                ->findOrFail($history->data_id);
+
+            if (!$produksi->trashed()) {
+                return redirect()->route('owner.historyhapus')
+                    ->with('error', 'Data produksi sudah tidak berada di tempat sampah.');
+            }
+
+            $produksi->forceDelete();
+
+            $history->dihapus_permanen_pada = now();
+            $history->save();
+
+            DB::commit();
+
+            return redirect()->route('owner.historyhapus')
+                ->with('success', 'Data produksi berhasil dihapus permanen.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()->route('owner.historyhapus')
+                ->with('error', 'Gagal menghapus permanen: ' . $e->getMessage());
+        }
     }
 }

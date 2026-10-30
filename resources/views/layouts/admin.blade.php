@@ -742,6 +742,14 @@ if (auth()->user()->role == 'Admin') {
                     </div>
                 </li>
 
+                {{-- HISTORY HAPUS KHUSUS OWNER --}}
+                <li class="nav-item {{ Request::is('owner/historyhapus') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ url('owner/historyhapus') }}">
+                        <i class="mdi mdi-history menu-icon"></i>
+                        <span class="menu-title">History Hapus</span>
+                    </a>
+                </li>
+
                 <!-- KASIR -->
 
                 <?php } ?>

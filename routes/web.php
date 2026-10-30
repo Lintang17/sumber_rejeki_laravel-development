@@ -241,7 +241,17 @@ Route::middleware(['auth'])->controller(OwnerController::class)->group(function 
     Route::get('owner/po', 'poDaftar');
     Route::get('owner/po/{id}/review', 'poReview');
     Route::post('owner/po/{id}/approve', 'poApprove');
-});
+
+    // History Hapus
+    Route::get('owner/historyhapus', 'historyhapus')
+        ->name('owner.historyhapus');
+    // Pulihkan data produksi
+    Route::post('owner/historyhapus/pulihkan/{id}', 'historyhapusPulihkan')
+        ->name('owner.historyhapus.pulihkan');
+    // Hapus permanen data produksi
+    Route::delete('owner/historyhapus/permanen/{id}', 'historyhapusPermanen')
+        ->name('owner.historyhapus.permanen');
+    });
 
 // -- KASIR --//
 Route::middleware(['auth'])->controller(KasirController::class)->group(function () {

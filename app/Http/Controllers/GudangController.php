@@ -10,6 +10,7 @@ use App\Models\PembelianModel;
 use App\Models\ProdukModel;
 use App\Models\Po;
 use App\Models\PoDetail;
+use App\Models\HistoryHapus;
 //use App\Models\StockopnameModel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -163,20 +164,45 @@ public function produksiupdate(Request $request, $id)
 
 // Hapus Daftar Produksi
 
+// public function produksihapus($id)
+// {
+//     $produksi = ProduksiModel::findOrFail($id);
+
+//     // Hapus file foto jika ada
+//     if (
+//         $produksi->fotoproduk &&
+//         file_exists(public_path('uploads/foto_produk/' . $produksi->fotoproduk))
+//     ) {
+//         unlink(public_path('uploads/foto_produk/' . $produksi->fotoproduk));
+//     }
+
+//     // Hapus data produksi
+//     $produksi->delete();
+
+//     return redirect('gudang/produksidaftar')
+//         ->with('success', 'Data produksi berhasil dihapus.');
+// }
+
 public function produksihapus($id)
 {
-    $produksi = ProduksiModel::findOrFail($id);
+    DB::transaction(function () use ($id) {
 
-    // Hapus file foto jika ada
-    if (
-        $produksi->fotoproduk &&
-        file_exists(public_path('uploads/foto_produk/' . $produksi->fotoproduk))
-    ) {
-        unlink(public_path('uploads/foto_produk/' . $produksi->fotoproduk));
-    }
+        $produksi = ProduksiModel::findOrFail($id);
 
-    // Hapus data produksi
-    $produksi->delete();
+        // Simpan riwayat sebelum data dihapus
+        HistoryHapus::create([
+            'user_id' => Auth::id(),
+            'nama_user' => Auth::user()->name,
+            'jenis_data' => 'Produksi',
+            'data_id' => $produksi->idproduksi,
+            'nama_data' => $produksi->namaproduk,
+            'data_snapshot' => $produksi->toArray(),
+            'dihapus_pada' => now(),
+        ]);
+
+        // Soft delete data produksi
+        $produksi->delete();
+    });
 
     return redirect('gudang/produksidaftar')
         ->with('success', 'Data produksi berhasil dihapus.');
