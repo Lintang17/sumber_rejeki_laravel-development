@@ -114,10 +114,20 @@ public function showroomhapus($id)
 {
     $showroom = ShowroomModel::findOrFail($id);
 
-    $showroom->forceDelete();
+    HistoryHapus::create([
+        'user_id' => auth()->id(),
+        'nama_user' => auth()->user()->name,
+        'jenis_data' => 'Showroom',
+        'data_id' => $showroom->getKey(),
+        'nama_data' => $showroom->nama_barang ?? 'Barang Showroom',
+        'data_snapshot' => $showroom->toArray(),
+        'dihapus_pada' => now(),
+    ]);
+
+    $showroom->delete();
 
     return redirect('owner/showroomdaftar')
-        ->with('success', 'Barang showroom berhasil dihapus.');
+        ->with('success', 'Barang showroom berhasil dihapus dan masuk ke History Hapus.');
 }
 
 public function penjualandaftar(Request $request)
@@ -462,8 +472,6 @@ public function opnameriwayat()
 
         return view('owner.laporanpenjualan', compact('penjualan', 'tahun', 'bulan', 'namabarang', 'produk'));
     }
-
-
 
 
     public function laporanPenjualanCetak(Request $request, $tahun, $bulan, $namabarang)
@@ -819,7 +827,7 @@ public function opnameriwayat()
         );
     }
 
-    // HISTORY HAPUS PRODUKSI
+    // HISTORY HAPUS
 
     public function historyhapus(Request $request)
     {
@@ -832,7 +840,11 @@ public function opnameriwayat()
             'tahun' => 'nullable|integer|min:2000|max:2100',
         ]);
 
-        $query = HistoryHapus::where('jenis_data', 'Produksi');
+        // Tampilkan riwayat Produksi dan Showroom
+        $query = HistoryHapus::whereIn('jenis_data', [
+            'Produksi',
+            'Showroom',
+        ]);
 
         if ($request->filled('bulan')) {
             $query->whereMonth('dihapus_pada', $request->bulan);
@@ -844,14 +856,14 @@ public function opnameriwayat()
 
         $history = $query
             ->orderBy('dihapus_pada', 'desc')
-            ->paginate(10)
-            ->withQueryString();
+            ->paginate(10);
+
+        $history->appends($request->query());
 
         return view('owner.historyhapus', compact('history'));
     }
 
-    // PULIHKAN DATA PRODUKSI
-
+    // PULIHKAN DATA 
     public function historyhapusPulihkan($id)
     {
         if (!auth()->check() || auth()->user()->role !== 'Owner') {
@@ -861,25 +873,35 @@ public function opnameriwayat()
         DB::beginTransaction();
 
         try {
-            $history = HistoryHapus::where('jenis_data', 'Produksi')
-                ->findOrFail($id);
+            $history = HistoryHapus::findOrFail($id);
 
             if ($history->dipulihkan_pada || $history->dihapus_permanen_pada) {
-                DB::rollBack();
-
-                return redirect()->route('owner.historyhapus')
-                    ->with('error', 'Data ini sudah dipulihkan atau dihapus permanen.');
+                throw new \Exception('Data sudah dipulihkan atau dihapus permanen.');
             }
 
-            $produksi = ProduksiModel::withTrashed()
-                ->findOrFail($history->data_id);
-
-            if (!$produksi->trashed()) {
-                return redirect()->route('owner.historyhapus')
-                    ->with('error', 'Data produksi sudah tidak berada di tempat sampah.');
+            if (!$history->dihapus_pada ||
+                $history->dihapus_pada->lt(now()->subDays(30))) {
+                throw new \Exception('Masa pemulihan data sudah melewati 30 hari.');
             }
 
-            $produksi->restore();
+            // Tentukan model berdasarkan jenis data
+            if ($history->jenis_data === 'Produksi') {
+                $data = ProduksiModel::withTrashed()
+                    ->findOrFail($history->data_id);
+
+            } elseif ($history->jenis_data === 'Showroom') {
+                $data = ShowroomModel::withTrashed()
+                    ->findOrFail($history->data_id);
+
+            } else {
+                throw new \Exception('Jenis data belum didukung.');
+            }
+
+            if (!$data->trashed()) {
+                throw new \Exception('Data sudah tidak berada di tempat sampah.');
+            }
+
+            $data->restore();
 
             $history->dipulihkan_pada = now();
             $history->save();
@@ -887,7 +909,8 @@ public function opnameriwayat()
             DB::commit();
 
             return redirect()->route('owner.historyhapus')
-                ->with('success', 'Data produksi berhasil dipulihkan.');
+                ->with('success', 'Data ' . $history->jenis_data . ' berhasil dipulihkan.');
+
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -896,9 +919,9 @@ public function opnameriwayat()
         }
     }
 
-    // HAPUS PERMANEN DATA PRODUKSI
+    // HAPUS PERMANEN DATA 
 
-    public function historyhapusPermanen($id)
+   public function historyhapusPermanen($id)
     {
         if (!auth()->check() || auth()->user()->role !== 'Owner') {
             abort(403, 'Anda tidak memiliki akses.');
@@ -907,42 +930,51 @@ public function opnameriwayat()
         DB::beginTransaction();
 
         try {
-            $history = HistoryHapus::where('jenis_data', 'Produksi')
-                ->findOrFail($id);
+            $history = HistoryHapus::findOrFail($id);
 
             if ($history->dipulihkan_pada || $history->dihapus_permanen_pada) {
-                return redirect()->route('owner.historyhapus')
-                    ->with('error', 'Data ini sudah dipulihkan atau dihapus permanen.');
+                throw new \Exception('Data sudah dipulihkan atau dihapus permanen.');
             }
 
-            if (!$history->dihapus_pada ||
-                $history->dihapus_pada->gt(now()->subDays(30))) {
-                return redirect()->route('owner.historyhapus')
-                    ->with('error', 'Data belum melewati masa penyimpanan 30 hari.');
+            // Pembelian dan Penjualan tidak boleh dihapus permanen
+            if (in_array($history->jenis_data, ['Penjualan', 'Pembelian'])) {
+                throw new \Exception('Data Penjualan dan Pembelian tidak boleh dihapus permanen.');
             }
 
-            $produksi = ProduksiModel::withTrashed()
-                ->findOrFail($history->data_id);
+            // Tentukan model berdasarkan jenis data
+            if ($history->jenis_data === 'Produksi') {
+                $data = ProduksiModel::withTrashed()
+                    ->findOrFail($history->data_id);
 
-            if (!$produksi->trashed()) {
-                return redirect()->route('owner.historyhapus')
-                    ->with('error', 'Data produksi sudah tidak berada di tempat sampah.');
+            } elseif ($history->jenis_data === 'Showroom') {
+                $data = ShowroomModel::withTrashed()
+                    ->findOrFail($history->data_id);
+
+            } else {
+                throw new \Exception('Jenis data belum didukung.');
             }
 
-            $produksi->forceDelete();
+            if (!$data->trashed()) {
+                throw new \Exception('Data sudah tidak berada di tempat sampah.');
+            }
 
+            // Hapus data aslinya secara permanen
+            $data->forceDelete();
+
+            // Catat waktu penghapusan permanen
             $history->dihapus_permanen_pada = now();
             $history->save();
 
             DB::commit();
 
             return redirect()->route('owner.historyhapus')
-                ->with('success', 'Data produksi berhasil dihapus permanen.');
+                ->with('success', 'Data ' . $history->jenis_data . ' berhasil dihapus permanen.');
+
         } catch (\Exception $e) {
             DB::rollBack();
 
             return redirect()->route('owner.historyhapus')
-                ->with('error', 'Gagal menghapus permanen: ' . $e->getMessage());
+                ->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
 }

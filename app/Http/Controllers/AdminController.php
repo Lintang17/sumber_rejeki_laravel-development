@@ -10,6 +10,7 @@ use App\Models\ProdukModel;
 use App\Models\User;
 use App\Models\Po;
 use App\Models\PoDetail;
+use App\Models\HistoryHapus;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -230,8 +231,22 @@ public function showroomdaftar()
 
 public function showroomhapus($id)
 {
-    $showroom = ShowroomModel::findOrFail($id);
-    $showroom->forceDelete();
+    DB::transaction(function () use ($id) {
+        $showroom = ShowroomModel::with('produksi')->findOrFail($id);
+
+        HistoryHapus::create([
+            'user_id' => Auth::id(),
+            'nama_user' => Auth::user()->name,
+            'jenis_data' => 'Showroom',
+            'data_id' => $showroom->idshowroom,
+            'nama_data' => $showroom->produksi->namaproduk
+                ?? 'Showroom #' . $showroom->idshowroom,
+            'data_snapshot' => $showroom->toArray(),
+            'dihapus_pada' => now(),
+        ]);
+
+        $showroom->delete();
+    });
 
     return redirect('admin/showroomdaftar')
         ->with('success', 'Barang showroom berhasil dihapus.');
