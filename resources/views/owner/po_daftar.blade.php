@@ -23,11 +23,6 @@
                                     Purchase Order (Owner)
                                 </h4>
                             </div>
-                            <div>
-                                <span class="badge badge-primary badge-lg px-3 py-2">
-                                    <i class="fas fa-box mr-1"></i> {{ $po->count() }} Data
-                                </span>
-                            </div>
                         </div>
                     </div>
 

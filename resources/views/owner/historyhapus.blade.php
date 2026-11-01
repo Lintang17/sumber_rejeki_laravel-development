@@ -18,12 +18,14 @@
                     </div>
 
                     <div class="filter-card mb-4">
-                        <form method="GET" action="{{ route('owner.historyhapus') }}">
+                        <form method="GET" action="{{ route('owner.historyhapus') }}" id="filterHistory">
                             <div class="filter-content">
                                 <div class="filter-fields">
                                     <div class="filter-item">
                                         <label for="bulan">Bulan</label>
-                                        <select name="bulan" id="bulan" class="form-control">
+                                        <select name="bulan" id="bulan"
+                                            class="form-control"
+                                            style="height: 40px; min-height: 45px; padding: 8px 12px; line-height: 24px; font-size: 13px; box-sizing: border-box;">
                                             <option value="">Semua Bulan</option>
                                             @foreach ([
                                                 1 => 'Januari', 2 => 'Februari',
@@ -40,10 +42,11 @@
                                             @endforeach
                                         </select>
                                     </div>
-
                                     <div class="filter-item">
                                         <label for="tahun">Tahun</label>
-                                        <select name="tahun" id="tahun" class="form-control">
+                                        <select name="tahun" id="tahun"
+                                            class="form-control"
+                                            style="height: 40px; min-height: 45px; padding: 8px 12px; line-height: 24px; font-size: 13px; box-sizing: border-box;">
                                             <option value="">Semua Tahun</option>
                                             @for ($tahun = date('Y'); $tahun >= date('Y') - 5; $tahun--)
                                                 <option value="{{ $tahun }}"
@@ -54,12 +57,7 @@
                                         </select>
                                     </div>
                                 </div>
-
                                 <div class="filter-buttons">
-                                    <button type="submit" class="btn btn-filter">
-                                        <i class="mdi mdi-magnify"></i> Filter
-                                    </button>
-
                                     <a href="{{ route('owner.historyhapus') }}" class="btn btn-reset">
                                         <i class="mdi mdi-refresh"></i> Reset
                                     </a>
@@ -105,12 +103,16 @@
                                                 {{ $item->jenis_data }}
                                             </span>
                                         </td>
-                                        <td class="font-weight-bold text-dark">
-                                            {{ $item->nama_data ?? '-' }}
+                                        <td>
+                                            <div style="font-size: 14px; font-weight: 700; color: #493737;">
+                                                {{ $item->nama_data ?? '-' }}
+                                            </div>
                                         </td>
                                         <td>
-                                            <i class="mdi mdi-account-outline text-muted"></i>
-                                            {{ $item->nama_user ?? '-' }}
+                                            <div style="font-size: 14px; font-weight: 700; color: #493737;">
+                                                <i class="mdi mdi-account-outline" style="color: #A97474;"></i>
+                                                {{ $item->nama_user ?? '-' }}
+                                            </div>
                                         </td>
                                         <td>
                                             <div class="date-text">
@@ -153,10 +155,8 @@
                                                 @if (!$melewatiBatas)
                                                     <form action="{{ route('owner.historyhapus.pulihkan', $item->id) }}"
                                                           method="POST"
-                                                          class="d-inline"
-                                                          onsubmit="return confirm('Pulihkan data ini?')">
+                                                          class="d-inline form-pulihkan">
                                                         @csrf
-
                                                         <button type="submit" class="btn btn-restore btn-sm">
                                                             <i class="mdi mdi-restore"></i> Pulihkan
                                                         </button>
@@ -167,11 +167,10 @@
                                                 @if (!in_array($item->jenis_data, ['Penjualan', 'Pembelian']))
                                                     <form action="{{ route('owner.historyhapus.permanen', $item->id) }}"
                                                           method="POST"
-                                                          class="d-inline"
-                                                          onsubmit="return confirm('Hapus data ini secara permanen? Data tidak dapat dikembalikan!')">
+                                                          class="d-inline form-hapus-permanen">
                                                         @csrf
                                                         @method('DELETE')
-
+                                                    
                                                         <button type="submit" class="btn btn-permanent btn-sm">
                                                             <i class="mdi mdi-delete-forever"></i> Hapus Permanen
                                                         </button>
@@ -319,13 +318,14 @@
         color: white;
     }
     .btn-reset {
-        background: white;
-        color: #7A4F4F;
-        border: 1px solid #A97474;
+        background: #7A4F4F;
+        color: white;
+        border: 1px solid #7A4F4F;
     }
     .btn-reset:hover {
-        background: #f4e8e8;
-        color: #613c3c;
+        background: #613c3c;
+        color: white;
+        border-color: #613c3c;
     }
     .table-heading {
         display: flex;
@@ -387,7 +387,7 @@
         color: #7A4F4F;
         border-radius: 5px;
         padding: 6px 10px;
-        font-size: 11px;
+        font-size: 13px;
         font-weight: 700;
     }
     .date-text strong {
@@ -408,12 +408,12 @@
     .status-label {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        padding: 7px 10px;
+        gap: 5px;
+        padding: 8px 11px;
         border-radius: 5px;
-        font-size: 10px;
-        font-weight: 700;
-        white-space: nowrap;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;    
     }
     .status-success {
         background: #d9f2e2;
@@ -582,4 +582,71 @@
         }
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Filter otomatis berdasarkan bulan dan tahun
+        const filterForm = document.getElementById('filterHistory');
+        const bulan = document.getElementById('bulan');
+        const tahun = document.getElementById('tahun');
+
+        if (filterForm && bulan && tahun) {
+            bulan.addEventListener('change', function () {
+                filterForm.submit();
+            });
+
+            tahun.addEventListener('change', function () {
+                filterForm.submit();
+            });
+        }
+
+        // Konfirmasi Pulihkan
+        document.querySelectorAll('.form-pulihkan').forEach(function (formPulihkan) {
+            formPulihkan.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Pulihkan Data?',
+                    text: 'Data akan dikembalikan ke halaman asal dengan ID yang sama.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#25975a',
+                    cancelButtonColor: '#7A4F4F',
+                    confirmButtonText: 'Ya, Pulihkan',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        formPulihkan.submit();
+                    }
+                });
+            });
+        });
+
+        // Konfirmasi Hapus Permanen
+        document.querySelectorAll('.form-hapus-permanen').forEach(function (formHapus) {
+            formHapus.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Hapus Permanen?',
+                    text: 'Data yang dihapus secara permanen tidak dapat dipulihkan kembali!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#c94343',
+                    cancelButtonColor: '#7A4F4F',
+                    confirmButtonText: 'Ya, Hapus Permanen',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        formHapus.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
+
 @endsection
