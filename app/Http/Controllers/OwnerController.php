@@ -637,20 +637,47 @@ public function opnameriwayat()
     public function internalhapus($id)
     {
         $user = User::find($id);
-
         if (!$user) {
             return redirect('owner/internaldaftar')
                 ->with('error', 'User tidak ditemukan');
         }
 
-        if ($user->file) {
-            Storage::disk('public')->delete($user->file);
+        DB::beginTransaction();
+
+        try {
+            // Simpan data akun ke History Hapus
+            HistoryHapus::create([
+                'user_id' => auth()->id(),
+                'nama_user' => auth()->user()->name,
+                'jenis_data' => 'Internal',
+                'data_id' => $user->id,
+                'nama_data' => $user->name,
+                'data_snapshot' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'alamat' => $user->alamat,
+                    'nohp' => $user->nohp,
+                    'role' => $user->role,
+                    'file' => $user->file,
+                ],
+                'dihapus_pada' => now(),
+            ]);
+
+            // Soft delete akun
+            $user->delete();
+            DB::commit();
+
+            return redirect('owner/internaldaftar')
+                ->with('success', 'User berhasil dihapus dan masuk ke History Hapus.');
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return redirect('owner/internaldaftar')
+                ->with('error', 'Gagal menghapus user: ' . $e->getMessage());
         }
-
-        $user->delete();
-
-        return redirect('owner/internaldaftar')
-            ->with('success', 'User berhasil dihapus');
     }
 
     // profile
@@ -840,10 +867,11 @@ public function opnameriwayat()
             'tahun' => 'nullable|integer|min:2000|max:2100',
         ]);
 
-        // Tampilkan riwayat Produksi dan Showroom
+        // Riwayat Hapus
         $query = HistoryHapus::whereIn('jenis_data', [
             'Produksi',
             'Showroom',
+            'Internal',
         ]);
 
         if ($request->filled('bulan')) {
@@ -891,6 +919,10 @@ public function opnameriwayat()
 
             } elseif ($history->jenis_data === 'Showroom') {
                 $data = ShowroomModel::withTrashed()
+                    ->findOrFail($history->data_id);
+
+            } elseif ($history->jenis_data === 'Internal') {
+                $data = User::withTrashed()
                     ->findOrFail($history->data_id);
 
             } else {
@@ -950,6 +982,10 @@ public function opnameriwayat()
                 $data = ShowroomModel::withTrashed()
                     ->findOrFail($history->data_id);
 
+            } elseif ($history->jenis_data === 'Internal') {
+                $data = User::withTrashed()
+                    ->findOrFail($history->data_id);
+
             } else {
                 throw new \Exception('Jenis data belum didukung.');
             }
@@ -958,7 +994,14 @@ public function opnameriwayat()
                 throw new \Exception('Data sudah tidak berada di tempat sampah.');
             }
 
-            // Hapus data aslinya secara permanen
+            // Simpan lokasi foto profil jika data Internal
+            $fileToDelete = null;
+
+            if ($history->jenis_data === 'Internal') {
+                $fileToDelete = $data->file;
+            }
+
+            // Hapus data dari database secara permanen
             $data->forceDelete();
 
             // Catat waktu penghapusan permanen
@@ -966,6 +1009,11 @@ public function opnameriwayat()
             $history->save();
 
             DB::commit();
+
+            // Hapus foto setelah database berhasil diperbarui
+            if ($fileToDelete) {
+                Storage::disk('public')->delete($fileToDelete);
+            }
 
             return redirect()->route('owner.historyhapus')
                 ->with('success', 'Data ' . $history->jenis_data . ' berhasil dihapus permanen.');

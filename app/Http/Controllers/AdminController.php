@@ -1196,28 +1196,60 @@ public function barangmasukupdate(Request $request, $id)
 
         // Admin tidak boleh menghapus Owner
         if ($user->role == 'Owner') {
-            return redirect('admin/internaldaftar')->with('error', 'Anda tidak memiliki izin untuk menghapus akun Owner!');
+            return redirect('admin/internaldaftar')
+                ->with('error', 'Anda tidak memiliki izin untuk menghapus akun Owner!');
         }
 
         $hapusAkunSendiri = auth()->id() == $user->id;
 
-        // Hapus file profile jika ada
-        if ($user->file) {
-            Storage::disk('public')->delete($user->file);
+        DB::beginTransaction();
+
+        try {
+
+            // Simpan riwayat penghapusan
+            HistoryHapus::create([
+                'user_id' => Auth::id(),
+                'nama_user' => Auth::user()->name,
+                'jenis_data' => 'Internal',
+                'data_id' => $user->id,
+                'nama_data' => $user->name,
+                'data_snapshot' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'alamat' => $user->alamat,
+                    'nohp' => $user->nohp,
+                    'role' => $user->role,
+                    'file' => $user->file,
+                ],
+                'dihapus_pada' => now(),
+            ]);
+
+            // Soft delete akun
+            $user->delete();
+
+            DB::commit();
+
+            if ($hapusAkunSendiri) {
+                Auth::logout();
+
+                request()->session()->invalidate();
+                request()->session()->regenerateToken();
+
+                return redirect('/login')
+                    ->with('success', 'Akun berhasil dihapus.');
+            }
+
+            return redirect('admin/internaldaftar')
+                ->with('success', 'User berhasil dihapus.');
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return redirect('admin/internaldaftar')
+                ->with('error', 'Gagal menghapus user: ' . $e->getMessage());
         }
-    
-        $user->delete();
-
-        if ($hapusAkunSendiri) {
-            Auth::logout();
-            request()->session()->invalidate();
-            request()->session()->regenerateToken();
-
-            return redirect('/login')
-                ->with('success', 'Akun Anda berhasil dihapus.');
-        }
-
-        return redirect('admin/internaldaftar')->with('success', 'User berhasil dihapus');
     }
 
     // profile
