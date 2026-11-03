@@ -1601,23 +1601,43 @@ public function barangmasukupdate(Request $request, $id)
         DB::beginTransaction();
 
         try {
+            $po = Po::with('detail')->findOrFail($id);
 
-            $po = Po::findOrFail($id);
+            // Simpan riwayat penghapusan PO beserta detailnya
+            HistoryHapus::create([
+                'user_id' => Auth::id(),
+                'nama_user' => Auth::user()->name,
+                'jenis_data' => 'PO',
+                'data_id' => $po->id,
+                'nama_data' => $po->kode_po . ' - ' . $po->customer,
+                'data_snapshot' => [
+                    'po' => $po->toArray(),
+                    'detail' => $po->detail->toArray(),
+                ],
+                'dihapus_pada' => now(),
+            ]);
 
-            PoDetail::where('po_id', $po->id)->delete();
+            // Soft delete seluruh detail PO
+            foreach ($po->detail as $detail) {
+                $detail->delete();
+            }
 
+            // Soft delete data PO
             $po->delete();
 
             DB::commit();
 
             return redirect('admin/po')
-                ->with('success', 'PO berhasil dihapus');
+                ->with('success', 'PO berhasil dihapus dan masuk ke History Hapus.');
 
         } catch (\Exception $e) {
 
             DB::rollBack();
 
-            return back()->with('error', 'Gagal menghapus PO: ' . $e->getMessage());
+            return back()->with(
+                'error',
+                'Gagal menghapus PO: ' . $e->getMessage()
+            );
         }
     }
 

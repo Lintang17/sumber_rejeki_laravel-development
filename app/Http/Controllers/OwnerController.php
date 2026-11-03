@@ -872,6 +872,7 @@ public function opnameriwayat()
             'Produksi',
             'Showroom',
             'Internal',
+            'PO',
         ]);
 
         if ($request->filled('bulan')) {
@@ -925,6 +926,10 @@ public function opnameriwayat()
                 $data = User::withTrashed()
                     ->findOrFail($history->data_id);
 
+            } elseif ($history->jenis_data === 'PO') {
+                $data = Po::withTrashed()
+                    ->findOrFail($history->data_id);
+
             } else {
                 throw new \Exception('Jenis data belum didukung.');
             }
@@ -934,6 +939,31 @@ public function opnameriwayat()
             }
 
             $data->restore();
+
+            // Jika jenis data adalah PO, pulihkan juga detailnya
+            if ($history->jenis_data === 'PO') {
+
+                $detailIds = collect(
+                    $history->data_snapshot['detail'] ?? []
+                )->pluck('id')->filter()->all();
+
+                if (!empty($detailIds)) {
+                    $details = PoDetail::withTrashed()
+                        ->where('po_id', $data->id)
+                        ->whereIn('id', $detailIds)
+                        ->get();
+
+                    if ($details->count() !== count($detailIds)) {
+                        throw new \Exception(
+                            'Sebagian detail PO tidak ditemukan. Pemulihan dibatalkan.'
+                        );
+                    }
+
+                    foreach ($details as $detail) {
+                        $detail->restore();
+                    }
+                }
+            }
 
             $history->dipulihkan_pada = now();
             $history->save();
@@ -953,11 +983,15 @@ public function opnameriwayat()
 
     // HAPUS PERMANEN DATA 
 
-   public function historyhapusPermanen($id)
+    public function historyhapusPermanen($id)
     {
         if (!auth()->check() || auth()->user()->role !== 'Owner') {
             abort(403, 'Anda tidak memiliki akses.');
         }
+
+        // Menyiapkan tempat menyimpan nama foto yang akan dihapus
+        $fotoPoToDelete = [];
+        $fileInternalToDelete = null;
 
         DB::beginTransaction();
 
@@ -968,6 +1002,14 @@ public function opnameriwayat()
                 throw new \Exception('Data sudah dipulihkan atau dihapus permanen.');
             }
 
+            // Data hanya boleh dihapus permanen setelah melewati 30 hari
+            if (
+                !$history->dihapus_pada ||
+                $history->dihapus_pada->gte(now()->subDays(30))
+            ) {
+                throw new \Exception('Data hanya bisa dihapus permanen setelah melewati 30 hari.');
+            }
+
             // Pembelian dan Penjualan tidak boleh dihapus permanen
             if (in_array($history->jenis_data, ['Penjualan', 'Pembelian'])) {
                 throw new \Exception('Data Penjualan dan Pembelian tidak boleh dihapus permanen.');
@@ -975,16 +1017,62 @@ public function opnameriwayat()
 
             // Tentukan model berdasarkan jenis data
             if ($history->jenis_data === 'Produksi') {
+
                 $data = ProduksiModel::withTrashed()
                     ->findOrFail($history->data_id);
 
             } elseif ($history->jenis_data === 'Showroom') {
+
                 $data = ShowroomModel::withTrashed()
                     ->findOrFail($history->data_id);
 
             } elseif ($history->jenis_data === 'Internal') {
+
                 $data = User::withTrashed()
                     ->findOrFail($history->data_id);
+
+            } elseif ($history->jenis_data === 'PO') {
+
+                $data = Po::withTrashed()
+                    ->findOrFail($history->data_id);
+
+                // Ambil ID detail PO dari snapshot History Hapus
+                $detailIds = collect(
+                    $history->data_snapshot['detail'] ?? []
+                )->pluck('id')->filter()->values()->all();
+
+                // Cari detail PO yang sudah di-soft-delete
+                $details = PoDetail::withTrashed()
+                    ->where('po_id', $data->id)
+                    ->whereIn('id', $detailIds)
+                    ->get();
+
+                // Pastikan semua detail PO masih tersedia
+                if (count($detailIds) !== $details->count()) {
+                    throw new \Exception(
+                        'Sebagian detail PO tidak ditemukan. Penghapusan permanen dibatalkan.'
+                    );
+                }
+
+                // Pastikan semua detail memang sudah dihapus sementara
+                foreach ($details as $detail) {
+
+                    if (!$detail->trashed()) {
+                        throw new \Exception(
+                            'Ada detail PO yang masih aktif. Penghapusan permanen dibatalkan.'
+                        );
+                    }
+
+                    // Simpan nama foto untuk dihapus setelah transaksi berhasil
+                    if (!empty($detail->foto)) {
+                        $fotoPoToDelete[] = basename($detail->foto);
+                    }
+                }
+
+                // Hapus detail PO secara permanen terlebih dahulu
+                foreach ($details as $detail) {
+                    $detail->forceDelete();
+                }
 
             } else {
                 throw new \Exception('Jenis data belum didukung.');
@@ -994,14 +1082,12 @@ public function opnameriwayat()
                 throw new \Exception('Data sudah tidak berada di tempat sampah.');
             }
 
-            // Simpan lokasi foto profil jika data Internal
-            $fileToDelete = null;
-
+            // Simpan foto profil jika data Internal
             if ($history->jenis_data === 'Internal') {
-                $fileToDelete = $data->file;
+                $fileInternalToDelete = $data->file;
             }
 
-            // Hapus data dari database secara permanen
+            // Hapus data utama secara permanen
             $data->forceDelete();
 
             // Catat waktu penghapusan permanen
@@ -1010,19 +1096,29 @@ public function opnameriwayat()
 
             DB::commit();
 
-            // Hapus foto setelah database berhasil diperbarui
-            if ($fileToDelete) {
-                Storage::disk('public')->delete($fileToDelete);
+            // Hapus foto profil Internal setelah transaksi berhasil
+            if ($fileInternalToDelete) {
+                Storage::disk('public')->delete($fileInternalToDelete);
+            }
+
+            // Hapus foto detail PO setelah transaksi berhasil
+            foreach ($fotoPoToDelete as $foto) {
+                $path = public_path('assets/foto/po/' . $foto);
+
+                if (File::exists($path)) {
+                    File::delete($path);
+                }
             }
 
             return redirect()->route('owner.historyhapus')
                 ->with('success', 'Data ' . $history->jenis_data . ' berhasil dihapus permanen.');
 
         } catch (\Exception $e) {
+
             DB::rollBack();
 
             return redirect()->route('owner.historyhapus')
                 ->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
-    }
+    }   
 }
