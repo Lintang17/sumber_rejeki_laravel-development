@@ -218,7 +218,7 @@
                             <strong>Informasi Penghapusan</strong>
                             <p>
                                 Data dapat dipulihkan selama 30 hari sejak tanggal penghapusan.
-                                Setelah melewati batas tersebut, Owner dapat menghapus data secara permanen.
+                                Setelah melewati batas tersebut, data akan terhapus secara permanen.
                                 Data Penjualan dan Pembelian tidak dapat dihapus permanen karena diperlukan
                                 untuk laporan dan pembukuan.
                             </p>
