@@ -864,7 +864,7 @@ public function opnameriwayat()
 
         $request->validate([
             'bulan' => 'nullable|integer|min:1|max:12',
-            'tahun' => 'nullable|integer|min:2000|max:2100',
+            'tahun' => 'nullable|integer|min:2024|max:' . date('Y'),
         ]);
 
         // Riwayat Hapus

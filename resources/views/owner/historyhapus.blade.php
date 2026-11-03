@@ -48,7 +48,7 @@
                                             class="form-control"
                                             style="height: 40px; min-height: 45px; padding: 8px 12px; line-height: 24px; font-size: 13px; box-sizing: border-box;">
                                             <option value="">Semua Tahun</option>
-                                            @for ($tahun = date('Y'); $tahun >= date('Y') - 5; $tahun--)
+                                            @for ($tahun = date('Y'); $tahun >= 2024; $tahun--)
                                                 <option value="{{ $tahun }}"
                                                     {{ request('tahun') == $tahun ? 'selected' : '' }}>
                                                     {{ $tahun }}
