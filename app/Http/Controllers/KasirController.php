@@ -9,6 +9,7 @@ use App\Models\PenjualanDetailModel;
 //use App\Models\ProdukModel;
 use App\Models\StockopnameModel;
 use App\Models\User;
+use App\Models\HistoryHapus;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -360,5 +361,87 @@ public function cetakFaktur($notajual)
         User::where('id', auth()->user()->id)->update($data);
 
         return redirect('kasir/profile')->with('success', 'Profile berhasil diperbarui');
+    }
+
+    // Penjualan Hapus
+    public function penjualanhapus($id)
+    {
+        abort_unless(auth()->user()->role === 'Kasir', 403);
+
+        try {
+            DB::transaction(function () use ($id) {
+
+                // Ambil transaksi beserta detailnya.
+                $penjualan = PenjualanModel::with('penjualandetail')
+                    ->lockForUpdate()
+                    ->findOrFail($id);
+
+                // Simpan snapshot transaksi dan detail.
+                $snapshot = [
+                    'penjualan' => $penjualan->toArray(),
+                    'detail' => $penjualan->penjualandetail->toArray(),
+                ];
+
+                // Kembalikan stok showroom.
+                foreach ($penjualan->penjualandetail as $detail) {
+
+                    $showroom = ShowroomModel::where(
+                        'idshowroom',
+                        $detail->idproduk
+                    )->lockForUpdate()->first();
+
+                    if (!$showroom) {
+                        throw new \Exception(
+                            'Data showroom untuk produk '
+                            . $detail->namaproduk
+                            . ' tidak ditemukan.'
+                        );
+                    }
+
+                    $jumlah = (int) $detail->jumlah_pembelian;
+                    $stokTerjual = (int) $showroom->stok_terjual;
+
+                    if ($stokTerjual < $jumlah) {
+                        throw new \Exception(
+                            'Stok terjual tidak sesuai untuk produk '
+                            . $detail->namaproduk
+                        );
+                    }
+
+                    $showroom->stok_terjual = $stokTerjual - $jumlah;
+                    $showroom->stok_sisa =
+                        (int) $showroom->stok_awal
+                        + (int) $showroom->stok_tambahan
+                        - (int) $showroom->stok_terjual;
+
+                    $showroom->save();
+                }
+
+                // Catat ke History Hapus.
+                HistoryHapus::create([
+                    'user_id' => auth()->id(),
+                    'nama_user' => auth()->user()->name,
+                    'jenis_data' => 'Penjualan',
+                    'data_id' => $penjualan->idpenjualan,
+                    'nama_data' => $penjualan->notajual,
+                    'data_snapshot' => $snapshot,
+                    'dihapus_pada' => now(),
+                ]);
+
+                $penjualan->delete();
+            });
+
+            return redirect('kasir/penjualandaftar')
+                ->with('success', 'Transaksi berhasil dihapus dan stok showroom telah dikembalikan.');
+
+        } catch (\Throwable $e) {
+
+            report($e);
+
+            return back()->with(
+                'error',
+                'Transaksi gagal dihapus: ' . $e->getMessage()
+            );
+        }
     }
 }

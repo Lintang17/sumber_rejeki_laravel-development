@@ -151,6 +151,96 @@ public function penjualandaftar(Request $request)
     return view('owner.penjualandaftar', $data);
 }
 
+// Hapus Penjualan
+public function penjualanhapus($id)
+{
+    if (!auth()->check() || auth()->user()->role !== 'Owner') {
+        abort(403, 'Anda tidak memiliki akses.');
+    }
+
+    DB::beginTransaction();
+
+    try {
+        $penjualan = PenjualanModel::with('penjualandetail')
+            ->lockForUpdate()
+            ->findOrFail($id);
+
+        if ($penjualan->trashed()) {
+            throw new \Exception('Transaksi sudah dihapus.');
+        }
+
+        $snapshot = [
+            'penjualan' => $penjualan->toArray(),
+            'detail' => $penjualan->penjualandetail->toArray(),
+        ];
+
+        // Kembalikan stok showroom
+        foreach ($penjualan->penjualandetail as $detail) {
+
+            $showroom = ShowroomModel::where(
+                'idshowroom',
+                $detail->idproduk
+            )->lockForUpdate()->first();
+
+            if (!$showroom) {
+                throw new \Exception(
+                    'Data showroom untuk produk ' .
+                    $detail->namaproduk .
+                    ' tidak ditemukan atau sudah dihapus.'
+                );
+            }
+
+            $jumlah = (int) $detail->jumlah_pembelian;
+            $stokTerjual = (int) $showroom->stok_terjual;
+
+            if ($stokTerjual < $jumlah) {
+                throw new \Exception(
+                    'Stok terjual tidak mencukupi untuk mengembalikan produk ' .
+                    $detail->namaproduk
+                );
+            }
+
+            $showroom->stok_terjual = $stokTerjual - $jumlah;
+            $showroom->stok_sisa =
+                (int) $showroom->stok_awal +
+                (int) $showroom->stok_tambahan -
+                (int) $showroom->stok_terjual;
+
+            $showroom->save();
+        }
+
+        HistoryHapus::create([
+            'user_id' => auth()->id(),
+            'nama_user' => auth()->user()->name,
+            'jenis_data' => 'Penjualan',
+            'data_id' => $penjualan->idpenjualan,
+            'nama_data' => $penjualan->notajual,
+            'data_snapshot' => $snapshot,
+            'dihapus_pada' => now(),
+        ]);
+
+        $penjualan->delete();
+
+        DB::commit();
+
+        return back()->with(
+            'success',
+            'Transaksi penjualan berhasil dihapus dan stok showroom dikembalikan.'
+        );
+
+    } catch (\Throwable $e) {
+
+        DB::rollBack();
+
+        report($e);
+
+        return back()->with(
+            'error',
+            'Gagal menghapus transaksi: ' . $e->getMessage()
+        );
+    }
+}
+
 public function opnamedaftar()
 {
     $data = ShowroomModel::with('produksi')->get();
@@ -873,6 +963,7 @@ public function opnameriwayat()
             'Showroom',
             'Internal',
             'PO',
+            'Penjualan',
         ]);
 
         if ($request->filled('bulan')) {
@@ -930,6 +1021,10 @@ public function opnameriwayat()
                 $data = Po::withTrashed()
                     ->findOrFail($history->data_id);
 
+            } elseif ($history->jenis_data === 'Penjualan') {
+                $data = PenjualanModel::withTrashed()
+                    ->findOrFail($history->data_id);
+
             } else {
                 throw new \Exception('Jenis data belum didukung.');
             }
@@ -939,6 +1034,51 @@ public function opnameriwayat()
             }
 
             $data->restore();
+
+            // Jika Penjualan dipulihkan, stok showroom dikurangi kembali
+            if ($history->jenis_data === 'Penjualan') {
+                $detailPenjualan = PenjualanDetailModel::where(
+                    'idpenjualan',
+                    $data->idpenjualan
+                )->get();
+
+                foreach ($detailPenjualan as $detail) {
+                    $showroom = ShowroomModel::where(
+                        'idshowroom',
+                        $detail->idproduk
+                    )->lockForUpdate()->first();
+
+                    if (!$showroom) {
+                        throw new \Exception(
+                            'Showroom untuk produk ' .
+                            $detail->namaproduk .
+                            'tidak ditemukan. Pemulihan dibatalkan.'
+                        );
+                    }
+
+                    $jumlah = (int) $detail->jumlah_pembelian;
+                    $stokTersedia =
+                        (int) $showroom->stok_awal +
+                        (int) $showroom->stok_tambahan -
+                        (int) $showroom->stok_terjual;
+
+                    if ($stokTersedia < $jumlah) {
+                        throw new \Exception(
+                            'Stok showroom tidak mencukupi untuk memulihkan transaksi.'
+                        );
+                    }
+
+                    $showroom->stok_terjual =
+                        (int) $showroom->stok_terjual + $jumlah;
+
+                    $showroom->stok_sisa =
+                        (int) $showroom->stok_awal +
+                        (int) $showroom->stok_tambahan -
+                        (int) $showroom->stok_terjual;
+
+                    $showroom->save();
+                }
+            }
 
             // Jika jenis data adalah PO, pulihkan juga detailnya
             if ($history->jenis_data === 'PO') {
@@ -989,7 +1129,6 @@ public function opnameriwayat()
             abort(403, 'Anda tidak memiliki akses.');
         }
 
-        // Menyiapkan tempat menyimpan nama foto yang akan dihapus
         $fotoPoToDelete = [];
         $fileInternalToDelete = null;
 
@@ -1002,37 +1141,23 @@ public function opnameriwayat()
                 throw new \Exception('Data sudah dipulihkan atau dihapus permanen.');
             }
 
-            // Data hanya boleh dihapus permanen setelah melewati 30 hari
-            if (
-                !$history->dihapus_pada ||
-                $history->dihapus_pada->gte(now()->subDays(30))
-            ) {
-                throw new \Exception('Data hanya bisa dihapus permanen setelah melewati 30 hari.');
-            }
-
-            // Pembelian dan Penjualan tidak boleh dihapus permanen
-            if (in_array($history->jenis_data, ['Penjualan', 'Pembelian'])) {
-                throw new \Exception('Data Penjualan dan Pembelian tidak boleh dihapus permanen.');
-            }
-
-            // Tentukan model berdasarkan jenis data
             if ($history->jenis_data === 'Produksi') {
-
                 $data = ProduksiModel::withTrashed()
                     ->findOrFail($history->data_id);
 
             } elseif ($history->jenis_data === 'Showroom') {
-
                 $data = ShowroomModel::withTrashed()
                     ->findOrFail($history->data_id);
 
             } elseif ($history->jenis_data === 'Internal') {
-
                 $data = User::withTrashed()
                     ->findOrFail($history->data_id);
 
-            } elseif ($history->jenis_data === 'PO') {
+            } elseif ($history->jenis_data === 'Penjualan') {
+                $data = PenjualanModel::withTrashed()
+                    ->findOrFail($history->data_id);
 
+            } elseif ($history->jenis_data === 'PO') {
                 $data = Po::withTrashed()
                     ->findOrFail($history->data_id);
 
@@ -1047,29 +1172,25 @@ public function opnameriwayat()
                     ->whereIn('id', $detailIds)
                     ->get();
 
-                // Pastikan semua detail PO masih tersedia
                 if (count($detailIds) !== $details->count()) {
                     throw new \Exception(
                         'Sebagian detail PO tidak ditemukan. Penghapusan permanen dibatalkan.'
                     );
                 }
 
-                // Pastikan semua detail memang sudah dihapus sementara
                 foreach ($details as $detail) {
-
                     if (!$detail->trashed()) {
                         throw new \Exception(
                             'Ada detail PO yang masih aktif. Penghapusan permanen dibatalkan.'
                         );
                     }
 
-                    // Simpan nama foto untuk dihapus setelah transaksi berhasil
                     if (!empty($detail->foto)) {
                         $fotoPoToDelete[] = basename($detail->foto);
                     }
                 }
 
-                // Hapus detail PO secara permanen terlebih dahulu
+                // Hapus detail PO secara permanen
                 foreach ($details as $detail) {
                     $detail->forceDelete();
                 }
@@ -1078,6 +1199,7 @@ public function opnameriwayat()
                 throw new \Exception('Jenis data belum didukung.');
             }
 
+            // Pastikan data utama memang sudah dihapus sementara
             if (!$data->trashed()) {
                 throw new \Exception('Data sudah tidak berada di tempat sampah.');
             }
@@ -1085,6 +1207,14 @@ public function opnameriwayat()
             // Simpan foto profil jika data Internal
             if ($history->jenis_data === 'Internal') {
                 $fileInternalToDelete = $data->file;
+            }
+
+            // PenjualanDetailModel tidak menggunakan SoftDeletes
+            if ($history->jenis_data === 'Penjualan') {
+                PenjualanDetailModel::where(
+                    'idpenjualan',
+                    $data->idpenjualan
+                )->delete();
             }
 
             // Hapus data utama secara permanen
@@ -1120,5 +1250,5 @@ public function opnameriwayat()
             return redirect()->route('owner.historyhapus')
                 ->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
-    }   
+    }
 }

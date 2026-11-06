@@ -170,6 +170,8 @@ Route::middleware(['auth'])->controller(OwnerController::class)->group(function 
    
     // transaksi penjualan
     Route::get('owner/penjualandaftar', [OwnerController::class, 'penjualandaftar']);
+    Route::delete('owner/penjualanhapus/{id}', [OwnerController::class, 'penjualanhapus'])
+        ->name('owner.penjualan.hapus');
 
     // stokopanem
     Route::get('owner/stokopname', [OwnerController::class, 'opnamedaftar'])->name('stokopname.daftar');
@@ -268,7 +270,8 @@ Route::middleware(['auth'])->controller(KasirController::class)->group(function 
     Route::get('kasir/penjualandaftar/{id}', [KasirController::class,'penjualandaftar']);
     Route::get('penjualanedit/{id}', [KasirController::class, 'penjualanedit'])->name('penjualan.edit');
     Route::put('penjualanupdate/{id}', [KasirController::class, 'penjualanupdate'])->name('penjualan.update');
-    Route::get('penjualanhapus/{id}', [KasirController::class, 'penjualanhapus'])->name('penjualan.hapus');
+    Route::delete('kasir/penjualanhapus/{id}', [KasirController::class, 'penjualanhapus'])
+        ->name('penjualan.hapus');
 
     // Cetak Nota dan Faktur
     Route::get('kasir/cetaknota/{id}', [KasirController::class, 'cetakNota'])->name('penjualan.cetaknota');

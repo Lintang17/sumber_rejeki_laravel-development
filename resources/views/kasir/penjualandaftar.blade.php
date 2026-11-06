@@ -334,9 +334,22 @@
                                                         <a href="{{ url('kasir/cetaknota', $item->notajual) }}"
                                                             target="_blank"
                                                             class="btn text-white"
-                                                            style="background:#2F8F83; border:none; min-width:75px; height:42px; font-size:13px; font-weight:600; border-radius:0 8px 8px 0;">
+                                                            style="background:#2F8F83; border:none; min-width:75px; height:42px; font-size:13px; font-weight:600;">
                                                             Nota
                                                         </a>
+                                                        <form action="{{ route('penjualan.hapus', $item->idpenjualan) }}"
+                                                            method="POST"
+                                                            class="form-hapus-penjualan mb-0"
+                                                            data-nota="{{ $item->notajual }}">
+                                                            @csrf
+                                                            @method('DELETE')
+
+                                                            <button type="submit"
+                                                                class="btn text-white"
+                                                                style="background:#FF0000; border:none; min-width:75px; height:42px; font-size:13px; font-weight:600; border-radius:0 8px 8px 0;">
+                                                                Hapus
+                                                            </button>
+                                                        </form>
                                                     </div>
                                                 </td>
                                             @endif
@@ -658,6 +671,37 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             tandaiPilihanFilter();
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Konfirmasi hapus penjualan
+            document.querySelectorAll('.form-hapus-penjualan').forEach(function(form) {
+
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const nomorNota = this.dataset.nota;
+
+                    Swal.fire({
+                        title: 'Hapus Transaksi Penjualan?',
+                        html: `Apakah Anda yakin ingin menghapus transaksi nota <strong>${nomorNota}</strong>?<br><br>
+                               <span style="color:#d33;">Stok showroom akan dikembalikan dan transaksi dapat dipulihkan melalui History Hapus.</span>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Ya, Hapus',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
         });
     </script>
 @endsection

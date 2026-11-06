@@ -252,6 +252,18 @@
                                             @else
                                                 <button class="btn btn-success btn-sm" style="min-width:90px;" disabled> Tuntas</span>
                                             @endif
+                                            <!-- Hapus  -->
+                                            <form action="{{ route('owner.penjualan.hapus', $item->idpenjualan) }}"
+                                                method="POST"
+                                                class="form-hapus-penjualan mt-2"
+                                                data-nota="{{ $item->notajual }}">
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="mdi mdi-delete"></i> Hapus
+                                                </button>
+                                            </form>
                                             {{-- <div class="mt-2">
                                                 <a href="{{ url('owner/nota', $item->notajual) }}" target="_blank" class="btn btn-info btn-sm mr-1 mb-1">Nota</a>
                                                 <a href="{{ url('owner/faktur', $item->notajual) }}" target="_blank" class="btn btn-primary btn-sm mb-1">Faktur</a>
@@ -480,5 +492,33 @@
         });
     }
 
+    // Konfirmasi hapus transaksi penjualan Owner
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.form-hapus-penjualan').forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const nomorNota = this.dataset.nota;
+                Swal.fire({
+                    title: 'Hapus Transaksi Penjualan?',
+                    html: `Apakah Anda yakin ingin menghapus transaksi nota <strong>${nomorNota}</strong>?<br><br>
+                        <span style="color:#d33;">
+                            Transaksi dapat dipulihkan melalui History Hapus.
+                        </span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
 </script>
 @endsection

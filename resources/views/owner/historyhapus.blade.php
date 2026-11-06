@@ -141,7 +141,7 @@
                                                 </span>
                                             @elseif ($melewatiBatas)
                                                 <span class="status-label status-warning">
-                                                    <i class="mdi mdi-alert-circle"></i> Melewati 30 Hari
+                                                   <i class="mdi mdi-alert-circle"></i> Masa Pemulihan Berakhir
                                                 </span>
                                             @else
                                                 <span class="status-label status-info">
@@ -164,23 +164,16 @@
                                                 @endif
 
                                                 {{-- Owner boleh menghapus permanen kapan saja --}}
-                                                @if (!in_array($item->jenis_data, ['Penjualan', 'Pembelian']))
-                                                    <form action="{{ route('owner.historyhapus.permanen', $item->id) }}"
-                                                          method="POST"
-                                                          class="d-inline form-hapus-permanen">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                    
-                                                        <button type="submit" class="btn btn-permanent btn-sm">
-                                                            <i class="mdi mdi-delete-forever"></i> Hapus Permanen
-                                                        </button>
-                                                    </form>
-                                                @endif
+                                                <form action="{{ route('owner.historyhapus.permanen', $item->id) }}"
+                                                      method="POST"
+                                                      class="d-inline form-hapus-permanen">
+                                                    @csrf
+                                                    @method('DELETE')
 
-                                                @if (in_array($item->jenis_data, ['Penjualan', 'Pembelian']))
-                                                    <span class="text-muted small">Tidak tersedia</span>
-                                                @endif
-
+                                                    <button type="submit" class="btn btn-permanent btn-sm">
+                                                        <i class="mdi mdi-delete-forever"></i> Hapus Permanen
+                                                    </button>
+                                                </form>
                                             @else
                                                 <span class="text-muted">—</span>
                                             @endif
@@ -218,9 +211,8 @@
                             <strong>Informasi Penghapusan</strong>
                             <p>
                                 Data dapat dipulihkan selama 30 hari sejak tanggal penghapusan.
-                                Setelah melewati batas tersebut, data akan terhapus secara permanen.
-                                Data Penjualan dan Pembelian tidak dapat dihapus permanen karena diperlukan
-                                untuk laporan dan pembukuan.
+                                Owner dapat menghapus data secara permanen kapan saja jika data sudah tidak diperlukan
+                                atau terjadi kesalahan input. Data yang telah dihapus permanen tidak dapat dipulihkan kembali.
                             </p>
                         </div>
                     </div>
