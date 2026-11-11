@@ -77,27 +77,42 @@ public function produksireview($id)
     return view('owner.produksireview', compact('produksi'));
 }
 
+
 public function produksireviewproses(Request $request, $id)
 {
     $produksi = ProduksiModel::findOrFail($id);
 
+    // Hanya produksi berstatus Menunggu yang bisa direview
     if ($produksi->status !== 'Menunggu') {
-        return redirect('owner/produksidaftar')->with('error', 'Status produksi tidak valid untuk diriview.'); 
+        return redirect('owner/produksidaftar')
+            ->with('error', 'Status produksi tidak valid untuk direview.');
     }
 
+    // Validasi HPP Final dan Harga Jual
     $request->validate([
-        'hppfinal' => 'required|numeric|min:0',
-        'hargajual' => 'required|string|min:0',
+        'hppfinal' => 'nullable|numeric|min:0',
+        'hargajual' => 'required|numeric|min:1000',
+    ], [
+        'hppfinal.numeric' => 'HPP Final harus berupa angka.',
+        'hppfinal.min' => 'HPP Final tidak boleh negatif.',
+        'hargajual.required' => 'Harga Jual wajib diisi.',
+        'hargajual.numeric' => 'Harga Jual harus berupa angka.',
+        'hargajual.min' => 'Harga Jual minimal Rp1.000.',
     ]);
 
-    $produksi->hppfinal = $request->hppfinal;
+    // HPP Final kosong akan disimpan sebagai 0
+    $produksi->hppfinal = $request->filled('hppfinal')
+        ? $request->hppfinal
+        : 0;
+
     $produksi->hargajual = $request->hargajual;
     $produksi->status = 'Selesai';
     $produksi->tanggalselesai = now();
 
     $produksi->save();
 
-    return redirect('owner/produksidaftar')->with('success', 'Review produksi berhasil disimpan.');
+    return redirect('owner/produksidaftar')
+        ->with('success', 'Review produksi berhasil disimpan.');
 }
 
 public function showroomdaftar()

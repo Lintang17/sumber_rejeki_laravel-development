@@ -59,14 +59,17 @@
 
                         <div class="form-group">
                             <label for="hppfinal">HPP Final</label>
-                            <input type="text" id="hppfinal" name="hppfinal" class="form-control" 
-                                value="{{ old('hppfinal', number_format($produksi->hppfinal ?? 0, 0, ',', '.')) }}" required>
+                            <input type="text" id="hppfinal" name="hppfinal" class="form-control"
+                                value="{{ old('hppfinal', $produksi->hppfinal ? number_format($produksi->hppfinal, 0, ',', '.') : '') }}">
                         </div>
 
                         <div class="form-group">
                             <label for="hargajual">Harga Jual</label>
                             <input type="text" id="hargajual" name="hargajual" class="form-control"
-                                value="{{ old('hargajual', number_format($produksi->hargajual ?? 0, 0, ',', '.')) }}" required>
+                                value="{{ old('hargajual', $produksi->hargajual > 0 ? number_format($produksi->hargajual, 0, ',', '.') : '') }}"
+                                placeholder="Masukkan harga jual"
+                                required>
+                            <small class="text-danger">Harga Jual wajib diisi!</small>
                         </div>
 
                         <div class="form-group">
@@ -108,23 +111,24 @@
     [hppInput, jualInput].forEach(input => {
         input.addEventListener('input', function () {
             let value = cleanNumber(this.value);
-            if (value) {
-                this.value = formatRupiah(value);
-            } else {
-                this.value = '';
-            }
-        });
 
-        input.addEventListener('focus', function () {
-            if (cleanNumber(this.value) === '0') {
-                this.value = '';
-            }
+            this.value = value ? formatRupiah(value) : '';
         });
     });
 
-    document.querySelector('form').addEventListener('submit', function () {
+    document.querySelector('form').addEventListener('submit', function (e) {
+        let hargaJual = cleanNumber(jualInput.value);
+
+        if (!hargaJual || Number(hargaJual) < 1000) {
+            e.preventDefault();
+            alert('Harga Jual wajib diisi!');
+
+            jualInput.focus();
+            return;
+        }
+
         hppInput.value = cleanNumber(hppInput.value);
-        jualInput.value = cleanNumber(jualInput.value);
+        jualInput.value = hargaJual;
     });
 </script>
 @endsection
