@@ -36,21 +36,31 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($data as $index => $item)
+                                @php
+                                    $nomor = 1;
+                                @endphp
+
+                                @foreach ($data as $item)
+                                    @if ($item->showroom && $item->showroom->produksi)
+                                        <tr>
+                                            <td>{{ $nomor++ }}</td>
+                                            <td>{{ $item->showroom->produksi->namaproduk }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($item->tanggal_opname)->format('d-m-Y') }}</td>
+                                            <td>{{ $item->stok_sistem }}</td>
+                                            <td>{{ $item->stok_fisik }}</td>
+                                            <td>{{ $item->selisih }}</td>
+                                            <td>{{ $item->keterangan ?? '-' }}</td>
+                                        </tr>
+                                    @endif
+                                @endforeach
+
+                                @if ($nomor === 1)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $item->showroom->produksi->namaproduk ?? '-' }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($item->tanggal_opname)->format('d-m-Y') }}</td>
-                                        <td>{{ $item->stok_sistem }}</td>
-                                        <td>{{ $item->stok_fisik }}</td>
-                                        <td>{{ $item->selisih }}</td>
-                                        <td>{{ $item->keterangan ?? '-' }}</td>
+                                        <td colspan="7" class="text-center">
+                                            Belum ada data stok opname.
+                                        </td>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center">Belum ada data stok opname.</td>
-                                    </tr>
-                                @endforelse
+                                @endif
                             </tbody>
                         </table>
                     </div>
