@@ -130,9 +130,15 @@ public function showroomsimpan(Request $request)
         ]);
     }
 
-    // Validasi bahwa tanggal masuk showroom tidak boleh sebelum tanggal selesai produksi
-    if (Carbon::parse($request->tanggalmasuk)->lt(Carbon::parse($produksi->tanggalselesai))) {
-        return redirect()->back()->withErrors(['Tanggal masuk showroom tidak boleh sebelum tanggal selesai produksi.']);
+    // Bandingkan tanggal saja, tanpa jam
+    $tanggalMasuk = Carbon::parse($request->tanggalmasuk)->toDateString();
+    $tanggalSelesai = Carbon::parse($produksi->tanggalselesai)->toDateString();
+
+    // Tanggal masuk tidak boleh sebelum tanggal selesai produksi
+    if ($tanggalMasuk < $tanggalSelesai) {
+        return back()->withInput()->withErrors([
+            'Tanggal masuk showroom tidak boleh sebelum tanggal selesai produksi.'
+        ]);
     }
 
     // Generate barcode
@@ -183,7 +189,7 @@ public function showroomsimpan(Request $request)
         'barcode'       => $barcode,
         'link'          => $link,
         'kodeqr'        => $barcodeFilename,
-        'tanggalmasuk'  => Carbon::parse($request->tanggalmasuk),
+        'tanggalmasuk'  => $tanggalMasuk,
     ]);
 
     return redirect('admin/showroomdaftar')->with('success', 'Barang berhasil ditambahkan ke showroom.');
