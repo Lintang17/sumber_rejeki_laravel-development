@@ -137,33 +137,18 @@
         </div>
     </div>
 </div>
+
 @endsection
 
+@section('script')
 <script>
-window.addEventListener('load', function () {
-
-    if (
-        typeof jQuery !== 'undefined' &&
-        jQuery.fn.DataTable &&
-        !jQuery.fn.DataTable.isDataTable('#table')
-    ) {
-        jQuery('#table').DataTable({
-            language: {
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ entri",
-                zeroRecords: "Tidak ditemukan data",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-                infoEmpty: "Menampilkan 0 dari 0 entri",
-                infoFiltered: "(difilter dari _MAX_ total entri)"
-            }
-        });
-    }
-
-    // SweetAlert2 untuk tombol hapus
     document.addEventListener('click', function (e) {
         const tombol = e.target.closest('.btn-konfirmasi-hapus');
+
         if (!tombol) return;
+
         e.preventDefault();
+
         const form = tombol.closest('form');
 
         if (typeof Swal === 'undefined') {
@@ -173,7 +158,7 @@ window.addEventListener('load', function () {
 
         Swal.fire({
             title: 'Yakin mau hapus?',
-            text: 'Data barang showroom akan dihapus secara permanen!',
+            text: 'Data barang showroom akan dihapus dan masuk ke History Hapus.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
@@ -187,5 +172,5 @@ window.addEventListener('load', function () {
             }
         });
     });
-});
 </script>
+@endsection
