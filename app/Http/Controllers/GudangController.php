@@ -298,16 +298,35 @@ public function penjualandaftar(Request $request)
     return view('gudang.penjualandaftar', $data);
 }
 
+// public function opnamedaftar()
+// {
+//     $data = ShowroomModel::with('produksi')->get();
+//     return view('gudang.stokopnamedaftar', compact('data'));
+// }
+
 public function opnamedaftar()
 {
-    $data = ShowroomModel::with('produksi')->get();
+    $data = ShowroomModel::whereHas('produksi')
+        ->with('produksi')
+        ->orderBy('tanggalmasuk', 'desc')
+        ->get();
+
     return view('gudang.stokopnamedaftar', compact('data'));
 }
 
 // Form tambah opname berdasarkan showroom ID
+// public function opnametambah($id)
+// {
+//     $showroom = ShowroomModel::with('produksi')->findOrFail($id);
+//     return view('gudang.stokopnametambah', compact('showroom'));
+// }
+
 public function opnametambah($id)
 {
-    $showroom = ShowroomModel::with('produksi')->findOrFail($id);
+    $showroom = ShowroomModel::whereHas('produksi')
+        ->with('produksi')
+        ->findOrFail($id);
+
     return view('gudang.stokopnametambah', compact('showroom'));
 }
 
@@ -340,7 +359,11 @@ public function opnamesimpan(Request $request)
 
 public function opnameriwayat()
 {
-    $data = StokOpnameModel::with('showroom.produksi')->latest()->get();
+    $data = StokOpnameModel::with('showroom.produksi')
+        ->whereHas('showroom.produksi')
+        ->latest()
+        ->get();
+
     return view('gudang.stokopnameriwayat', compact('data'));
 }
 
@@ -402,32 +425,41 @@ public function exportExcelProduksi()
 
 public function laporanstokopname()
 {
-    $data = StokOpnameModel::with('showroom.produksi')->latest()->get();
+    $data = StokOpnameModel::with('showroom.produksi')
+        ->whereHas('showroom.produksi')
+        ->latest()
+        ->get();
+
     return view('gudang.laporanstokopname', compact('data'));
 }
 
 public function exportPdfStokOpname()
 {
-    $data = StokOpnameModel::with('showroom.produksi')->latest()->get();
-    $tanggal = \Carbon\Carbon::now()->format('d-m-Y');
+    $data = StokOpnameModel::with('showroom.produksi')
+        ->whereHas('showroom.produksi')
+        ->latest()
+        ->get();
 
     $pdf = Pdf::loadView('gudang.laporanstokopname_pdf', compact('data'))
         ->setPaper('A4', 'landscape');
 
-        return Pdf::loadView('gudang.laporanstokopname_pdf', compact('data'))
-        ->download('Laporan-Stok-Opname-' . now()->format('d-m-Y') . '.pdf');
-    
+    return $pdf->download(
+        'Laporan-Stok-Opname-' . now()->format('d-m-Y') . '.pdf'
+    );
 }
 
 public function exportExcelStokOpname()
 {
-    $data = StokOpnameModel::with('showroom.produksi')->latest()->get();
-    $tanggal = \Carbon\Carbon::now()->format('d-m-Y');
+    $data = StokOpnameModel::with('showroom.produksi')
+        ->whereHas('showroom.produksi')
+        ->latest()
+        ->get();
+
+    $tanggal = Carbon::now()->format('d-m-Y');
 
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
 
-    // Header
     $sheet->setCellValue('A1', 'No');
     $sheet->setCellValue('B1', 'Nama Produk');
     $sheet->setCellValue('C1', 'Tanggal Opname');
@@ -436,23 +468,22 @@ public function exportExcelStokOpname()
     $sheet->setCellValue('F1', 'Selisih');
     $sheet->setCellValue('G1', 'Keterangan');
 
-    // Data
     $row = 2;
+
     foreach ($data as $index => $item) {
         $sheet->setCellValue('A' . $row, $index + 1);
-        $sheet->setCellValue('B' . $row, $item->showroom->produksi->namaproduk ?? '-');
+        $sheet->setCellValue('B' . $row, $item->showroom->produksi->namaproduk);
         $sheet->setCellValue('C' . $row, Carbon::parse($item->tanggal_opname)->format('d-m-Y'));
         $sheet->setCellValue('D' . $row, $item->stok_sistem);
         $sheet->setCellValue('E' . $row, $item->stok_fisik);
         $sheet->setCellValue('F' . $row, $item->selisih);
         $sheet->setCellValue('G' . $row, $item->keterangan ?? '-');
+
         $row++;
     }
 
-    // Filename otomatis dengan tanggal
     $filename = 'Laporan-Stok-Opname-' . $tanggal . '.xlsx';
 
-    // Download
     return new StreamedResponse(function () use ($spreadsheet) {
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
@@ -463,9 +494,7 @@ public function exportExcelStokOpname()
     ]);
 }
 
-
-
-// ✅ Batalkan produksi
+// Batalkan produksi
 //public function produksibatalkan($id)
 //{
     //$produksi = ProduksiModel::findOrFail($id);

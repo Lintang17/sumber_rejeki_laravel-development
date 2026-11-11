@@ -19,18 +19,26 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($data as $item)
-                            <tr>
-                                <td>{{ $item->produksi->namaproduk ?? 'Tidak ditemukan' }}</td>
-                                <td>{{ $item->stok_awal }}</td>
-                                {{-- <td>{{ $item->stok_tambahan }}</td> --}}
-                                <td>{{ $item->stok_terjual }}</td>
-                                <td>{{ $item->stok_sisa }}</td>
-                                <td>
-                                <a href="{{ route('stokopname.tambah', $item->idshowroom) }}" class="btn btn-warning btn-sm">
-                                        <i class="bi bi-pencil-square"></i> Input Stok Fisik </a>
-                                </td>
-                            @endforeach
+                            @forelse ($data as $item)
+                                <tr>
+                                    <td>{{ $item->produksi->namaproduk }}</td>
+                                    <td>{{ $item->stok_awal }}</td>
+                                    {{-- <td>{{ $item->stok_tambahan }}</td> --}}
+                                    <td>{{ $item->stok_terjual }}</td>
+                                    <td>{{ $item->stok_sisa }}</td>
+                                    <td>
+                                        <a href="{{ route('stokopname.tambah', $item->idshowroom) }}" class="btn btn-warning btn-sm">
+                                            <i class="bi bi-pencil-square"></i> Input Stok Fisik 
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        Belum ada barang untuk stok opname.
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -43,7 +51,7 @@
 @push('scripts')
 <script>
     $(document).ready(function () {
-        $('#tabelStokOpname').DataTable({
+        $('#table').DataTable({
             language: {
                 search: "Cari:",
                 lengthMenu: "Tampilkan _MENU_ entri",
@@ -58,4 +66,3 @@
     });
 </script>
 @endpush
-
