@@ -90,11 +90,23 @@ class AdminController extends Controller
 // Menampilkan form tambah barang showroom
 public function showroomtambah()
 {
-    $produksi = ProduksiModel::whereNotNull('tanggalselesai')->get();
+    // Ambil semua ID produksi yang pernah masuk Showroom
+    $produkYangSudahMasuk = ShowroomModel::withTrashed()
+        ->pluck('idproduk')
+        ->unique()
+        ->map(function ($id) {
+            return (int) $id;
+        })
+        ->toArray();
 
-    $produkYangSudahMasuk = ShowroomModel::pluck('idproduk')->toArray();
+    // Tampilkan semua produksi yang sudah selesai
+    $produksi = ProduksiModel::whereNotNull('tanggalselesai')
+        ->get();
 
-    return view('admin.showroomtambah', compact('produksi', 'produkYangSudahMasuk'));
+    return view('admin.showroomtambah', compact(
+        'produksi',
+        'produkYangSudahMasuk'
+    ));
 }
 
 // Menyimpan barang showroom ke database
@@ -108,18 +120,17 @@ public function showroomsimpan(Request $request)
     $produksi = ProduksiModel::find($request->idproduksi);
 
     // cek apakah produk sudah pernah masuk showroom
-    $cekDuplikat = ShowroomModel::where('idproduk', $produksi->idproduksi)->first();
+    $cekDuplikat = ShowroomModel::withTrashed()
+        ->where('idproduk', $request->idproduksi)
+        ->exists();
+
     if ($cekDuplikat) {
-        return redirect()->back()->withErrors(['Produk ini sudah pernah ditambahkan ke showroom.']);
+        return back()->withErrors([
+            'Produk ini sudah pernah masuk Showroom dan tidak dapat ditambahkan kembali.'
+        ]);
     }
 
-    $cek = ShowroomModel::where('idproduk', $request->idproduksi)->exists();
-
-    if ($cek) {
-        return back()->withErrors(['Produk sudah ada di showroom']);
-    }
-
-    // ✅ Validasi bahwa tanggal masuk showroom tidak boleh sebelum tanggal selesai produksi
+    // Validasi bahwa tanggal masuk showroom tidak boleh sebelum tanggal selesai produksi
     if (Carbon::parse($request->tanggalmasuk)->lt(Carbon::parse($produksi->tanggalselesai))) {
         return redirect()->back()->withErrors(['Tanggal masuk showroom tidak boleh sebelum tanggal selesai produksi.']);
     }

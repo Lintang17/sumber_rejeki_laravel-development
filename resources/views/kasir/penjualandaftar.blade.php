@@ -686,8 +686,7 @@
 
                     Swal.fire({
                         title: 'Hapus Transaksi Penjualan?',
-                        html: `Apakah Anda yakin ingin menghapus transaksi nota <strong>${nomorNota}</strong>?<br><br>
-                               <span style="color:#d33;">Stok showroom akan dikembalikan dan transaksi dapat dipulihkan melalui History Hapus.</span>`,
+                        html: `Apakah Anda yakin ingin menghapus transaksi nota <strong>${nomorNota}</strong>?<br><br>`,
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#d33',
