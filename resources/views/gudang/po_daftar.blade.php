@@ -42,9 +42,9 @@
                     </div>
                     @endif
                     
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <label class="font-weight-bold text-secondary mb-1">Status</label>
+                    <div class="row mb-4 align-items-end filter-po">
+                        <div class="col-lg-4 col-md-6 filter-item">
+                            <label class="font-weight-bold text-secondary mb-2">Status</label>
                             <select id="filterStatus" class="form-control">
                                 <option value="">-- Semua Status --</option>
                                 <option value="Pending">Pending</option>
@@ -55,11 +55,92 @@
                                 <option value="Selesai">Selesai</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="font-weight-bold text-secondary mb-1">Bulan</label>
-                            <input type="month" id="filterMonth" class="form-control">
+                        
+                        @php
+                            $tahunSekarang = (int) date('Y');
+                            $tahunAwal = 2025;
+                            $tahunAkhir = $tahunSekarang + 5;
+                            $tahunDipilih = (int) request('tahun', $tahunSekarang);
+                            $bulanDipilih = (int) request('bulan', 0);
+                            $daftarBulan = [
+                                1 => 'Januari',
+                                2 => 'Februari',
+                                3 => 'Maret',
+                                4 => 'April',
+                                5 => 'Mei',
+                                6 => 'Juni',
+                                7 => 'Juli',
+                                8 => 'Agustus',
+                                9 => 'September',
+                                10 => 'Oktober',
+                                11 => 'November',
+                                12 => 'Desember',
+                            ];
+                        @endphp
+
+                        <div class="col-lg-3 col-md-6 filter-item">
+                            <label class="font-weight-bold text-secondary mb-2">Periode</label>
+                            <div class="d-flex periode-filter" style="gap:10px; width:100%;">
+                                <div class="dropdown" style="flex:1; min-width:0;">
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
+                                            data-toggle="dropdown"
+                                            style="white-space:nowrap; height:38px; width:100%;">
+                                        Bulan{{ isset($daftarBulan[$bulanDipilih]) ? ': '.substr($daftarBulan[$bulanDipilih], 0, 3) : '' }}
+                                    </button>
+
+                                    <div class="dropdown-menu p-2" style="width:220px;">
+                                        <div class="row no-gutters">
+                                            @foreach($daftarBulan as $angka => $nama)
+                                                <div class="col-4 p-1">
+                                                    <label class="btn btn-sm btn-block mb-0 font-weight-bold
+                                                        {{ $bulanDipilih === $angka ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                                        style="cursor:pointer;">
+
+                                                        <input type="radio"
+                                                            name="pilihBulan"
+                                                            value="{{ $angka }}"
+                                                            class="d-none"
+                                                            {{ $bulanDipilih === $angka ? 'checked' : '' }}>
+                                                        {{ substr($nama, 0, 3) }}
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="dropdown" style="flex:1; min-width:0;">
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
+                                            data-toggle="dropdown"
+                                            style="white-space:nowrap; height:38px; width:100%;">
+                                        Tahun: {{ $tahunDipilih }}
+                                    </button>
+
+                                    <div class="dropdown-menu p-2" style="width:220px;">
+                                        <div class="row no-gutters">
+                                            @for($tahun = $tahunAwal; $tahun <= $tahunAkhir; $tahun++)
+                                                <div class="col-4 p-1">
+                                                    <label class="btn btn-sm btn-block mb-0 font-weight-bold
+                                                        {{ $tahunDipilih === $tahun ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                                        style="cursor:pointer;">
+                                                        <input type="radio"
+                                                            name="pilihTahun"
+                                                            value="{{ $tahun }}"
+                                                            class="d-none"
+                                                           {{ $tahunDipilih === $tahun ? 'checked' : '' }}>
+                                                        {{ $tahun }}
+                                                    </label>
+                                                </div>
+                                            @endfor
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-4">
+
+                        <div class="col-lg-3 col-md-8 filter-item">
                             <label class="font-weight-bold text-secondary mb-1">Pencarian</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
@@ -651,14 +732,16 @@
 
 @endsection
 
+
 @section('script')
 <script>
 $(document).ready(function () {
+
     if ($.fn.dataTable.isDataTable('#table')) {
         $('#table').DataTable().destroy();
     }
 
-    $('#table').DataTable({
+    let table = $('#table').DataTable({
         pageLength: 10,
         responsive: true,
         autoWidth: false,
@@ -679,85 +762,148 @@ $(document).ready(function () {
         dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>tip'
     });
 
-    let currentMonth = new Date().toISOString().slice(0,7);
-    $('#filterMonth').val(currentMonth);
+    let selectedMonth = @json((string) request('bulan', ''));
+    let selectedYear = @json((string) request('tahun', date('Y')));
 
-    function filterTable() {
+    function filterPO(settings, data, dataIndex) {
+        if (settings.nTable.id !== 'table') {
+            return true;
+        }
+
+        let row = settings.aoData[dataIndex].nTr;
+
+        if (!row) {
+            return true;
+        }
+
         let status = $('#filterStatus').val();
-        let month = $('#filterMonth').val();
-        let search = $('#searchPO').val().toLowerCase();
+        let search = ($('#searchPO').val() || '').toLowerCase();
 
-        $('#table tbody tr').each(function () {
-            let row = $(this);
-            let rowStatus = row.data('status');
-            let rowDate = row.data('date');
-            let rowSearch = (row.data('search') || '').toLowerCase();
+        let rowStatus = row.getAttribute('data-status') || '';
+        let rowDate = row.getAttribute('data-date') || '';
+        let rowSearch = (row.getAttribute('data-search') || '').toLowerCase();
 
-            let show = true;
-            if (status && rowStatus !== status) show = false;
-            if (month && rowDate !== month) show = false;
-            if (search && !rowSearch.includes(search)) show = false;
+        // Filter status
+        if (status && rowStatus !== status) {
+            return false;
+        }
 
-            if (show) row.show();
-            else row.hide();
-        });
+        // Filter tahun
+        if (selectedYear && rowDate.substring(0, 4) !== selectedYear) {
+            return false;
+        }
+
+        // Filter bulan
+        if (
+            selectedMonth &&
+            rowDate.substring(5, 7) !== String(selectedMonth).padStart(2, '0')
+        ) {
+            return false;
+        }
+
+        // Filter pencarian kode PO dan customer
+        if (search && !rowSearch.includes(search)) {
+            return false;
+        }
+
+        return true;
     }
 
-    filterTable();
+    $.fn.dataTable.ext.search.push(filterPO);
 
-    $('#filterStatus, #filterMonth').on('change', filterTable);
-    $('#searchPO').on('keyup', filterTable);
+    function refreshFilter() {
+        table.draw();
+    }
 
+    refreshFilter();
+
+    // Filter status
+    $('#filterStatus').on('change', function () {
+        refreshFilter();
+    });
+
+    // Pencarian
+    $('#searchPO').on('input', function () {
+        refreshFilter();
+    });
+
+    $('input[name="pilihBulan"]').on('change', function () {
+        let bulan = $(this).val();
+
+        let url = new URL(window.location.href);
+        url.searchParams.set('bulan', bulan);
+        url.searchParams.set('tahun', selectedYear);
+
+        window.location.href = url.toString();
+    });
+
+    $('input[name="pilihTahun"]').on('change', function () {
+        let tahun = $(this).val();
+
+        let url = new URL(window.location.href);
+        url.searchParams.set('tahun', tahun);
+
+        if (selectedMonth) {
+            url.searchParams.set('bulan', selectedMonth);
+        } else {
+            url.searchParams.delete('bulan');
+        }
+
+        window.location.href = url.toString();
+    });
+
+   // Reset filter ke bulan dan tahun sekarang
     $('#resetFilter').on('click', function () {
-        $('#filterStatus').val('');
-        $('#filterMonth').val(currentMonth);
-        $('#searchPO').val('');
-        filterTable();
+        let url = new URL("{{ url()->current() }}");
+        url.searchParams.set('bulan', '{{ date('n') }}');
+        url.searchParams.set('tahun', '{{ date('Y') }}');
+        window.location.href = url.toString();  
     });
-});
 
-// Ubah Status Menjadi 'Diproses'
-function prosesPo(id) {
-    Swal.fire({
-        title: 'Konfirmasi Proses PO',
-        text: 'Apakah Anda yakin ingin memproses PO ini? Status akan berubah menjadi Diproses.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#5b0ff3',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: '<i class="fas fa-play mr-1"></i> Ya, Proses',
-        cancelButtonText: '<i class="fas fa-times mr-1"></i> Batal',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('proses-form-' + id).submit();
-        }
+    // Konfirmasi proses PO
+    window.prosesPo = function (id) {
+        Swal.fire({
+            title: 'Konfirmasi Proses PO',
+            text: 'Apakah Anda yakin ingin memproses PO ini? Status akan berubah menjadi Diproses.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#5b0ff3',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-play mr-1"></i> Ya, Proses',
+            cancelButtonText: '<i class="fas fa-times mr-1"></i> Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('proses-form-' + id).submit();
+            }
+        });
+    };
+
+    // Konfirmasi selesai produksi
+    window.ambilPo = function (id) {
+        Swal.fire({
+            title: 'Konfirmasi Selesai Produksi',
+            text: 'Apakah produksi PO ini sudah selesai dan siap diambil?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-check mr-1"></i> Ya, Selesai',
+            cancelButtonText: '<i class="fas fa-times mr-1"></i> Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('ambil-form-' + id).submit();
+            }
+        });
+    };
+
+    // Preview foto PO
+    $(document).on('click', '.foto-po', function () {
+        $('#previewFoto').attr('src', $(this).data('foto'));
+        $('#judulProduk').text($(this).data('produk'));
+        $('#qtyProdukHeader').text($(this).data('qty'));
     });
-}
 
-// Ubah Status Menjadi 'Diambil'
-function ambilPo(id) {
-    Swal.fire({
-        title: 'Konfirmasi Selesai Produksi',
-        text: 'Apakah produksi PO ini sudah selesai dan siap diambil?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: '<i class="fas fa-check mr-1"></i> Ya, Selesai',
-        cancelButtonText: '<i class="fas fa-times mr-1"></i> Batal'
-    }).then((result)=>{
-
-        if(result.isConfirmed){
-            document.getElementById('ambil-form-'+id).submit();
-        }
-    });
-}
-
-$(document).on('click', '.foto-po', function () {
-    $('#previewFoto').attr('src', $(this).data('foto'));
-    $('#judulProduk').text($(this).data('produk'));
-    $('#qtyProdukHeader').text($(this).data('qty'));
 });
 </script>
 @endsection
