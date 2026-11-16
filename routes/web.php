@@ -350,7 +350,9 @@ Route::middleware(['auth'])->controller(GudangController::class)->group(function
     Route::get('gudang/laporan/stokopname/pdf', [GudangController::class, 'exportPdfStokOpname'])->name('laporan.gudang.stokopname.pdf');
     Route::get('gudang/laporan/stokopname/excel', [GudangController::class, 'exportExcelStokOpname'])->name('laporan.gudang.stokopname.excel');
 
-
+    Route::get('/gudang/laporan/penjualan', [GudangController::class, 'laporanpenjualan'])->name('laporan.gudang.penjualan');
+    Route::get('/gudang/laporan/penjualan/pdf', [GudangController::class, 'exportPdfPenjualan'])->name('laporan.gudang.penjualan.pdf');
+    Route::get('/gudang/laporan/penjualan/excel', [GudangController::class, 'exportExcelPenjualan'])->name('laporan.gudang.penjualan.excel');
 
     //Route::post('gudang/produksibatal/{id}', [GudangController::class, 'produksibatal'])->name('produksi.batal');
     

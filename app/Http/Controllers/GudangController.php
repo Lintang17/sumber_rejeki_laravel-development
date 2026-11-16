@@ -494,6 +494,94 @@ public function exportExcelStokOpname()
     ]);
 }
 
+// LAPORAN PENJUALAN GUDANG
+
+public function laporanpenjualan()
+{
+    $data = PenjualanModel::with('penjualandetail')
+        ->orderBy('tanggalpenjualan', 'desc')
+        ->get();
+
+    return view('gudang.laporanpenjualan', compact('data'));
+}
+
+// EXPORT PDF LAPORAN PENJUALAN
+public function exportPdfPenjualan()
+{
+    $data = PenjualanModel::with('penjualandetail')
+        ->orderBy('tanggalpenjualan', 'desc')
+        ->get();
+
+    $pdf = Pdf::loadView(
+        'gudang.laporanpenjualan_pdf',
+        compact('data')
+    )->setPaper('A4', 'landscape');
+
+    return $pdf->download(
+        'Laporan-Penjualan-' . now()->format('d-m-Y') . '.pdf'
+    );
+}
+
+// EXPORT EXCEL LAPORAN PENJUALAN
+public function exportExcelPenjualan()
+{
+    $data = PenjualanModel::with('penjualandetail')
+        ->orderBy('tanggalpenjualan', 'desc')
+        ->get();
+
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+
+    $sheet->fromArray([
+        [
+            'No',
+            'Tanggal Penjualan',
+            'No Nota',
+            'Nama Produk',
+            'Jumlah Terjual',
+            'Harga Satuan',
+            'Total Penjualan',
+            'Status Pengiriman'
+        ]
+    ], null, 'A1');
+
+    $row = 2;
+    $nomor = 1;
+
+    foreach ($data as $item) {
+        foreach ($item->penjualandetail as $detail) {
+
+            $sheet->setCellValue('A' . $row, $nomor++);
+            $sheet->setCellValue('B' . $row, $item->tanggalpenjualan
+                ? Carbon::parse($item->tanggalpenjualan)->format('d-m-Y')
+                : '-');
+            $sheet->setCellValue('C' . $row, $item->notajual ?? '-');
+            $sheet->setCellValue('D' . $row, $detail->namaproduk ?? '-');
+            $sheet->setCellValue('E' . $row, $detail->jumlah_pembelian ?? 0);
+            $sheet->setCellValue('F' . $row, $detail->harga ?? 0);
+            $sheet->setCellValue('G' . $row, $detail->total ?? 0);
+            $sheet->setCellValue('H' . $row, $item->statuspengiriman ?? '-');
+
+            $row++;
+        }
+    }
+
+    foreach (range('A', 'H') as $column) {
+        $sheet->getColumnDimension($column)->setAutoSize(true);
+    }
+
+    $filename = 'Laporan-Penjualan-' . now()->format('d-m-Y') . '.xlsx';
+
+    return new StreamedResponse(function () use ($spreadsheet) {
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+    }, 200, [
+        'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition' => 'attachment;filename="' . $filename . '"',
+        'Cache-Control' => 'max-age=0',
+    ]);
+}
+
 // Batalkan produksi
 //public function produksibatalkan($id)
 //{
