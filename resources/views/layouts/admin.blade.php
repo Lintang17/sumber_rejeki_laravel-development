@@ -869,7 +869,7 @@ if (auth()->user()->role == 'Admin') {
 
                             <li class="nav-item {{ Request::is('gudang/laporan/*') ? 'active' : '' }}">
                                 <a class="nav-link" data-toggle="collapse" href="#laporanGudang" aria-expanded="false" aria-controls="laporanGudang">
-                                    <i class="mdi mdi-file-document-box menu-icon"></i>
+                                    <i class="mdi mdi-book-open-page-variant menu-icon"></i>
                                     <span class="menu-title">Laporan Gudang</span>
                                     <i class="menu-arrow"></i>
                                 </a>
@@ -880,6 +880,9 @@ if (auth()->user()->role == 'Admin') {
                                         </li>
                                         <li class="nav-item">
                                             <a class="nav-link {{ Request::is('gudang/laporan/stokopname') ? 'active' : '' }}" href="{{ url('gudang/laporan/stokopname') }}">Laporan Stok Opname</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ Request::is('gudang/laporan/penjualan') ? 'active' : '' }}" href="{{ url('gudang/laporan/penjualan') }}">Laporan Penjualan</a>
                                         </li>
                                     </ul>
                                 </div>

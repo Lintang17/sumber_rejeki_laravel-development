@@ -200,7 +200,7 @@
                             dari {{ $history->total() }} data
                         </div>
 
-                        {{ $history->links() }}
+                        {{ $history->onEachSide(1)->links('pagination::bootstrap-4') }}
                     </div>
 
                     <div class="info-box">
