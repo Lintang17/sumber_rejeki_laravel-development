@@ -496,21 +496,37 @@ public function exportExcelStokOpname()
 
 // LAPORAN PENJUALAN GUDANG
 
-public function laporanpenjualan()
+public function laporanpenjualan(Request $request)
 {
-    $data = PenjualanModel::with('penjualandetail')
-        ->orderBy('tanggalpenjualan', 'desc')
-        ->get();
+    $query = PenjualanModel::with('penjualandetail');
+
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggalpenjualan', $request->bulan);
+    }
+
+    if ($request->filled('tahun')) {
+        $query->whereYear('tanggalpenjualan', $request->tahun);
+    }
+
+    $data = $query->orderBy('tanggalpenjualan', 'desc')->get();
 
     return view('gudang.laporanpenjualan', compact('data'));
 }
 
 // EXPORT PDF LAPORAN PENJUALAN
-public function exportPdfPenjualan()
+public function exportPdfPenjualan(Request $request)
 {
-    $data = PenjualanModel::with('penjualandetail')
-        ->orderBy('tanggalpenjualan', 'desc')
-        ->get();
+    $query = PenjualanModel::with('penjualandetail');
+
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggalpenjualan', $request->bulan);
+    }
+
+    if ($request->filled('tahun')) {
+        $query->whereYear('tanggalpenjualan', $request->tahun);
+    }
+
+    $data = $query->orderBy('tanggalpenjualan', 'desc')->get();
 
     $pdf = Pdf::loadView(
         'gudang.laporanpenjualan_pdf',
@@ -523,15 +539,57 @@ public function exportPdfPenjualan()
 }
 
 // EXPORT EXCEL LAPORAN PENJUALAN
-public function exportExcelPenjualan()
+
+public function exportExcelPenjualan(Request $request)
 {
-    $data = PenjualanModel::with('penjualandetail')
-        ->orderBy('tanggalpenjualan', 'desc')
-        ->get();
+    $query = PenjualanModel::with('penjualandetail');
+
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggalpenjualan', $request->bulan);
+    }
+
+    if ($request->filled('tahun')) {
+        $query->whereYear('tanggalpenjualan', $request->tahun);
+    }
+
+    $data = $query->orderBy('tanggalpenjualan', 'desc')->get();
 
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Laporan Penjualan');
 
+    // Nama bulan
+    $namaBulan = [
+        1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
+        4 => 'April', 5 => 'Mei', 6 => 'Juni',
+        7 => 'Juli', 8 => 'Agustus', 9 => 'September',
+        10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+    ];
+
+    $periode = 'Semua Bulan';
+
+    if ($request->filled('bulan')) {
+        $periode = $namaBulan[(int) $request->bulan];
+    }
+
+    if ($request->filled('tahun')) {
+        $periode .= ' ' . $request->tahun;
+    }
+
+    // Judul laporan
+    $sheet->mergeCells('A1:H1');
+    $sheet->setCellValue('A1', 'LAPORAN PENJUALAN GUDANG');
+
+    $sheet->mergeCells('A2:H2');
+    $sheet->setCellValue('A2', 'UD SUMBER REJEKI');
+
+    $sheet->mergeCells('A3:H3');
+    $sheet->setCellValue('A3', 'Jl. Gajah Mada No.197, Rambipuji, Jember');
+
+    $sheet->mergeCells('A4:H4');
+    $sheet->setCellValue('A4', 'Periode: ' . $periode);
+
+    // Header tabel
     $sheet->fromArray([
         [
             'No',
@@ -543,32 +601,152 @@ public function exportExcelPenjualan()
             'Total Penjualan',
             'Status Pengiriman'
         ]
-    ], null, 'A1');
+    ], null, 'A6');
 
-    $row = 2;
+    $row = 7;
     $nomor = 1;
+    $totalPenjualan = 0;
 
+    // Data penjualan
     foreach ($data as $item) {
         foreach ($item->penjualandetail as $detail) {
 
             $sheet->setCellValue('A' . $row, $nomor++);
-            $sheet->setCellValue('B' . $row, $item->tanggalpenjualan
-                ? Carbon::parse($item->tanggalpenjualan)->format('d-m-Y')
-                : '-');
-            $sheet->setCellValue('C' . $row, $item->notajual ?? '-');
+
+            $sheet->setCellValue(
+                'B' . $row,
+                $item->tanggalpenjualan
+                    ? Carbon::parse($item->tanggalpenjualan)->format('d-m-Y')
+                    : '-'
+            );
+
+            $sheet->setCellValueExplicit(
+                'C' . $row,
+                (string) ($item->notajual ?? '-'),
+                \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING
+            );
+
             $sheet->setCellValue('D' . $row, $detail->namaproduk ?? '-');
             $sheet->setCellValue('E' . $row, $detail->jumlah_pembelian ?? 0);
             $sheet->setCellValue('F' . $row, $detail->harga ?? 0);
             $sheet->setCellValue('G' . $row, $detail->total ?? 0);
             $sheet->setCellValue('H' . $row, $item->statuspengiriman ?? '-');
 
+            $totalPenjualan += (float) ($detail->total ?? 0);
+
             $row++;
         }
     }
 
-    foreach (range('A', 'H') as $column) {
-        $sheet->getColumnDimension($column)->setAutoSize(true);
+    $lastDataRow = $row - 1;
+
+    // Jika tidak ada data
+    if ($nomor === 1) {
+        $sheet->mergeCells('A7:H7');
+        $sheet->setCellValue('A7', 'Belum ada data penjualan.');
+        $lastDataRow = 7;
+        $row = 8;
     }
+
+    // Total penjualan
+    if ($nomor > 1) {
+        $sheet->mergeCells('A' . $row . ':F' . $row);
+        $sheet->setCellValue('A' . $row, 'TOTAL PENJUALAN');
+        $sheet->setCellValue('G' . $row, $totalPenjualan);
+        $lastRow = $row;
+    } else {
+        $lastRow = $lastDataRow;
+    }
+
+    // Lebar kolom
+    $lebar = [
+        'A' => 7,
+        'B' => 17,
+        'C' => 19,
+        'D' => 23,
+        'E' => 14,
+        'F' => 17,
+        'G' => 19,
+        'H' => 21,
+    ];
+
+    foreach ($lebar as $kolom => $ukuran) {
+        $sheet->getColumnDimension($kolom)->setWidth($ukuran);
+    }
+
+    // Font dan judul
+    $sheet->getStyle('A1:H4')->getAlignment()
+        ->setHorizontal('center')
+        ->setVertical('center');
+
+    $sheet->getStyle('A1')->getFont()
+        ->setBold(true)
+        ->setSize(16);
+
+    $sheet->getStyle('A2')->getFont()
+        ->setBold(true)
+        ->setSize(13);
+
+    $sheet->getStyle('A3:H4')->getFont()
+        ->setSize(10);
+
+    $sheet->getRowDimension(1)->setRowHeight(28);
+    $sheet->getRowDimension(2)->setRowHeight(23);
+
+    // Header tabel
+    $sheet->getStyle('A6:H6')->getFont()->setBold(true);
+
+    $sheet->getStyle('A6:H6')->getAlignment()
+        ->setHorizontal('center')
+        ->setVertical('center')
+        ->setWrapText(true);
+
+    $sheet->getStyle('A6:H6')->getFill()
+        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+        ->getStartColor()->setARGB('FFD9EAF7');
+
+    $sheet->getRowDimension(6)->setRowHeight(32);
+
+    // Border tabel
+    $sheet->getStyle('A6:H' . $lastRow)
+        ->getBorders()->getAllBorders()
+        ->setBorderStyle(
+            \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+        );
+
+    // Format rupiah
+    if ($nomor > 1) {
+        $sheet->getStyle('F7:G' . $lastRow)
+            ->getNumberFormat()
+            ->setFormatCode('"Rp" #,##0');
+
+        // Baris total
+        $sheet->getStyle('A' . $lastRow . ':G' . $lastRow)
+            ->getFont()->setBold(true);
+
+        $sheet->getStyle('A' . $lastRow . ':G' . $lastRow)
+            ->getFill()->setFillType(
+                \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID
+            );
+
+        $sheet->getStyle('A' . $lastRow . ':G' . $lastRow)
+            ->getFill()->getStartColor()->setARGB('FFD9EAF7');
+    }
+
+    // Rata tengah
+    $sheet->getStyle('A7:C' . $lastDataRow)
+        ->getAlignment()->setHorizontal('center');
+
+    $sheet->getStyle('E7:E' . $lastDataRow)
+        ->getAlignment()->setHorizontal('center');
+
+    // Tinggi baris data
+    for ($i = 7; $i <= $lastRow; $i++) {
+        $sheet->getRowDimension($i)->setRowHeight(22);
+    }
+
+    $sheet->freezePane('A7');
+    $sheet->getSheetView()->setZoomScale(90);
 
     $filename = 'Laporan-Penjualan-' . now()->format('d-m-Y') . '.xlsx';
 
@@ -581,6 +759,7 @@ public function exportExcelPenjualan()
         'Cache-Control' => 'max-age=0',
     ]);
 }
+
 
 // Batalkan produksi
 //public function produksibatalkan($id)

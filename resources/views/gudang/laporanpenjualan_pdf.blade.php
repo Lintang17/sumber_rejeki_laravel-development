@@ -39,8 +39,18 @@
         <h2 style="margin: 0;">Laporan Penjualan Gudang</h2>
         <h3 style="margin: 0; font-weight: normal;">UD Sumber Rejeki</h3>
         <p style="margin: 0;">Jl. Gajah Mada No.197, Rambipuji, Jember</p>
+
         <p style="margin-top: 5px;">
-            Periode: {{ \Carbon\Carbon::now()->format('d F Y') }}
+            Periode:
+            @if (request('bulan') && request('tahun'))
+                {{ \Carbon\Carbon::createFromDate(request('tahun'), request('bulan'), 1)->translatedFormat('F Y') }}
+            @elseif (request('tahun'))
+                Tahun {{ request('tahun') }}
+            @elseif (request('bulan'))
+                {{ \Carbon\Carbon::createFromDate(now()->year, request('bulan'), 1)->translatedFormat('F') }}
+            @else
+                Semua Periode
+            @endif
         </p>
     </div>
 
