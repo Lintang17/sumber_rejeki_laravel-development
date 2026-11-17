@@ -367,51 +367,262 @@ public function opnameriwayat()
     return view('gudang.stokopnameriwayat', compact('data'));
 }
 
-public function laporanproduksi()
+public function laporanproduksi(Request $request)
 {
-    $data = ProduksiModel::latest()->get();
+    $request->validate([
+        'bulan' => 'nullable|integer|between:1,12',
+        'tahun' => 'nullable|integer|min:2025|max:2100',
+    ]);
+
+    $tahun = $request->input('tahun', now()->year);
+    $query = ProduksiModel::query();
+
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggalproduksi', $request->bulan);
+    }
+
+    $query->whereYear('tanggalproduksi', $tahun);
+    $data = $query->latest()->get();
+
     return view('gudang.laporanproduksi', compact('data'));
 }
 
-public function exportPdfProduksi()
+public function exportPdfProduksi(Request $request)
 {
-    $data = ProduksiModel::latest()->get();
+    $request->validate([
+        'bulan' => 'nullable|integer|between:1,12',
+        'tahun' => 'nullable|integer|min:2025|max:2100',
+    ]);
 
-    $pdf = Pdf::loadView('gudang.laporanproduksi_pdf', compact('data'))
-        ->setPaper('A4', 'landscape');
+    $tahun = $request->input('tahun', now()->year);
+    $query = ProduksiModel::query();
 
-    return $pdf->download('Laporan-Produksi-' . now()->format('d-m-Y') . '.pdf');
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggalproduksi', $request->bulan);
+    }
+
+    $query->whereYear('tanggalproduksi', $tahun);
+    $data = $query->latest()->get();
+    $namaBulan = [
+        1 => 'Januari',
+        2 => 'Februari',
+        3 => 'Maret',
+        4 => 'April',
+        5 => 'Mei',
+        6 => 'Juni',
+        7 => 'Juli',
+        8 => 'Agustus',
+        9 => 'September',
+        10 => 'Oktober',
+        11 => 'November',
+        12 => 'Desember',
+    ];
+
+    $periode = $request->filled('bulan')
+        ? $namaBulan[(int) $request->bulan] . ' ' . $tahun
+        : 'Januari - Desember ' . $tahun;
+
+    $pdf = Pdf::loadView(
+        'gudang.laporanproduksi_pdf',
+        compact('data', 'periode')
+    )->setPaper('A4', 'landscape');
+
+    return $pdf->download(
+        'Laporan-Produksi-' . $tahun .
+        ($request->filled('bulan') ? '-' . str_pad($request->bulan, 2, '0', STR_PAD_LEFT) : '') .
+        '-' . now()->format('d-m-Y') . '.pdf'
+    );
 }
 
-public function exportExcelProduksi()
+public function exportExcelProduksi(Request $request)
 {
-    $data = ProduksiModel::latest()->get();
-    $tanggal = \Carbon\Carbon::now()->format('d-m-Y');
+    $request->validate([
+        'bulan' => 'nullable|integer|between:1,12',
+        'tahun' => 'nullable|integer|min:2025|max:2100',
+    ]);
+
+    $tahun = $request->input('tahun', now()->year);
+    $query = ProduksiModel::query();
+
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggalproduksi', $request->bulan);
+    }
+
+    $query->whereYear('tanggalproduksi', $tahun);
+    $data = $query->latest()->get();
+    $namaBulan = [
+        1 => 'Januari',
+        2 => 'Februari',
+        3 => 'Maret',
+        4 => 'April',
+        5 => 'Mei',
+        6 => 'Juni',
+        7 => 'Juli',
+        8 => 'Agustus',
+        9 => 'September',
+        10 => 'Oktober',
+        11 => 'November',
+        12 => 'Desember',
+    ];
+
+    $periode = $request->filled('bulan')
+        ? $namaBulan[(int) $request->bulan] . ' ' . $tahun
+        : 'Januari - Desember ' . $tahun;
 
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
 
-    // Header
-    $sheet->fromArray([
-        ['No', 'Nama Produk', 'Tanggal Produksi', 'Stok Awal', 'Stok Tambahan', 'Stok Total', 'HPP Final', 'Harga Jual', 'Status']
-    ], null, 'A1');
+    $sheet->setTitle('Laporan Produksi');
 
-    // Data
-    $row = 2;
-    foreach ($data as $index => $item) {
-        $sheet->setCellValue("A{$row}", $index + 1);
-        $sheet->setCellValue("B{$row}", $item->namaproduk);
-        $sheet->setCellValue("C{$row}", \Carbon\Carbon::parse($item->tanggalproduksi)->format('d-m-Y'));
-        $sheet->setCellValue("D{$row}", $item->stok_awal);
-        $sheet->setCellValue("E{$row}", $item->stok_tambahan);
-        $sheet->setCellValue("F{$row}", $item->stok); // Total stok
-        $sheet->setCellValue("G{$row}", $item->hppfinal ?? '-');
-        $sheet->setCellValue("H{$row}", $item->hargajual ?? '-');
-        $sheet->setCellValue("I{$row}", ucfirst($item->status));
+    // Judul laporan
+    $sheet->mergeCells('A1:I1');
+    $sheet->setCellValue('A1', 'LAPORAN PRODUKSI BARANG');
+
+    $sheet->mergeCells('A2:I2');
+    $sheet->setCellValue('A2', 'UD SUMBER REJEKI');
+
+    $sheet->mergeCells('A3:I3');
+    $sheet->setCellValue('A3', 'Jl. Gajah Mada No.197, Rambipuji, Jember');
+
+    $sheet->mergeCells('A4:I4');
+    $sheet->setCellValue('A4', 'Periode: ' . $periode);
+
+    // Header tabel
+    $sheet->fromArray([
+        [
+            'No',
+            'Nama Produk',
+            'Tanggal Produksi',
+            'Stok Awal',
+            'Stok Tambahan',
+            'Stok Total',
+            'HPP Final',
+            'Harga Jual',
+            'Status',
+        ]
+    ], null, 'A6');
+
+    $row = 7;
+    $nomor = 1;
+
+    foreach ($data as $item) {
+
+        $sheet->setCellValue('A' . $row, $nomor++);
+
+        $sheet->setCellValue(
+            'B' . $row,
+            $item->namaproduk ?? '-'
+        );
+
+        $sheet->setCellValue(
+            'C' . $row,
+            $item->tanggalproduksi
+                ? Carbon::parse($item->tanggalproduksi)->format('d-m-Y')
+                : '-'
+        );
+
+        $sheet->setCellValue('D' . $row, $item->stok_awal ?? 0);
+        $sheet->setCellValue('E' . $row, $item->stok_tambahan ?? 0);
+        $sheet->setCellValue('F' . $row, $item->stok ?? 0);
+        $sheet->setCellValue('G' . $row, $item->hppfinal ?? '-');
+        $sheet->setCellValue('H' . $row, $item->hargajual ?? '-');
+        $sheet->setCellValue('I' . $row, ucfirst($item->status ?? '-'));
+
         $row++;
     }
 
-    $filename = 'Laporan-Produksi-' . $tanggal . '.xlsx';
+    $lastDataRow = $row - 1;
+
+    if ($nomor === 1) {
+        $sheet->mergeCells('A7:I7');
+        $sheet->setCellValue('A7', 'Belum ada data produksi.');
+        $lastDataRow = 7;
+    }
+
+    $lebar = [
+        'A' => 7,
+        'B' => 25,
+        'C' => 18,
+        'D' => 14,
+        'E' => 16,
+        'F' => 14,
+        'G' => 17,
+        'H' => 17,
+        'I' => 17,
+    ];
+
+    foreach ($lebar as $kolom => $ukuran) {
+        $sheet->getColumnDimension($kolom)->setWidth($ukuran);
+    }
+
+    // Format judul
+    $sheet->getStyle('A1:I4')->getAlignment()
+        ->setHorizontal('center')
+        ->setVertical('center');
+
+    $sheet->getStyle('A1')->getFont()
+        ->setBold(true)
+        ->setSize(16);
+
+    $sheet->getStyle('A2')->getFont()
+        ->setBold(true)
+        ->setSize(13);
+
+    $sheet->getStyle('A3:I4')->getFont()
+        ->setSize(10);
+
+    $sheet->getRowDimension(1)->setRowHeight(28);
+    $sheet->getRowDimension(2)->setRowHeight(23);
+
+    // Format header tabel
+    $sheet->getStyle('A6:I6')->getFont()->setBold(true);
+
+    $sheet->getStyle('A6:I6')->getAlignment()
+        ->setHorizontal('center')
+        ->setVertical('center')
+        ->setWrapText(true);
+
+    $sheet->getStyle('A6:I6')->getFill()
+        ->setFillType(
+            \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID
+        )
+        ->getStartColor()->setARGB('FFD9EAF7');
+
+    $sheet->getRowDimension(6)->setRowHeight(32);
+
+    $sheet->getStyle('A6:I' . $lastDataRow)
+        ->getBorders()
+        ->getAllBorders()
+        ->setBorderStyle(
+            \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+        );
+
+    if ($nomor > 1) {
+        $sheet->getStyle('G7:H' . $lastDataRow)
+            ->getNumberFormat()
+            ->setFormatCode('"Rp" #,##0');
+
+        // Rata tengah nomor dan tanggal
+        $sheet->getStyle('A7:A' . $lastDataRow)
+            ->getAlignment()->setHorizontal('center');
+
+        $sheet->getStyle('C7:F' . $lastDataRow)
+            ->getAlignment()->setHorizontal('center');
+
+        $sheet->getStyle('I7:I' . $lastDataRow)
+            ->getAlignment()->setHorizontal('center');
+    }
+
+    for ($i = 7; $i <= $lastDataRow; $i++) {
+        $sheet->getRowDimension($i)->setRowHeight(22);
+    }
+
+    $sheet->freezePane('A7');
+    $sheet->getSheetView()->setZoomScale(90);
+
+    $filename = 'Laporan-Produksi-' . $tahun .
+        ($request->filled('bulan') ? '-' . str_pad($request->bulan, 2, '0', STR_PAD_LEFT) : '') .
+        '-' . now()->format('d-m-Y') . '.xlsx';
 
     return new StreamedResponse(function () use ($spreadsheet) {
         $writer = new Xlsx($spreadsheet);
@@ -423,66 +634,259 @@ public function exportExcelProduksi()
     ]);
 }
 
-public function laporanstokopname()
+public function laporanstokopname(Request $request)
 {
-    $data = StokOpnameModel::with('showroom.produksi')
-        ->whereHas('showroom.produksi')
-        ->latest()
-        ->get();
+    $request->validate([
+        'bulan' => 'nullable|integer|between:1,12',
+        'tahun' => 'nullable|integer|min:2025|max:2100',
+    ]);
+
+    $tahun = $request->input('tahun', now()->year);
+    $query = StokOpnameModel::with('showroom.produksi')
+        ->whereHas('showroom.produksi');
+
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggal_opname', $request->bulan);
+    }
+
+    $query->whereYear('tanggal_opname', $tahun);
+    $data = $query->orderByDesc('tanggal_opname')->get();
 
     return view('gudang.laporanstokopname', compact('data'));
 }
 
-public function exportPdfStokOpname()
+public function exportPdfStokOpname(Request $request)
 {
-    $data = StokOpnameModel::with('showroom.produksi')
-        ->whereHas('showroom.produksi')
-        ->latest()
-        ->get();
+    $request->validate([
+        'bulan' => 'nullable|integer|between:1,12',
+        'tahun' => 'nullable|integer|min:2025|max:2100',
+    ]);
 
-    $pdf = Pdf::loadView('gudang.laporanstokopname_pdf', compact('data'))
-        ->setPaper('A4', 'landscape');
+    $tahun = $request->input('tahun', now()->year);
+    $query = StokOpnameModel::with('showroom.produksi')
+        ->whereHas('showroom.produksi');
+
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggal_opname', $request->bulan);
+    }
+
+    $query->whereYear('tanggal_opname', $tahun);
+    $data = $query->orderByDesc('tanggal_opname')->get();
+    $namaBulan = [
+        1 => 'Januari',
+        2 => 'Februari',
+        3 => 'Maret',
+        4 => 'April',
+        5 => 'Mei',
+        6 => 'Juni',
+        7 => 'Juli',
+        8 => 'Agustus',
+        9 => 'September',
+        10 => 'Oktober',
+        11 => 'November',
+        12 => 'Desember',
+    ];
+
+    $periode = $request->filled('bulan')
+        ? $namaBulan[(int) $request->bulan] . ' ' . $tahun
+        : 'Januari - Desember ' . $tahun;
+
+    $pdf = Pdf::loadView(
+        'gudang.laporanstokopname_pdf',
+        compact('data', 'periode')
+    )->setPaper('A4', 'landscape');
 
     return $pdf->download(
-        'Laporan-Stok-Opname-' . now()->format('d-m-Y') . '.pdf'
+        'Laporan-Stok-Opname-' . $tahun .
+        ($request->filled('bulan')
+            ? '-' . str_pad($request->bulan, 2, '0', STR_PAD_LEFT)
+            : '') .
+        '-' . now()->format('d-m-Y') . '.pdf'
     );
 }
 
-public function exportExcelStokOpname()
+public function exportExcelStokOpname(Request $request)
 {
-    $data = StokOpnameModel::with('showroom.produksi')
-        ->whereHas('showroom.produksi')
-        ->latest()
-        ->get();
+    $request->validate([
+        'bulan' => 'nullable|integer|between:1,12',
+        'tahun' => 'nullable|integer|min:2025|max:2100',
+    ]);
 
-    $tanggal = Carbon::now()->format('d-m-Y');
+    $tahun = $request->input('tahun', now()->year);
+
+    $query = StokOpnameModel::with('showroom.produksi')
+        ->whereHas('showroom.produksi');
+
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggal_opname', $request->bulan);
+    }
+
+    $query->whereYear('tanggal_opname', $tahun);
+
+    $data = $query->orderByDesc('tanggal_opname')->get();
+
+    $namaBulan = [
+        1 => 'Januari',
+        2 => 'Februari',
+        3 => 'Maret',
+        4 => 'April',
+        5 => 'Mei',
+        6 => 'Juni',
+        7 => 'Juli',
+        8 => 'Agustus',
+        9 => 'September',
+        10 => 'Oktober',
+        11 => 'November',
+        12 => 'Desember',
+    ];
+
+    $periode = $request->filled('bulan')
+        ? $namaBulan[(int) $request->bulan] . ' ' . $tahun
+        : 'Januari - Desember ' . $tahun;
 
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
 
-    $sheet->setCellValue('A1', 'No');
-    $sheet->setCellValue('B1', 'Nama Produk');
-    $sheet->setCellValue('C1', 'Tanggal Opname');
-    $sheet->setCellValue('D1', 'Stok Sistem');
-    $sheet->setCellValue('E1', 'Stok Fisik');
-    $sheet->setCellValue('F1', 'Selisih');
-    $sheet->setCellValue('G1', 'Keterangan');
+    $sheet->setTitle('Laporan Stok Opname');
 
-    $row = 2;
+    // Judul laporan
+    $sheet->mergeCells('A1:G1');
+    $sheet->setCellValue('A1', 'LAPORAN STOK OPNAME');
 
-    foreach ($data as $index => $item) {
-        $sheet->setCellValue('A' . $row, $index + 1);
-        $sheet->setCellValue('B' . $row, $item->showroom->produksi->namaproduk);
-        $sheet->setCellValue('C' . $row, Carbon::parse($item->tanggal_opname)->format('d-m-Y'));
-        $sheet->setCellValue('D' . $row, $item->stok_sistem);
-        $sheet->setCellValue('E' . $row, $item->stok_fisik);
-        $sheet->setCellValue('F' . $row, $item->selisih);
+    $sheet->mergeCells('A2:G2');
+    $sheet->setCellValue('A2', 'UD SUMBER REJEKI');
+
+    $sheet->mergeCells('A3:G3');
+    $sheet->setCellValue('A3', 'Jl. Gajah Mada No.197, Rambipuji, Jember');
+
+    $sheet->mergeCells('A4:G4');
+    $sheet->setCellValue('A4', 'Periode: ' . $periode);
+
+    // Header tabel
+    $sheet->fromArray([
+        [
+            'No',
+            'Nama Produk',
+            'Tanggal Opname',
+            'Stok Sistem',
+            'Stok Fisik',
+            'Selisih',
+            'Keterangan',
+        ]
+    ], null, 'A6');
+
+    $row = 7;
+    $nomor = 1;
+
+    foreach ($data as $item) {
+        $sheet->setCellValue('A' . $row, $nomor++);
+
+        $sheet->setCellValue(
+            'B' . $row,
+            $item->showroom->produksi->namaproduk ?? '-'
+        );
+
+        $sheet->setCellValue(
+            'C' . $row,
+            $item->tanggal_opname
+                ? Carbon::parse($item->tanggal_opname)->format('d-m-Y')
+                : '-'
+        );
+
+        $sheet->setCellValue('D' . $row, $item->stok_sistem ?? 0);
+        $sheet->setCellValue('E' . $row, $item->stok_fisik ?? 0);
+        $sheet->setCellValue('F' . $row, $item->selisih ?? 0);
         $sheet->setCellValue('G' . $row, $item->keterangan ?? '-');
 
         $row++;
     }
 
-    $filename = 'Laporan-Stok-Opname-' . $tanggal . '.xlsx';
+    $lastDataRow = $row - 1;
+
+    if ($nomor === 1) {
+        $sheet->mergeCells('A7:G7');
+        $sheet->setCellValue('A7', 'Belum ada data stok opname.');
+        $lastDataRow = 7;
+    }
+
+    // Lebar kolom
+    $lebar = [
+        'A' => 7,
+        'B' => 28,
+        'C' => 18,
+        'D' => 16,
+        'E' => 16,
+        'F' => 14,
+        'G' => 30,
+    ];
+
+    foreach ($lebar as $kolom => $ukuran) {
+        $sheet->getColumnDimension($kolom)->setWidth($ukuran);
+    }
+
+    // Format judul
+    $sheet->getStyle('A1:G4')->getAlignment()
+        ->setHorizontal('center')
+        ->setVertical('center');
+
+    $sheet->getStyle('A1')->getFont()
+        ->setBold(true)
+        ->setSize(16);
+
+    $sheet->getStyle('A2')->getFont()
+        ->setBold(true)
+        ->setSize(13);
+
+    $sheet->getStyle('A3:G4')->getFont()
+        ->setSize(10);
+
+    $sheet->getRowDimension(1)->setRowHeight(28);
+    $sheet->getRowDimension(2)->setRowHeight(23);
+
+    // Format header tabel
+    $sheet->getStyle('A6:G6')->getFont()->setBold(true);
+
+    $sheet->getStyle('A6:G6')->getAlignment()
+        ->setHorizontal('center')
+        ->setVertical('center')
+        ->setWrapText(true);
+
+    $sheet->getStyle('A6:G6')->getFill()
+        ->setFillType(
+            \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID
+        )
+        ->getStartColor()->setARGB('FFD9EAF7');
+
+    $sheet->getRowDimension(6)->setRowHeight(32);
+
+    // Border tabel
+    $sheet->getStyle('A6:G' . $lastDataRow)
+        ->getBorders()
+        ->getAllBorders()
+        ->setBorderStyle(
+            \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+        );
+
+    if ($nomor > 1) {
+        $sheet->getStyle('A7:A' . $lastDataRow)
+            ->getAlignment()->setHorizontal('center');
+
+        $sheet->getStyle('C7:F' . $lastDataRow)
+            ->getAlignment()->setHorizontal('center');
+    }
+
+    for ($i = 7; $i <= $lastDataRow; $i++) {
+        $sheet->getRowDimension($i)->setRowHeight(22);
+    }
+
+    $sheet->freezePane('A7');
+    $sheet->getSheetView()->setZoomScale(90);
+
+    $filename = 'Laporan-Stok-Opname-' . $tahun .
+        ($request->filled('bulan')
+            ? '-' . str_pad($request->bulan, 2, '0', STR_PAD_LEFT)
+            : '') .
+        '-' . now()->format('d-m-Y') . '.xlsx';
 
     return new StreamedResponse(function () use ($spreadsheet) {
         $writer = new Xlsx($spreadsheet);
