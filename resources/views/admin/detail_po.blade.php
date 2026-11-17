@@ -311,76 +311,74 @@
                                                 <i class="fas fa-check-double mr-1"></i> Selesai
                                             </span>
                                         @endif
-                                    </td>
+                                    </td> 
                                     <td>
-                                        <div class="btn-group btn-group-sm" style="width:100%">
+                                        <div class="d-flex flex-column" style="gap:5px; min-width:100px;">
+                                            {{-- Tombol Edit hanya untuk Pending --}}
                                             @if($item->status == 'Pending')
-                                                <a href="{{ url('admin/po/edit/'.$item->id) }}" 
-                                                   class="btn btn-warning">
+                                                <a href="{{ url('admin/po/edit/'.$item->id) }}"
+                                                    class="btn btn-warning btn-sm">
                                                     <i class="fas fa-edit mr-1"></i> Edit
                                                 </a>
-                                                <button onclick="hapusPo({{ $item->id }})" 
-                                                        class="btn btn-danger">
-                                                    <i class="fas fa-trash mr-1"></i> Hapus
-                                                </button>
-                                            @else
-                                                <button class="btn btn-secondary" disabled>
-                                                    <i class="fas fa-lock mr-1"></i> Terkunci
-                                                </button>
                                             @endif
-                            
+                                            {{-- Tombol Ubah Status untuk Diambil --}}
                                             @if($item->status == 'Diambil')
                                                 <form id="form-kirim-{{ $item->id }}"
                                                       action="{{ url('admin/po/status/'.$item->id) }}"
-                                                       method="POST">
+                                                      method="POST">
                                                     @csrf
                                                     @method('PUT')
-                                                    <input type="hidden"
-                                                            name="status"
-                                                            value="Dikirim">
+
+                                                    <input type="hidden" name="status" value="Dikirim">
                                                     <button type="button"
-                                                            class="btn btn-primary btn-block" style="height: 32px;"
+                                                            class="btn btn-primary btn-sm btn-block"
                                                             onclick="ubahStatusDikirim({{ $item->id }})">
                                                         Ubah Status
                                                     </button>
                                                 </form>
-                                            @elseif($item->status == 'Dikirim')
+                                            @endif
+                                            {{-- Tombol untuk Dikirim --}}
+                                            @if($item->status == 'Dikirim')
                                                 <a href="{{ url('admin/po/print/'.$item->id) }}"
-                                                    class="btn btn-info btn-block"
-                                                    style="line-height:1.0;">
+                                                    class="btn btn-info btn-sm">
                                                     Surat Jalan
                                                 </a>
                                                 <a href="{{ url('admin/po/print/'.$item->id.'?invoice=true') }}"
-                                                    class="btn btn-success">
+                                                    class="btn btn-success btn-sm">
                                                     Invoice
                                                 </a>
-                                                @if(strtolower($item->status_pembayaran ?? '') != 'lunas')
-                                                    
-                                                @else
+                                                @if(strtolower($item->status_pembayaran ?? '') == 'lunas')
                                                     <form id="form-selesai-{{ $item->id }}"
-                                                        action="{{ url('admin/po/status/'.$item->id) }}"
-                                                        method="POST">
+                                                          action="{{ url('admin/po/status/'.$item->id) }}"
+                                                          method="POST">
                                                         @csrf
                                                         @method('PUT')
-                                                        <input type="hidden"
-                                                            name="status"
-                                                            value="Selesai">
+
+                                                        <input type="hidden" name="status" value="Selesai">
                                                         <button type="button"
-                                                            class="btn btn-block"
-                                                            style="background-color:#6f42c1; border-color:#6f42c1; color:#fff;"
-                                                            onmouseover="this.style.backgroundColor='#5a32a3';this.style.borderColor='#5a32a3';"
-                                                            onmouseout="this.style.backgroundColor='#6f42c1';this.style.borderColor='#6f42c1';"
-                                                            onclick="konfirmasiSelesai({{ $item->id }})">
+                                                                class="btn btn-sm btn-block"
+                                                                style="background-color:#6f42c1; color:white;"
+                                                                onclick="konfirmasiSelesai({{ $item->id }})">
                                                             Selesaikan PO
                                                         </button>
                                                     </form>
                                                 @endif
-                                            @elseif($item->status == 'Selesai')
+                                            @endif
+                                            {{-- Invoice untuk Selesai --}}
+                                            @if($item->status == 'Selesai')
                                                 <a href="{{ url('admin/po/print/'.$item->id) }}"
-                                                    class="btn btn-success">
+                                                    class="btn btn-success btn-sm"
+                                                    style="font-size:13px; padding:6px 8px; border-radius:4px; padding-top:4px; padding-bottom:4px;">
                                                     Invoice
                                                 </a>
                                             @endif
+                                            {{-- Tombol Hapus untuk Semua Status --}}
+                                            <button type="button"
+                                                onclick="hapusPo({{ $item->id }}, @js($item->kode_po), @js($item->status))"
+                                                class="btn btn-danger btn-sm"
+                                                style="font-size:13px; padding:6px 8px; border-radius:4px; padding-top:4px; padding-bottom:4px;">
+                                                Hapus
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -975,7 +973,7 @@ $(document).ready(function () {
 
 });
 
-function hapusPo(id) {
+function hapusPo(id, kode, status) {
     Swal.fire({
         title: 'Konfirmasi Hapus',
         html: 'Apakah Anda yakin ingin menghapus Purchase Order ini?<br><strong>Data yang dihapus tidak dapat dikembalikan!</strong>',
