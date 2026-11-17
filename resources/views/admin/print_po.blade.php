@@ -27,14 +27,6 @@
             margin-bottom:25px;
             position:relative;
         }
-        .logo{
-            position:absolute;
-            left:0;
-            top:0;
-        }
-        .logo img{
-            width:80px;
-        }
         .company{
             text-align:center;
         }
@@ -152,10 +144,6 @@
 <div class="container">
 
     <div class="header">
-        <div class="logo">
-            <img src="{{ public_path('assets/logo.png') }}" alt="logo">
-        </div>
-
         <div class="company">
             <div class="company-name">
                 UD. SUMBER REJEKI

@@ -450,7 +450,7 @@
                             </label>
                             <div class="d-flex flex-wrap" style="gap:15px;">
                                 @foreach($item->detail as $detail)
-                                    @if($detail->foto)
+                                    @if($detail->foto && file_exists(public_path('assets/foto/po/'.$detail->foto)))
                                         <div class="text-center">
                                             <img src="{{ asset('assets/foto/po/'.$detail->foto) }}"
                                                  class="img-thumbnail"

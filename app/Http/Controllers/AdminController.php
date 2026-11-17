@@ -25,6 +25,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
+    private function folderFotoPO()
+    {
+        if (app()->environment('local')) {
+            return public_path('assets/foto/po');
+        }
+
+        return base_path('../public_html/assets/foto/po');
+    }
+
     public function dashboard()
     {
         $data['jumlahbarangshowroom'] = ShowroomModel::count();
@@ -1386,16 +1395,19 @@ public function barangmasukupdate(Request $request, $id)
                 $hppEstimasiGudang = 0;
 
                 $namaFoto = null;
-
                 if ($request->hasFile('foto') && isset($request->file('foto')[$i])) {
                     $file = $request->file('foto')[$i];
-                    $namaFoto = time() . '_' . $i . '.' .
-                        $file->getClientOriginalExtension();
+                    // Lokasi foto otomatis menyesuaikan lokal atau hosting
+                    $folderFoto = $this->folderFotoPO();
 
-                    $file->move(
-                        public_path('assets/foto/po'),
-                        $namaFoto
-                    );
+                    File::ensureDirectoryExists($folderFoto);
+                    $namaFoto = time() . '_' . $i . '_' . uniqid() . '.' .
+                        strtolower($file->getClientOriginalExtension());
+
+                    $file->move($folderFoto, $namaFoto);
+                    if (!file_exists($folderFoto . '/' . $namaFoto)) {
+                        throw new \Exception('Foto produk gagal disimpan.');
+                    }
                 }
 
                 PoDetail::create([
@@ -1501,25 +1513,36 @@ public function barangmasukupdate(Request $request, $id)
                         'hpp_estimasi_admin' =>
                             $request->hpp_estimasi_admin[$index] ?? 0,
                     ];
-                    // jika ada upload foto baru
-                    if($request->hasFile('foto') &&
-                        isset($request->file('foto')[$index])){
+                    
+                    // Jika ada upload foto baru
+                    if (
+                        $request->hasFile('foto') &&
+                        isset($request->file('foto')[$index])
+                    ) {
                         $file = $request->file('foto')[$index];
-                        $namaFoto = time().'_'.$index.'.'.$file->getClientOriginalExtension();
-                        // hapus foto lama
-                        if($detail->foto &&
-                            file_exists(public_path('assets/foto/po/'.$detail->foto))){
-                            unlink(
-                                public_path('assets/foto/po/'.$detail->foto)
-                            );
+                        // Lokasi foto otomatis menyesuaikan lokal atau hosting
+                        $folderFoto = $this->folderFotoPO();
+
+                        File::ensureDirectoryExists($folderFoto);
+                        $namaFoto = time() . '_' . $index . '_' . uniqid() . '.' .
+                            strtolower($file->getClientOriginalExtension());
+                        // Simpan foto baru
+                        $file->move($folderFoto, $namaFoto);
+
+                        if (!file_exists($folderFoto . '/' . $namaFoto)) {
+                            throw new \Exception('Foto produk gagal disimpan.');
                         }
-                        // simpan foto baru
-                        $file->move(
-                            public_path('assets/foto/po'),
-                            $namaFoto
-                        );
+                        // Hapus foto lama setelah foto baru berhasil disimpan
+                        if (
+                            $detail->foto &&
+                            file_exists($folderFoto . '/' . $detail->foto)
+                        ) {
+                            unlink($folderFoto . '/' . $detail->foto);
+                        }
+
                         $data['foto'] = $namaFoto;
                     }
+                 
                     $detail->update($data);
                 }
             }
