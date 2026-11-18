@@ -391,7 +391,6 @@ Route::middleware(['auth'])->controller(GudangController::class)->group(function
     Route::get('gudang/po', 'poDaftar');
     Route::get('gudang/po/{id}/detail', 'poDetail');
     Route::post('gudang/po/{id}/update', 'poUpdate');
-    Route::get('gudang/po/{id}/print', 'poPrint');
     Route::get('/gudang/po/{id}/print', [GudangController::class, 'poPrint'])
         ->name('gudang.po.print');
     Route::post('/gudang/po/{id}/proses', [GudangController::class, 'proses'])

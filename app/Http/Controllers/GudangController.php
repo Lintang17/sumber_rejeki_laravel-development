@@ -1526,77 +1526,85 @@ public function exportExcelPenjualan(Request $request)
     }
 
     // SISTEM PO
+    
     public function poUpdate(Request $request, $id)
     {
-        $request->validate([
-            'estimasi_akhir' => 'nullable|date',
-            'keterangan'     => 'nullable|string',
-            'status'         => 'nullable|in:Diproses,Diambil',
-            'hpp_estimasi_gudang.*' => 'nullable|string'
-        ]);
-
         $po = Po::with('detail')->findOrFail($id);
+        $hppGudang = $request->input('hpp_estimasi_gudang', []);
 
-        if (in_array($po->status, ['Diambil', 'Dikirim', 'Selesai'])) {
-            return back()->with('error', 'PO sudah selesai dan tidak dapat diubah.');
+        foreach ($hppGudang as $detailId => $hpp) {
+            $angka = preg_replace('/\D/', '', (string) $hpp);
+            $hppGudang[$detailId] = $angka === '' ? null : $angka;
         }
 
+        $request->merge([
+            'hpp_estimasi_gudang' => $hppGudang
+        ]);
+
+        // Validasi input
+        $request->validate([
+            'estimasi_akhir' => 'nullable|date',
+            'keterangan' => 'nullable|string',
+            'hpp_estimasi_gudang' => 'sometimes|array',
+            'hpp_estimasi_gudang.*' => 'nullable|numeric|min:0',
+            'status' => 'nullable|in:Disetujui,Diproses,Diambil',
+        ]);
+
+        // Khusus Pending: data wajib diisi
         if ($po->status == 'Pending') {
             $request->validate([
                 'estimasi_akhir' => 'required|date',
                 'keterangan' => 'required|string',
-                'hpp_estimasi_gudang.*' => 'required|string',
-            ],[
+                'hpp_estimasi_gudang' => 'required|array',
+                'hpp_estimasi_gudang.*' => 'required|numeric|min:0',
+            ], [
                 'estimasi_akhir.required' => 'Estimasi akhir wajib diisi.',
                 'keterangan.required' => 'Keterangan wajib diisi.',
                 'hpp_estimasi_gudang.*.required' => 'HPP Estimasi Gudang wajib diisi.',
             ]);
-            foreach ($request->hpp_estimasi_gudang as $detailId => $hpp) {
-                $hpp = str_replace('.', '', $hpp);
+        }
 
-                PoDetail::where('id', $detailId)
-                    ->where('po_id', $po->id)
-                    ->update([
-                        'hpp_estimasi_gudang' => $hpp,
-                    ]);
+        $po->update([
+            'estimasi_akhir' => $request->input('estimasi_akhir', $po->estimasi_akhir),
+            'keterangan' => $request->input('keterangan', $po->keterangan),
+        ]);
+
+        // Simpan HPP Estimasi Gudang
+        foreach ($hppGudang as $detailId => $hpp) {
+            if ($hpp === null) {
+                continue;
             }
 
-            $po->update([
-                'estimasi_akhir' => $request->estimasi_akhir,
-                'keterangan' => $request->keterangan,
-            ]);
-
-            return redirect('/gudang/po')
-                ->with('success', 'Data gudang berhasil disimpan.');
+            PoDetail::where('id', $detailId)
+                ->where('po_id', $po->id)
+                ->update([
+                    'hpp_estimasi_gudang' => $hpp,
+                ]);
         }
 
-        if ($po->status == 'Disetujui') {
-            $request->validate([
-                'status' => 'required|in:Diproses',
-            ]);
+        if ($request->filled('status') && $request->status != $po->status) {
 
-            $po->update([
-                'status' => 'Diproses',
-            ]);
+            // Disetujui menjadi Diproses
+            if ($po->status == 'Disetujui' && $request->status == 'Diproses') {
+                $po->update([
+                    'status' => 'Diproses'
+                ]);
+            }
 
-            return redirect('/gudang/po')
-                ->with('success', 'PO berhasil diproses (Print Internal siap).');
+            // Diproses menjadi Diambil
+            elseif ($po->status == 'Diproses' && $request->status == 'Diambil') {
+                $po->update([
+                    'status' => 'Diambil'
+                ]);
+            }
+
+            else {
+                return back()->with('error', 'Perubahan status PO tidak diperbolehkan.');
+            }
         }
 
-        if ($po->status == 'Diproses') {
-            $request->validate([
-                'status' => 'required|in:Diambil',
-            ]);
-
-            $po->update([
-                'status' => 'Diambil',
-            ]);
-
-            return redirect('/gudang/po')
-                ->with('success', 'PO sudah diambil (Surat pengambilan siap).');
-        }
-
-        return back()->with('error', 'Status tidak valid.');
+        return redirect('/gudang/po')
+            ->with('success', 'Informasi Gudang berhasil diperbarui.');
     }
 
     public function proses($id)

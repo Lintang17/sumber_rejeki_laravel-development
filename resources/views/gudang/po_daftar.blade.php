@@ -331,14 +331,14 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="btn-group btn-group-sm" style="width:100%">
-                                            @if($item->status == 'Pending')
-                                                <a href="{{ url('gudang/po/'.$item->id.'/detail') }}"
-                                                   class="btn btn-block"
-                                                   style="background:#6f42c1; border-color:#6f42c1; color:#fff;">
-                                                   <i class="fas fa-edit mr-1" style="color:#fff;"></i> Edit
-                                                </a>
-                                            @elseif($item->status == 'Disetujui')
+                                        <div class="d-flex flex-column" style="gap:5px;">
+                                            <a href="{{ url('gudang/po/'.$item->id.'/detail') }}"
+                                               class="btn btn-sm btn-block"
+                                               style="background:#6f42c1; border-color:#6f42c1; color:#fff;">
+                                                <i class="fas fa-edit mr-1"></i> Edit
+                                            </a>
+
+                                            @if($item->status == 'Disetujui')
                                                 <form id="proses-form-{{ $item->id }}" 
                                                       action="{{ url('gudang/po/'.$item->id.'/proses') }}" 
                                                       method="POST">
@@ -373,13 +373,10 @@
                                             @elseif($item->status == 'Diambil')
                                                 <a href="{{ url('gudang/po/'.$item->id.'/print') }}" 
                                                    target="_blank"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-file-pdf mr-1"></i> Surat Pengambilan
+                                                   class="btn btn-sm btn-block"
+                                                   style="background:#007bff; border-color:#007bff; color:#fff;">
+                                                   Surat Pengambilan
                                                 </a>
-                                            @else
-                                                <button class="btn btn-secondary" disabled>
-                                                    <i class="fas fa-lock mr-1"></i> Terkunci
-                                                </button>
                                             @endif
                                         </div>
                                     </td>

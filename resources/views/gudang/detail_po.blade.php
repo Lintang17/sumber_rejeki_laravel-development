@@ -142,36 +142,22 @@
                                     @endif
                                 </td>
                                 <td style="min-width:250px;">
-                                    @if($po->status == 'Pending')
-                                        <div style="background:#FFF7E6;border:2px dashed #F59E0B;border-radius:12px;padding:12px;">
-                                            <label class="font-weight-bold mb-2 d-block" style="color:#B45309;">
-                                                <i class="mdi mdi-pencil-circle"></i>
-                                                HPP Estimasi Gudang
-                                                <span class="text-danger">*</span>
-                                            </label>
-                                            <div class="input-group mb-2">
-                                                <input type="text"
-                                                       name="hpp_estimasi_gudang[{{ $detail->id }}]"
-                                                       class="form-control rupiah"
-                                                       placeholder="Contoh : 1.200.000"
-                                                       value="{{ $detail->hpp_estimasi_gudang > 0 ? number_format($detail->hpp_estimasi_gudang,0,',','.') : '' }}"
-                                                       required>
-                                            </div>
-                                            <small class="text-warning font-weight-bold">
-                                                Wajib diisi oleh pihak Gudang sebelum PO disetujui Owner.
-                                            </small>
+                                    <div style="background:#FFF7E6;border:2px dashed #F59E0B;border-radius:12px;padding:12px;">
+                                        <label class="font-weight-bold mb-2 d-block" style="color:#B45309;">
+                                            <i class="mdi mdi-pencil-circle"></i>
+                                            HPP Estimasi Gudang
+                                        </label>
+                                        <div class="input-group mb-2">
+                                            <input type="text"
+                                                    name="hpp_estimasi_gudang[{{ $detail->id }}]"
+                                                    class="form-control rupiah"
+                                                    placeholder="Contoh : 1.200.000"
+                                                    value="{{ $detail->hpp_estimasi_gudang > 0 ? number_format($detail->hpp_estimasi_gudang,0,',','.') : '' }}">
                                         </div>
-                                    @else
-                                        @if($detail->hpp_estimasi_gudang > 0)
-                                            <div style="background:#DCFCE7;color:#166534;padding:10px;border-radius:10px;font-weight:700;text-align:center;">
-                                                Rp {{ number_format($detail->hpp_estimasi_gudang,0,',','.') }}
-                                            </div>
-                                        @else
-                                            <span class="badge badge-danger px-3 py-2">
-                                                Belum Diisi
-                                            </span>
-                                        @endif
-                                    @endif
+                                        <small class="text-muted">
+                                            HPP Estimasi Gudang wajib diisi.
+                                        </small>
+                                    </div>
                                 </td>
                                 <td>
                                     <div style="background:#EFF6FF;color:#2563EB;padding:10px;border-radius:10px;font-weight:700;text-align:center;">
@@ -193,7 +179,6 @@
                                 </label>
 
                                 <input type="date"
-                                       {{ $po->status != 'Pending' ? 'disabled' : '' }}
                                        name="estimasi_akhir"
                                        class="form-control"
                                        value="{{ $po->estimasi_akhir }}">
@@ -203,74 +188,37 @@
                                 <label class="fw-semibold">
                                     Status PO
                                 </label>
-
                                 @if($po->status == 'Pending')
-                                    <div class="alert alert-warning py-2 px-3 mb-2">
-                                        Menunggu approval owner.
-                                        Gudang hanya dapat mengisi estimasi akhir, HPP estimasi gudang dan keterangan.
+                                    <div class="form-control bg-light">
+                                        <strong>Pending</strong>
                                     </div>
+                                    <small class="text-info">
+                                        Menunggu persetujuan Owner.
+                                    </small>
 
                                 @elseif($po->status == 'Disetujui')
-                                    <div class="alert alert-info py-2 px-3 mb-2">
-                                        Owner telah menyetujui PO.
+                                    <select name="status" class="form-control">
+                                        <option value="Disetujui" selected>Disetujui</option>
+                                        <option value="Diproses">Diproses</option>
+                                    </select>
+                                    <small class="text-muted">
                                         Gudang dapat memulai proses PO.
-                                    </div>
+                                    </small>
 
                                 @elseif($po->status == 'Diproses')
-                                    <div class="alert alert-primary py-2 px-3 mb-2">
-                                        PO sedang diproses gudang.
-                                    </div>
-
-                                @elseif($po->status == 'Selesai')
-                                    <div class="alert alert-success py-2 px-3 mb-2">
-                                        PO telah selesai.
-                                    </div>
-                                @endif
-
-                               <select name="status"
-                                        class="form-control"
-                                        {{ $po->status == 'Pending' || $po->status == 'Selesai' ? 'disabled' : '' }}>
-
-                                    {{-- Pending --}}
-                                    @if($po->status == 'Pending')
-                                        <option selected>
-                                            Menunggu Approval Owner
-                                        </option>
-                                    @endif
-
-                                    {{-- Owner approve --}}
-                                    @if($po->status=='Disetujui')
-                                    <div class="alert alert-info">
-                                        <b>PO telah disetujui Owner.</b><br>
-                                        Gudang dapat memulai produksi dengan mengubah status menjadi
-                                        <b>Diproses</b>.
-                                    </div>
-                                    <select name="status" class="form-control">
-                                        <option value="Diproses">
-                                            Diproses
-                                        </option>
-                                    </select>
-                                    @endif
-
-                                    {{-- Sedang diproses --}}
-                                    @if($po->status=='Diproses')
-                                    <div class="alert alert-primary">
-                                        PO sedang diproses gudang.
-                                    </div>
                                     <select name="status" class="form-control">
                                         <option value="Diproses" selected>Diproses</option>
                                         <option value="Diambil">Diambil</option>
                                     </select>
-                                    @endif
+                                    <small class="text-muted">
+                                        Gudang dapat mengubah status menjadi Diambil setelah produksi selesai.
+                                    </small>
 
-                                    {{-- Sudah selesai --}}
-                                    @if($po->status == 'Selesai')
-                                        <option selected>
-                                            Selesai
-                                        </option>
-                                    @endif
-
-                                </select>
+                                @else
+                                    <div class="form-control bg-light">
+                                        <strong>{{ $po->status }}</strong>
+                                    </div>  
+                                @endif
                             </div>
 
                             <div class="col-md-12">
@@ -281,26 +229,18 @@
                                <textarea name="keterangan"
                                          class="form-control"
                                          rows="4"
-                                         placeholder="Masukkan keterangan PO"
-                                         @if($po->status == 'Pending')
-                                            required
-                                         @else
-                                            disabled
-                                         @endif>{{ $po->keterangan }}</textarea>
+                                         placeholder="Masukkan keterangan PO">{{ $po->keterangan }}</textarea>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="mt-3 d-flex gap-2">
-
-                    @if($po->status != 'Selesai')
                     <button type="submit"
                             class="btn btn-primary px-4">
                         <i class="mdi mdi-content-save"></i>
                         Simpan
                     </button>
-                    @endif
 
                     <a href="{{ url('gudang/po') }}"
                        class="btn btn-secondary px-4"
