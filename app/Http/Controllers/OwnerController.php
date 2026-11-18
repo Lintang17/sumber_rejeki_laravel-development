@@ -834,86 +834,123 @@ public function opnameriwayat()
 
         return view('owner.detail_po', compact('po', 'bolehApprove'));
     }
-
+  
     public function poApprove(Request $request, $id)
     {
-        $po = Po::with('detail')->findOrFail($id);
-
-        // Gudang wajib isi keterangan dulu
-        if (empty($po->keterangan)) {
-            return back()->with(
-                'error',
-                'PO belum bisa diapprove. Gudang harus mengisi keterangan terlebih dahulu.'
-            );
+        if (!auth()->check() || auth()->user()->role !== 'Owner') {
+            abort(403, 'Anda tidak memiliki akses.');
         }
 
+        $po = Po::with('detail')->findOrFail($id);
         $request->validate([
             'hpp_final' => 'required|array',
             'harga_jual' => 'required|array',
-            'status' => 'required'
+            'hpp_final.*' => 'nullable',
+            'harga_jual.*' => 'required',
+            'status' => 'nullable|in:Approve,Reject',
         ]);
+
+        $akanApproval = $po->status === 'Pending'
+            && $request->filled('status');
+
+        if ($akanApproval) {
+            $gudangSelesai = !empty($po->keterangan);
+
+            foreach ($po->detail as $detail) {
+                if (
+                    empty($detail->hpp_estimasi_gudang) ||
+                    $detail->hpp_estimasi_gudang <= 0
+                ) {
+                    $gudangSelesai = false;
+                    break;
+                }
+            }
+
+            if (!$gudangSelesai) {
+                return back()->with(
+                    'error',
+                    'PO belum bisa diapprove. Gudang harus mengisi Keterangan dan HPP Gudang terlebih dahulu.'
+                );
+            }
+        }
 
         DB::beginTransaction();
 
         try {
-
             $total = 0;
 
             foreach ($po->detail as $index => $detail) {
+                $hppFinal = preg_replace(
+                    '/[^0-9]/',
+                    '',
+                    $request->hpp_final[$index] ?? '0'
+                );
 
-                $hppFinal = str_replace('.', '', $request->hpp_final[$index]);
-                $hargaJual = str_replace('.', '', $request->harga_jual[$index]);
+                $hargaJual = preg_replace(
+                    '/[^0-9]/',
+                    '',
+                    $request->harga_jual[$index] ?? '0'
+                );
 
-                // Total PO dihitung dari harga jual
+                $hppFinal = $hppFinal === '' ? 0 : (int) $hppFinal;
+                $hargaJual = $hargaJual === '' ? 0 : (int) $hargaJual;
+
+                if ($hargaJual < 1000) {
+                    throw new \Exception(
+                        'Harga jual produk ' . $detail->produk .
+                        ' minimal Rp1.000.'
+                    );
+                }
+
                 $subtotal = $detail->qty * $hargaJual;
-
                 $detail->update([
                     'hpp_final' => $hppFinal,
                     'harga_jual' => $hargaJual,
-                    'subtotal' => $subtotal
+                    'subtotal' => $subtotal,
                 ]);
 
                 $total += $subtotal;
             }
 
-            $status = $request->status;
+            $status = $po->status;
 
-            // Jika approve
-           if ($status == 'Approve') {
-                $status = 'Disetujui';
-            } elseif ($status == 'Reject') {
-                $status = 'Dibatalkan';
+            if ($akanApproval) {
+                if ($request->status === 'Approve') {
+                    $status = 'Disetujui';
+                } elseif ($request->status === 'Reject') {
+                    $status = 'Dibatalkan';
+                }
             }
 
-            $dp = $po->dp;
-            $sisaPembayaran = 0;
+            $dp = (int) $po->dp;
 
-            if ($po->status_pembayaran == 'DP') {
-                $sisaPembayaran = max(0, $total - $dp);
-            } else {
-                // Jika admin memilih Lunas,
-                // pembayaran dianggap penuh.
-                $dp = $total;
-                $sisaPembayaran = 0;
-            }
+            $sisaPembayaran = $po->status_pembayaran === 'Lunas'
+                ? 0
+                : max(0, $total - $dp);
 
             $po->update([
                 'status' => $status,
                 'total' => $total,
-                'dp' => $dp,
                 'sisa_pembayaran' => $sisaPembayaran,
             ]);
 
             DB::commit();
 
-            return redirect('owner/po')
-                ->with('success', 'PO berhasil diproses');
+            return redirect('owner/po')->with(
+                'success',
+                $akanApproval
+                    ? 'PO berhasil diproses.'
+                    : 'Harga PO berhasil diperbarui. Status tetap ' . $status . '.'
+            );
 
-        } catch (\Exception $e) {
-
+        } catch (\Throwable $e) {
             DB::rollBack();
 
-            return back()->with('error', $e->getMessage());
+            report($e);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal menyimpan PO: ' . $e->getMessage());
         }
     }
 

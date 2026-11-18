@@ -238,18 +238,11 @@
                                         </td>
                                         
                                         <td>
-                                            @if($item->status == 'Selesai')
-                                                <button class="btn btn-secondary btn-block" disabled style="font-size: 12px; padding: 5px 8px;">
-                                                    <i class="fas fa-lock mr-1"></i> Terkunci
-                                                </button>
-                                            @else
-                                                <a href="{{ url('owner/po/'.$item->id.'/review') }}" 
-                                                    class="btn btn-block"
-                                                    style="background:#7C3AED;border-color:#7C3AED;color:#fff;font-size:12px;padding:6px 8px;font-weight:600;">
-                                                    <i class="fas fa-clipboard-check mr-1"></i>
-                                                    Review
-                                                </a>
-                                            @endif
+                                            <a href="{{ url('owner/po/'.$item->id.'/review') }}"
+                                                class="btn btn-block"
+                                                style="background:#7C3AED; border:1px solid #7C3AED; color:#fff; font-size:12px; padding:3px 8px; line-height:1.2; font-weight:600;">
+                                                Review
+                                            </a>
                                         </td>
                                     </tr>
                                     @empty

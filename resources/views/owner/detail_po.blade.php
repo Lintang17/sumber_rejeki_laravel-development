@@ -10,8 +10,9 @@
                 break;
             }
         }
-        $disabled = !$gudangSelesai || $po->status != 'Pending';
-
+   
+        $disabled = false;
+        $bolehApprove = $gudangSelesai && $po->status == 'Pending';
         $totalQty = $po->detail->sum('qty');
         $totalHppAdmin = $po->detail->sum(function($item){
             return ($item->hpp_estimasi_admin ?? 0) * $item->qty;
@@ -57,23 +58,49 @@
         </div>
 
         <div class="card-body p-4">
-
-            {{-- INFO STATUS GUDANG --}}
-            @if(!$gudangSelesai)
-            <div class="alert alert-warning border-0 mb-4">
-                <strong>Menunggu Gudang</strong><br>
-                Gudang belum mengisi Keterangan dan HPP Gudang.
-                <br>
-                Owner belum dapat mengisi HPP Final, Harga Jual, dan melakukan Approval.
-            </div>
-            @else
-            <div class="alert alert-success border-0 mb-4">
-                <strong>Gudang sudah mengisi Keterangan dan HPP Gudang.</strong>
-                <br>
-                Owner dapat mengisi <strong>HPP Final</strong>, <strong>Harga Jual</strong>,
-                serta mengubah status pada bagian <strong>Approval Owner</strong>.
-            </div>
+            @if(session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
             @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+        {{-- INFO STATUS GUDANG --}}
+        @if(!$gudangSelesai)
+            <div class="alert alert-warning border-0 mb-4">
+                <strong>Informasi Gudang</strong><br>
+                Gudang belum mengisi Keterangan dan HPP Gudang secara lengkap.
+                <br>
+                Owner tetap dapat memperbarui HPP Final dan Harga Jual.
+                Approval belum tersedia.
+            </div>
+        @else
+            <div class="alert alert-success border-0 mb-4">
+                <strong>Data Gudang sudah tersedia.</strong><br>
+                Owner dapat memperbarui HPP Final dan Harga Jual.
+
+                @if($po->status == 'Pending')
+                    Approval juga tersedia.
+                @else
+                    Status PO saat ini <strong>{{ $po->status }}</strong>
+                @endif
+            </div>
+        @endif
 
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
@@ -186,11 +213,11 @@
                                             Rp {{ number_format($detail->hpp_estimasi_gudang ?? 0,0,',','.') }}
                                         </td>
                                         <td style="padding:10px 12px; background:#fff8db; text-align:right; vertical-align:middle;">
-                                            <input type="text" name="hpp_final[]" class="form-control form-control-owner rupiah" value="{{ $detail->hpp_final ? number_format($detail->hpp_final,0,',','.') : '' }}" {{ $disabled ? 'readonly' : '' }} style="background:#fff8db; border:1.5px solid #f4c430; border-radius:6px;
+                                            <input type="text" name="hpp_final[]" class="form-control form-control-owner rupiah" value="{{ $detail->hpp_final ? number_format($detail->hpp_final,0,',','.') : '' }}" style="background:#fff8db; border:1.5px solid #f4c430; border-radius:6px;
                                                 padding:4px 8px; height:32px; max-width:120px; margin-left:auto; font-weight:700; font-size:12px; text-align:right; color:#8a5a00;">
                                         </td>
                                         <td style="padding:10px 12px; background:#fff8db; text-align:right; vertical-align:middle;">
-                                            <input type="text" name="harga_jual[]" class="form-control form-control-owner rupiah" value="{{ ($detail->harga_jual > 0) ? number_format($detail->harga_jual,0,',','.') : '' }}" {{ $disabled ? 'readonly' : '' }} autocomplete="off" required style="background:#fff8db; border:1.5px solid #f4c430; border-radius:6px;
+                                            <input type="text" name="harga_jual[]" class="form-control form-control-owner rupiah" value="{{ ($detail->harga_jual > 0) ? number_format($detail->harga_jual,0,',','.') : '' }}" autocomplete="off" required style="background:#fff8db; border:1.5px solid #f4c430; border-radius:6px;
                                                 padding:4px 8px; height:32px; max-width:120px; margin-left:auto; font-weight:700; font-size:12px; text-align:right; color:#8a5a00;">
                                         </td>
                                     </tr>
@@ -259,7 +286,7 @@
                 </div>
 
                 {{-- APPROVAL --}}
-                @if(!$disabled)
+                @if($bolehApprove)
                     <div class="border rounded p-3 mt-4" style="border-color:#e2e8f0 !important; background:#fafbfc;">
                         <h6 class="fw-bold mb-3" style="color:#1e293b; font-size:15px; border-bottom:2px solid #4f46e5; padding-bottom:6px;">
                             <i class="fas fa-check-circle mr-2" style="color:#4f46e5;"></i> Approval Owner
@@ -278,14 +305,17 @@
                 @endif
 
                 <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top:2px solid #e2e8f0;">
-                    <a href="{{ url('owner/po') }}" class="btn px-4" style="border-radius:10px; font-weight:700; background:#4f46e5; border:1.5px solid #4f46e5; color:#fff; padding:8px 20px; font-size:14px;">
-                        <i class="fas fa-arrow-left mr-2"></i> Kembali
+                    <a href="{{ url('owner/po') }}" class="btn px-4" style="border-radius:10px; font-weight:700; background:#6c757d; border:1.5px solid #6c757d; color:#fff; padding:8px 20px; font-size:14px;">
+                        Kembali
                     </a>
-                    @if(!$disabled)
-                        <button type="submit" class="btn px-4" style="border-radius:10px; font-weight:700; background:linear-gradient(135deg, #4f46e5, #6366f1); color:#fff; border:none; padding:8px 24px; font-size:14px;">
-                            <i class="fas fa-save mr-2"></i> Simpan Review
-                        </button>
-                    @endif
+                    <button type="submit" class="btn px-4" style="border-radius:10px; font-weight:700; background:linear-gradient(135deg, #4f46e5, #6366f1); color:#fff; border:none; padding:8px 24px; font-size:14px;">
+                        <i class="fas fa-save mr-2"></i> 
+                        @if($bolehApprove)
+                            Simpan Review & Approval
+                        @else
+                            Simpan Perubahan Harga
+                        @endif
+                    </button>
                 </div>
             </form>
         </div>
