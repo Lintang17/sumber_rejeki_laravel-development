@@ -61,9 +61,89 @@
                                     <option value="Selesai">Selesai</option>
                                 </select>
                             </div>
+                            @php
+                                $tahunSekarang = (int) date('Y');
+                                $tahunAwal = 2025;
+                                $tahunAkhir = $tahunSekarang + 5;
+                                $bulanDipilih = (int) date('n');
+                                $tahunDipilih = $tahunSekarang;
+
+                                $daftarBulan = [
+                                    1 => 'Januari',
+                                    2 => 'Februari',
+                                    3 => 'Maret',
+                                    4 => 'April',
+                                    5 => 'Mei',
+                                    6 => 'Juni',
+                                    7 => 'Juli',
+                                    8 => 'Agustus',
+                                    9 => 'September',
+                                    10 => 'Oktober',
+                                    11 => 'November',
+                                    12 => 'Desember',
+                                ];
+                            @endphp
+
                             <div class="col-md-3">
-                                <label class="font-weight-bold text-secondary mb-1">Bulan</label>
-                                <input type="month" id="filterMonth" class="form-control" style="height:38px !important; padding:0 12px !important;">
+                                <label class="font-weight-bold text-secondary mb-1">Periode</label>
+                                <div class="d-flex" style="gap:10px; width:100%;">
+                                    <div class="dropdown" style="flex:1; min-width:0;">
+                                        <button type="button"
+                                                class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
+                                                data-toggle="dropdown"
+                                                style="white-space:nowrap; height:38px; width:100%;">
+                                            Bulan: {{ substr($daftarBulan[$bulanDipilih], 0, 3) }}
+                                        </button>
+
+                                        <div class="dropdown-menu p-2" style="width:220px;">
+                                            <div class="row no-gutters">
+                                                @foreach($daftarBulan as $angka => $nama)
+                                                    <div class="col-4 p-1">
+                                                        <label class="btn btn-sm btn-block mb-0 font-weight-bold
+                                                            {{ $bulanDipilih === $angka ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                                            style="cursor:pointer;">
+
+                                                            <input type="radio"
+                                                                name="pilihBulan"
+                                                                value="{{ $angka }}"
+                                                                class="d-none"
+                                                                {{ $bulanDipilih === $angka ? 'checked' : '' }}>
+                                                            {{ substr($nama, 0, 3) }}
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="dropdown" style="flex:1; min-width:0;">
+                                        <button type="button"
+                                                class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
+                                                data-toggle="dropdown"
+                                                style="white-space:nowrap; height:38px; width:100%;">
+                                            Tahun: {{ $tahunDipilih }}
+                                        </button>
+                                        <div class="dropdown-menu p-2" style="width:220px;">
+                                            <div class="row no-gutters">
+                                                @for($tahun = $tahunAwal; $tahun <= $tahunAkhir; $tahun++)
+                                                    <div class="col-4 p-1">
+                                                        <label class="btn btn-sm btn-block mb-0 font-weight-bold
+                                                            {{ $tahunDipilih === $tahun ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                                            style="cursor:pointer;">
+
+                                                            <input type="radio"
+                                                                name="pilihTahun"
+                                                                value="{{ $tahun }}"
+                                                                class="d-none"
+                                                                {{ $tahunDipilih === $tahun ? 'checked' : '' }}>
+                                                            {{ $tahun }}
+                                                        </label>
+                                                    </div>
+                                                @endfor
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-4">
                                 <label class="font-weight-bold text-secondary mb-1">Pencarian</label>
@@ -648,7 +728,6 @@
 @section('script')
 <script>
 $(document).ready(function() {
-    // Inisialisasi DataTable
     if ($.fn.dataTable.isDataTable('#table')) {
         $('#table').DataTable().destroy();
     }
@@ -658,6 +737,7 @@ $(document).ready(function() {
         scrollX: true,
         autoWidth: false,
         ordering: false,
+
         language: {
             search: "Search:",
             lengthMenu: "Tampilkan _MENU_ per halaman",
@@ -671,51 +751,159 @@ $(document).ready(function() {
             zeroRecords: "Data tidak ditemukan",
             emptyTable: "Belum ada data purchase order"
         },
+
         dom:
             '<"row mb-2"<"col-md-6"l><"col-md-6 text-right"f>>' +
             'rt' +
             '<"row mt-2"<"col-md-6"i><"col-md-6"p>>',
         columnDefs: [
-            { orderable: false, targets: '_all' }
+            {
+                orderable: false,
+                targets: '_all'
+            }
         ]
     });
 
-    let currentMonth = new Date().toISOString().slice(0,7);
-    $('#filterMonth').val(currentMonth);
-
-    function filterTable() {
-        $.fn.dataTable.ext.search = [];
-        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-            let status = $('#filterStatus').val();
-            let month = $('#filterMonth').val();
-            let search = $('#searchPO').val().toLowerCase();
-
-            let row = table.row(dataIndex).node();
-            let rowStatus = $(row).data('status');
-            let rowDate = $(row).data('date');
-            let rowSearch = ($(row).data('search') || '').toLowerCase();
-
-            if (status && rowStatus !== status) return false;
-            if (month && rowDate !== month) return false;
-            if (search && !rowSearch.includes(search)) return false;
-
+    let selectedMonth = String({{ (int) date('n') }});
+    let selectedYear = String({{ (int) date('Y') }});
+    let filterPOOwner = function(settings, data, dataIndex) {
+        if (settings.nTable.id !== 'table') {
             return true;
-        });
+        }
+
+        let row = settings.aoData[dataIndex].nTr;
+        if (!row) {
+            return true;
+        }
+
+        let status = $('#filterStatus').val();
+        let search = ($('#searchPO').val() || '')
+            .toLowerCase()
+            .trim();
+
+        let rowStatus = row.getAttribute('data-status') || '';
+        let rowDate = row.getAttribute('data-date') || '';
+        let rowSearch = (row.getAttribute('data-search') || '')
+            .toLowerCase();
+
+        if (status && rowStatus !== status) {
+            return false;
+        }
+        if (selectedYear && rowDate.substring(0, 4) !== selectedYear) {
+            return false;
+        }
+        if (
+            selectedMonth &&
+            rowDate.substring(5, 7) !==
+            String(selectedMonth).padStart(2, '0')
+        ) {
+            return false;
+        }
+
+        if (search && !rowSearch.includes(search)) {
+            return false;
+        }
+
+        return true;
+    };
+
+    $.fn.dataTable.ext.search.push(filterPOOwner);
+    function filterTable() {
         table.draw();
     }
 
+    function updateMonthStyle() {
+        $('input[name="pilihBulan"]').each(function() {
+
+            let label = $(this).closest('label');
+            if ($(this).is(':checked')) {
+                label.removeClass('btn-outline-secondary')
+                     .addClass('btn-primary');
+            } else {
+                label.removeClass('btn-primary')
+                     .addClass('btn-outline-secondary');
+            }
+        });
+    }
+
+    function updateYearStyle() {
+        $('input[name="pilihTahun"]').each(function() {
+            let label = $(this).closest('label');
+            if ($(this).is(':checked')) {
+                label.removeClass('btn-outline-secondary')
+                     .addClass('btn-primary');
+            } else {
+                label.removeClass('btn-primary')
+                     .addClass('btn-outline-secondary');
+            }
+        });
+    }
+
+    updateMonthStyle();
+    updateYearStyle();
     filterTable();
 
-    $('#filterStatus, #filterMonth').on('change', filterTable);
-    $('#searchPO').on('keyup', function() {
+    $('#filterStatus').on('change', function() {
         filterTable();
     });
 
-    $('#resetFilter').on('click', function() {
+    $('#searchPO').on('input', function() {
+        filterTable();
+    });
+
+    $('input[name="pilihBulan"]').on('change', function() {
+        selectedMonth = String($(this).val());
+        let namaBulan = $(this).closest('label')
+            .text()
+            .trim();
+
+        $(this).closest('.dropdown')
+            .find('.dropdown-toggle')
+            .text('Bulan: ' + namaBulan);
+
+        updateMonthStyle();
+        filterTable();
+    });
+
+    $('input[name="pilihTahun"]').on('change', function() {
+        selectedYear = String($(this).val());
+        $(this).closest('.dropdown')
+            .find('.dropdown-toggle')
+            .text('Tahun: ' + selectedYear);
+
+        updateYearStyle();
+        filterTable();
+    });
+
+    $('#resetFilter').on('click', function(e) {
+        e.preventDefault();
+        selectedMonth = String({{ (int) date('n') }});
+        selectedYear = String({{ (int) date('Y') }});
+
         $('#filterStatus').val('');
-        $('#filterMonth').val(currentMonth);
         $('#searchPO').val('');
-        table.search('').draw(); 
+
+        $('input[name="pilihBulan"]').prop('checked', false);
+        $('input[name="pilihBulan"][value="' + selectedMonth + '"]')
+            .prop('checked', true);
+
+        $('input[name="pilihTahun"]').prop('checked', false);
+        $('input[name="pilihTahun"][value="' + selectedYear + '"]')
+            .prop('checked', true);
+
+        let namaBulanAwal = '{{ substr($daftarBulan[(int) date("n")], 0, 3) }}';
+        $('input[name="pilihBulan"]')
+            .closest('.dropdown')
+            .find('.dropdown-toggle')
+            .text('Bulan: ' + namaBulanAwal);
+
+        $('input[name="pilihTahun"]')
+            .closest('.dropdown')
+            .find('.dropdown-toggle')
+            .text('Tahun: ' + selectedYear);
+
+        updateMonthStyle();
+        updateYearStyle();
         filterTable();
     });
 });
