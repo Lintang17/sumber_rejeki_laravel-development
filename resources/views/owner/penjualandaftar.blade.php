@@ -98,6 +98,10 @@
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
 
+                    @if(session('error'))
+                        <div class="alert alert-danger">{{ session('error') }}</div>
+                    @endif
+
                     <div class="table-responsive">
                         <table class="table font-weight-bold" id="table">
                             <thead class="font-weight-bold">
@@ -111,6 +115,7 @@
                                     <th width="35%" class="text-center">Daftar Produk</th>
                                     <th class="text-center">Subtotal</th>
                                     <th class="text-center">Total Diskon</th>
+                                    <th class="text-center">Ongkir</th>
                                     <th class="text-center">Grand Total</th>
                                     <th class="text-center">DP</th>
                                     <th class="text-center">Bayar</th>
@@ -145,7 +150,8 @@
 
                                     @php
                                         $grandTotalTransaksi = (float) (
-                                            $item->grandtotal ?? ($subtotalTransaksi - $totalDiskonTransaksi)
+                                            $item->grandtotal ??
+                                            ($subtotalTransaksi - $totalDiskonTransaksi + ($item->ongkir ?? 0))
                                         );
                                     @endphp
 
@@ -232,6 +238,9 @@
                                         <td class="text-center text-nowrap">
                                             {{ rupiah($totalDiskonTransaksi) }}
                                         </td>
+                                        <td class="text-center text-nowrap">
+                                            {{ rupiah($item->ongkir ?? 0) }}
+                                        </td>
                                         <td class="text-center text-nowrap font-weight-bold">
                                             {{ rupiah($grandTotalTransaksi) }}
                                         </td>
@@ -247,6 +256,12 @@
                                             </button>
                                         </td>
                                         <td class="text-center">
+                                            <button type="button"
+                                                class="btn btn-info btn-sm mb-2"
+                                                style="min-width:90px;"
+                                                data-toggle="modal" data-target="#editOngkir{{ $item->idpenjualan }}">
+                                                Edit Ongkir
+                                            </button>
                                             @if($item->statuspembayaran == 'DP' && $item->sisabayar > 0)
                                                 <button class="btn btn-warning btn-sm" style="min-width:90px;" data-toggle="modal" data-target="#edit{{ $item->idpenjualan }}">Pelunasan</button>
                                             @else
@@ -343,6 +358,86 @@
                             </div>
                         </div>
                     @endforeach --}}
+
+                    {{-- MODAL EDIT ONGKIR --}}
+                    @foreach ($penjualan as $item)
+                        <div class="modal fade"
+                            id="editOngkir{{ $item->idpenjualan }}"
+                            tabindex="-1"
+                            role="dialog">
+
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <form action="{{ route('owner.penjualan.updateOngkir', $item->idpenjualan) }}"
+                                        method="POST">
+                                        @csrf
+
+                                        <div class="modal-header">
+                                            <h5 class="modal-title font-weight-bold">
+                                                Edit Ongkir Penjualan
+                                            </h5>
+
+                                            <button type="button"
+                                                class="close"
+                                                data-dismiss="modal">
+                                                <span>&times;</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <div class="form-group">
+                                                <label>Nomor Nota</label>
+                                                <input type="text"
+                                                    class="form-control"
+                                                    value="{{ $item->notajual }}"
+                                                    readonly>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label>Nama Pembeli</label>
+                                                <input type="text"
+                                                    class="form-control"
+                                                    value="{{ $item->namapembeli ?? '-' }}"
+                                                    readonly>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label>Ongkir</label>
+                                                <input type="text"
+                                                    name="ongkir"
+                                                    class="form-control"
+                                                    value="{{ !empty($item->ongkir) && $item->ongkir > 0 ? number_format((float) $item->ongkir, 0, ',', '.') : '' }}"
+                                                    inputmode="numeric"
+                                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')"
+                                                    required>
+
+                                                <small class="text-muted">
+                                                    Masukkan nominal ongkir yang telah disepakati.
+                                                </small>
+                                            </div>
+
+                                            <div class="alert alert-info mb-0">
+                                                Grand Total dan Sisa Bayar akan dihitung ulang
+                                                setelah ongkir disimpan.
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="mdi mdi-content-save"></i>
+                                                Simpan Ongkir
+                                            </button>
+                                            <button type="button"
+                                                class="btn btn-secondary"
+                                                data-dismiss="modal">
+                                                Batal
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
 
                 </div>
             </div>

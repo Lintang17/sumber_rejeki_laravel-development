@@ -141,6 +141,7 @@ public function penjualansimpan(Request $request)
         'namapembeli' => 'nullable|string|max:100',
         'notelp' => 'nullable|string|max:20',
         'alamat' => 'nullable|string',
+        'ongkir' => 'nullable|string',
         'metodepembayaran' => 'required|string|max:50',
         'dp' => 'nullable|string',
         'bayar' => 'nullable|string',
@@ -175,6 +176,7 @@ public function penjualansimpan(Request $request)
 
         $dp = $angka($request->dp);
         $bayar = $angka($request->bayar);
+        $ongkir = $angka($request->ongkir);
         $grandtotal = 0;
 
         $penjualan = PenjualanModel::create([
@@ -183,6 +185,7 @@ public function penjualansimpan(Request $request)
             'namapembeli' => $request->namapembeli,
             'notelp' => $request->notelp,
             'alamat' => $request->alamat,
+            'ongkir' => $ongkir,
             'grandtotal' => 0,
             'dp' => $dp,
             'bayar' => $bayar,
@@ -264,8 +267,11 @@ public function penjualansimpan(Request $request)
             $showroom->save();
         }
 
+        $grandtotal += $ongkir;
+
         $penjualan->update([
             'grandtotal' => $grandtotal,
+            'ongkir' => $ongkir,
             'sisabayar' => max(0, $grandtotal - $dp),
             'kembali' => max(
                 0,

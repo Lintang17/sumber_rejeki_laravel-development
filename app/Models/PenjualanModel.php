@@ -18,6 +18,7 @@ class PenjualanModel extends Model
         'namapembeli',
         'notelp',
         'alamat',
+        'ongkir',
         'grandtotal',
         'dp',
         'bayar',

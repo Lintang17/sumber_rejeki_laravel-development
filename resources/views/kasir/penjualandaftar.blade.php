@@ -118,6 +118,7 @@
                                         <th width="35%" class="text-center">Daftar Produk</th>
                                         <th class="text-center">Subtotal</th>
                                         <th class="text-center">Total Diskon</th>
+                                        <th class="text-center">Ongkir</th>
                                         <th class="text-center">Grand Total</th>
                                         <th class="text-center">DP</th>
                                         <th class="text-center">Uang Pembeli</th>
@@ -278,6 +279,11 @@
                                                 {{ rupiah($totalDiskonTransaksi) }}
                                             </td>
 
+                                            {{-- ONGKIR --}}
+                                            <td class="text-center text-nowrap">
+                                                {{ rupiah($item->ongkir ?? 0) }}
+                                            </td>
+
                                             {{-- GRAND TOTAL SETELAH DISKON --}}
                                             <td class="text-center text-nowrap">
                                                 {{ rupiah($grandTotalTransaksi) }}
@@ -359,10 +365,10 @@
 
                                 <tfoot>
                                     <tr>
-                                        <th colspan="9" class="text-right">
+                                        <th colspan="10" class="text-right">
                                             <em>Total Pemasukan:</em>
                                         </th>
-                                        <th colspan="{{ 5 + (auth()->user()->role != 'Kasir' ? 1 : 0) + (auth()->user()->role != 'Owner' ? 1 : 0) }}">
+                                        <th colspan="{{ 6 + (auth()->user()->role != 'Kasir' ? 1 : 0) + (auth()->user()->role != 'Owner' ? 1 : 0) }}">
                                             {{ rupiah($totalpemasukan) }}
                                         </th>
                                     </tr>
@@ -512,7 +518,8 @@
                                                 {{-- HITUNG GRAND TOTAL --}}
                                                 @php
                                                     $grandTotalModal = (float) (
-                                                        $item->grandtotal ?? ($subtotalModal - $totalDiskonModal)
+                                                        $item->grandtotal ??
+                                                        ($subtotalModal - $totalDiskonModal + ($item->ongkir ?? 0))
                                                     );
                                                 @endphp
 
@@ -565,6 +572,13 @@
                                                                 <span class="text-dark">Total Diskon</span>
                                                                 <span class="text-nowrap ml-2">
                                                                     {{ rupiah($totalDiskonModal) }}
+                                                                </span>
+                                                            </div>
+
+                                                            <div class="d-flex justify-content-between mb-2">
+                                                                <span class="text-dark">Ongkir</span>
+                                                                <span class="text-nowrap ml-2">
+                                                                    {{ rupiah($item->ongkir ?? 0) }}
                                                                 </span>
                                                             </div>
 

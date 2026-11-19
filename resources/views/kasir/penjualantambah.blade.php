@@ -53,18 +53,6 @@
                                     <td>
                                         <select name="idproduk[]" class="form-control produkselect" required>
                                             <option value="">Pilih Produk</option>
-                                            <!-- @foreach ($produk as $item)
-                                                @php
-                                                     $stokSisa = ($item->stok_awal + $item->stok_tambahan) - $item->stok_terjual;
-                                                @endphp
-                                                <option value="{{ $item->idshowroom }}"
-                                                    data-nama="{{ $item->produksi->namaproduk }}"
-                                                    data-harga="{{ $item->produksi->hargajual }}"
-                                                    data-stok="{{ $stokSisa }}"
-                                                    data-barcode="{{ $item->barcode }}">
-                                                    {{ $item->produksi->namaproduk }} - {{ $stokSisa }} pcs
-                                                </option>
-                                            @endforeach -->
                                             @foreach ($produk as $item)
                                                 @if ($item->produksi)
                                                     @php
@@ -114,6 +102,19 @@
                             <label>Total Diskon</label>
                             <input class="form-control" id="total_diskon_display" type="text" readonly>
                             <input type="hidden" id="total_diskon" name="total_diskon">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ongkir</label>
+                            <input class="form-control" id="ongkir" name="ongkir"
+                                type="text" value="" placeholder="Masukkan ongkir">
+
+                            <small class="text-danger d-block mt-2">
+                                <i class="mdi mdi-alert-circle"></i>
+                                <strong>Perhatian:</strong> Jika terdapat biaya ongkir,
+                                silakan konfirmasi terlebih dahulu kepada Owner sebelum mengisi nominal ongkir.
+                                Pastikan nominal sudah mendapat persetujuan Owner.
+                            </small>
                         </div>
 
                         <div class="form-group">
@@ -183,9 +184,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const dpInput = document.getElementById('dp');
     const bayarInput = document.getElementById('uangpembeli');
+    const ongkirInput = document.getElementById('ongkir');
     const sisaField = document.getElementById('sisabayar');
     const kembaliField = document.getElementById('kembalian');
-
     
     function updateTotal() {
         let subtotal = 0;
@@ -217,7 +218,8 @@ document.addEventListener('DOMContentLoaded', function () {
             totalDiskon += diskonBaris;
         });
 
-        const grandtotal = Math.max(0, subtotal - totalDiskon);
+        const ongkir = parseNumber(ongkirInput.value);
+        const grandtotal = Math.max(0, subtotal - totalDiskon + ongkir);
 
         document.getElementById('subtotal').value = formatRibuan(subtotal);
         document.getElementById('total_diskon_display').value = formatRibuan(totalDiskon);
@@ -239,6 +241,13 @@ document.addEventListener('DOMContentLoaded', function () {
             Math.max(bayar - (dp > 0 ? dp : grandtotal), 0)
         );
     }
+
+    // Event: input ongkir
+        ongkirInput.addEventListener('input', function () {
+            const val = this.value.replace(/\D/g, '');
+            this.value = formatRibuan(val);
+            updateTotal();
+        });
 
     function validateInputs() {
         const dp = parseNumber(dpInput.value);

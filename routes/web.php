@@ -172,7 +172,9 @@ Route::middleware(['auth'])->controller(OwnerController::class)->group(function 
     Route::get('owner/penjualandaftar', [OwnerController::class, 'penjualandaftar']);
     Route::delete('owner/penjualanhapus/{id}', [OwnerController::class, 'penjualanhapus'])
         ->name('owner.penjualan.hapus');
-
+    Route::post('owner/penjualan/{id}/update-ongkir', [OwnerController::class, 'penjualanUpdateOngkir'])
+    ->name('owner.penjualan.updateOngkir');
+    
     // stokopanem
     Route::get('owner/stokopname', [OwnerController::class, 'opnamedaftar'])->name('stokopname.daftar');
     //Route::get('owner/stokopname/tambah/{id}', [OwnerController::class, 'opnametambah'])->name('stokopname.tambah');

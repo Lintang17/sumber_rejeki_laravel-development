@@ -166,6 +166,73 @@ public function penjualandaftar(Request $request)
     return view('owner.penjualandaftar', $data);
 }
 
+// EDIT ONGKIR PENJUALAN
+public function penjualanUpdateOngkir(Request $request, $id)
+{
+    if (!auth()->check() || auth()->user()->role !== 'Owner') {
+        abort(403, 'Anda tidak memiliki akses.');
+    }
+
+    $request->validate([
+        'ongkir' => 'required|regex:/^[0-9.]+$/',
+    ], [
+        'ongkir.required' => 'Nominal ongkir wajib diisi.',
+        'ongkir.regex' => 'Nominal ongkir harus berupa angka.',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $penjualan = PenjualanModel::lockForUpdate()
+            ->findOrFail($id);
+
+        $ongkir = (int) str_replace('.', '', $request->ongkir);
+
+        if ($ongkir < 0) {
+            throw new \Exception('Ongkir tidak boleh negatif.');
+        }
+
+        // Hitung total seluruh produk setelah diskon
+        $totalProduk = PenjualanDetailModel::where(
+            'idpenjualan',
+            $penjualan->idpenjualan
+        )->sum('total');
+
+        // Grand Total = Total Produk Setelah Diskon + Ongkir
+        $grandtotal = (int) $totalProduk + $ongkir;
+
+        // Hitung ulang sisa pembayaran berdasarkan DP
+        $sisabayar = max(
+            0,
+            $grandtotal - (int) ($penjualan->dp ?? 0)
+        );
+
+        $penjualan->update([
+            'ongkir' => $ongkir,
+            'grandtotal' => $grandtotal,
+            'sisabayar' => $sisabayar,
+        ]);
+
+        DB::commit();
+
+        return redirect()->back()->with(
+            'success',
+            'Ongkir transaksi ' . $penjualan->notajual .
+            ' berhasil diperbarui.'
+        );
+
+    } catch (\Throwable $e) {
+        DB::rollBack();
+
+        report($e);
+
+        return redirect()->back()->with(
+            'error',
+            'Gagal memperbarui ongkir: ' . $e->getMessage()
+        );
+    }
+}
+
 // Hapus Penjualan
 public function penjualanhapus($id)
 {
