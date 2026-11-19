@@ -362,7 +362,6 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-
                                 <tfoot>
                                     <tr>
                                         <th colspan="10" class="text-right">
@@ -717,4 +716,26 @@
             });
         });
     </script>
+
+    <style>
+        #table > thead > tr > th {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            background-image: none !important;
+        }
+
+        #table > tbody > tr > td,
+        #table > tfoot > tr > th {
+            background: #fff3cd !important;
+            background-color: #fff3cd !important;
+            background-image: none !important;
+        }
+
+        #table table th,
+        #table table td {
+            background: #fff3cd !important;
+            background-color: #fff3cd !important;
+            background-image: none !important;
+        }
+</style>
 @endsection

@@ -128,7 +128,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @php $no = 1; @endphp
+                                @php 
+                                $no = 1;         
+                                $totalpemasukan = 0;
+                                @endphp
+
                                 @foreach ($penjualan as $item)
                                     @php
                                         $subtotalTransaksi = 0;
@@ -153,6 +157,11 @@
                                             $item->grandtotal ??
                                             ($subtotalTransaksi - $totalDiskonTransaksi + ($item->ongkir ?? 0))
                                         );
+
+                                        // Total pemasukan = DP + Sisa Bayar
+                                        $totalpemasukan +=
+                                            (float) ($item->dp ?? 0) +
+                                            (float) ($item->sisabayar ?? 0);
                                     @endphp
 
                                     <tr class="{{ $item->sisabayar > 0 ? 'table-warning' : '' }}">
@@ -287,6 +296,16 @@
                                     </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="12" class="text-right">
+                                        <em>Total Pemasukan:</em>
+                                    </th>
+                                    <th colspan="7" class="text-center">
+                                        {{ rupiah($totalpemasukan) }}
+                                    </th>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
 
@@ -444,6 +463,29 @@
         </div>
     </div>
 </div>
+
+<style>
+    #table > thead > tr > th {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        background-image: none !important;
+    }
+
+    #table > tbody > tr > td,
+    #table > tfoot > tr > th {
+        background: #fff3cd !important;
+        background-color: #fff3cd !important;
+        background-image: none !important;
+    }
+
+    #table table th,
+    #table table td {
+        background: #fff3cd !important;
+        background-color: #fff3cd !important;
+        background-image: none !important;
+    }
+</style>
+
 @endsection
 
 @section('script')
