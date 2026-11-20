@@ -1,125 +1,315 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Faktur Penjualan - {{ $penjualan->kodenota }}</title>
+
     <style>
-        body {
-            font-family: Tahoma, sans-serif;
-            font-size: 12px;
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
         }
 
-        .container {
-            width: 600px;
-            margin: auto;
-            border: 1px solid black;
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 13px;
+            color: #222;
+            background: #fff;
+            margin: 0;
             padding: 15px;
         }
-
-        table {
+        .invoice {
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 25px;
+            background: #fff;
+            border: 2px solid #222;
+            outline: 1px solid #222;
+            outline-offset: 4px;
+        }
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #222;
+        }
+        .invoice-title {
+            font-size: 25px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .section-title {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .info-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            font-size: 13px;
+            margin-bottom: 22px;
         }
-
-        th, td {
-            border: 1px solid black;
-            padding: 6px;
+        .info-table td {
+            padding: 6px 3px;
+        }
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .product-table th {
+            background: #eeeeee;
+            border: 1px solid #777;
+            padding: 10px 5px;
+        }
+        .product-table td {
+            border: 1px solid #aaa;
+            padding: 9px 7px;
+        }
+        .text-center {
             text-align: center;
         }
-
-        th {
-            background-color: #f2f2f2;
-        }
-
-        @media print {
-            .no-print {
-                display: none;
-            }
-        }
-
         .text-right {
             text-align: right;
         }
+        .summary-table {
+            width: 390px;
+            margin-left: auto;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 13px;
+        }
+        .summary-table td {
+            padding: 9px 12px;
+            vertical-align: middle;
+        }
+        .summary-table td:first-child {
+            width: 55%;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .summary-table td:last-child {
+            width: 45%;
+            text-align: right;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+        .grand-total {
+            width: 390px;
+            margin: 0 0 0 auto;
+            border-collapse: collapse;
+            table-layout: fixed;
+            border-top: 2px solid #222;
+            border-bottom: 2px solid #222;
+            font-size: 15px;
+        }
+        .grand-total td {
+            padding: 14px 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .grand-total td:first-child {
+            width: 55%;
+            text-align: left;
+        }
+        .grand-total td:last-child {
+            width: 45%;
+            text-align: right;
+            font-size: 17px;
+            font-variant-numeric: tabular-nums;
+        }
+        .payment-section {
+            margin-top: 25px;
+            padding-top: 12px;
+            border-top: 1px solid #bbb;
+        }
+        .payment-status td {
+            border-top: 1px solid #999;
+            padding-top: 12px;
+            padding-bottom: 12px;
+            font-weight: bold;
+        }
+        .signature-table {
+            width: 100%;
+            margin-top: 55px;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .signature-table td {
+            width: 50%;
+            text-align: center;
+        }
+        .signature-space {
+            height: 65px;
+        }
+        .no-print {
+            text-align: center;
+            margin-top: 25px;
+        }
+        .btn {
+            padding: 10px 22px;
+            margin: 5px;
+            border: none;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-back {
+            background: #666;
+        }
+        .btn-print {
+            background: #222;
+        }
 
-        .no-border {
-            border: none !important;
+        @media print {
+            body {
+                padding: 0;
+            }
+            .invoice {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 auto !important;
+                padding: 20px !important;
+                border: 2px solid #222 !important;
+                outline: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            table,
+            tr {
+                page-break-inside: avoid;
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            .invoice {
+                padding: 12px;
+            }
+            .summary-table,
+            .grand-total {
+                width: 100%;
+            }
+            .product-table {
+                font-size: 10px;
+            }
+            .product-table th,
+            .product-table td {
+                padding: 6px 3px;
+            }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h2 style="text-align: center;">FAKTUR PENJUALAN</h2>
 
-        <table class="no-border" style="margin-top: 10px;">
+<body>
+    @php
+        $no = 1;
+        $totalDiskon = 0;
+        $subtotal = 0;
+    @endphp
+
+    <div class="invoice">
+        <div class="invoice-header">
+            <div class="invoice-title">
+                FAKTUR PENJUALAN
+            </div>
+        </div>
+
+        <div class="section-title">
+            INFORMASI TRANSAKSI
+        </div>
+
+        <table class="info-table">
             <tr>
-                <td class="no-border" width="40%"><strong>No. Nota</strong></td>
-                <td class="no-border">: {{ $penjualan->kodenota }}</td>
+                <td style="width: 125px;">No. Nota</td>
+                <td style="width: 15px;">:</td>
+                <td style="width: 40%;">
+                    {{ $penjualan->kodenota ?? '-' }}
+                </td>
+                <td style="width: 100px;">Tanggal</td>
+                <td style="width: 15px;">:</td>
+                <td>
+                    {{ date('d-m-Y', strtotime($penjualan->tanggalpenjualan)) }}
+                </td>
             </tr>
             <tr>
-                <td class="no-border"><strong>Tanggal</strong></td>
-                <td class="no-border">: {{ date('d-m-Y', strtotime($penjualan->tanggalpenjualan)) }}</td>
+                <td>Nama Pembeli</td>
+                <td>:</td>
+                <td>
+                    {{ $penjualan->namapembeli ?? '-' }}
+                </td>
+                <td>No. Telepon</td>
+                <td>:</td>
+                <td>
+                    {{ $penjualan->notelp ?? '-' }}
+                </td>
             </tr>
             <tr>
-                <td class="no-border"><strong>Nama Pembeli</strong></td>
-                <td class="no-border">: {{ $penjualan->namapembeli ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="no-border"><strong>Telp</strong></td>
-                <td class="no-border">: {{ $penjualan->notelp ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="no-border"><strong>Alamat</strong></td>
-                <td class="no-border">: {{ $penjualan->alamat ?? '-' }}</td>
+                <td>Alamat</td>
+                <td>:</td>
+                <td colspan="4">
+                    {{ $penjualan->alamat ?? '-' }}
+                </td>
             </tr>
         </table>
 
-        <table cellspacing="0" cellpadding="3"
-            style="width:100%; font-size:10pt; font-family:Calibri, sans-serif; border-collapse:collapse;">
+        <div class="section-title">
+            RINCIAN PEMBELIAN PRODUK
+        </div>
+
+        <table class="product-table">
             <thead>
                 <tr>
-                    <th>No</th>
+                    <th style="width: 40px;">No.</th>
                     <th>Nama Produk</th>
-                    <th>Harga</th>
-                    <th>Jumlah</th>
-                    <th>Diskon (%)</th>
-                    <th>Total</th>
+                    <th style="width: 115px;">Harga</th>
+                    <th style="width: 65px;">Jumlah</th>
+                    <th style="width: 80px;">Diskon</th>
+                    <th style="width: 125px;">Total</th>
                 </tr>
             </thead>
+
             <tbody>
-                @php
-                    $no = 1;
-                    $totalDiskon = 0;
-                    $subtotal = 0;
-                @endphp
                 @foreach ($penjualan->penjualandetail as $item)
                     @php
                         $hargaSatuan = (float) ($item->harga ?? 0);
                         $jumlah = (int) ($item->jumlah_pembelian ?? 0);
                         $persenDiskon = (float) ($item->discount ?? 0);
 
-                        // Subtotal sebelum diskon
                         $subtotalItem = $hargaSatuan * $jumlah;
-
-                        // Total produk setelah diskon
                         $totalItem = (float) ($item->total ?? $subtotalItem);
 
                         $subtotal += $subtotalItem;
                         $totalDiskon += max(0, $subtotalItem - $totalItem);
                     @endphp
+
                     <tr>
-                        <td style="text-align: center;">{{ $no++ }}</td>
-                        <td>{{ $item->namaproduk }}</td>
-                        <td style="text-align: right;">
+                        <td class="text-center">
+                            {{ $no++ }}
+                        </td>
+                        <td>
+                            {{ $item->namaproduk }}
+                        </td>
+                        <td class="text-right">
                             {{ number_format($hargaSatuan, 0, ',', '.') }}
                         </td>
-                        <td style="text-align: center;">{{ $jumlah }}</td>
-                        <td style="text-align: center;">
+                        <td class="text-center">
+                            {{ $jumlah }}
+                        </td>
+                        <td class="text-center">
                             {{ $persenDiskon > 0
                                 ? number_format($persenDiskon, 2, ',', '.') . '%'
                                 : '-' }}
                         </td>
-                        <td style="text-align: right;">
+                        <td class="text-right">
                             {{ number_format($totalItem, 0, ',', '.') }}
                         </td>
                     </tr>
@@ -127,94 +317,120 @@
             </tbody>
         </table>
 
-        <table style="width: 100%; margin-top: 10px; border-collapse: collapse;">
-            <tr>
-                <td colspan="5" style="text-align: right;">
-                    <strong>Subtotal</strong>
-                </td>
-                <td style="text-align: right; white-space: nowrap;">
-                    {{ number_format($subtotal, 0, ',', '.') }}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5" style="text-align: right;">
-                    <strong>Total Diskon</strong>
-                </td>
-                <td style="text-align: right; white-space: nowrap;">
-                    {{ number_format($totalDiskon, 0, ',', '.') }}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5" style="text-align: right;">
-                    <strong>Grand Total</strong>
-                </td>
-                <td style="text-align: right; white-space: nowrap;">
-                    <strong> {{ number_format($penjualan->grandtotal ?? 0, 0, ',', '.') }} </strong>
-                </td>
-            </tr>
-            @if ((float) ($penjualan->dp ?? 0) > 0)
+        <table class="summary-table" style="margin-top: 18px;">
+            <tbody>
                 <tr>
-                    <td colspan="5" style="text-align: right;">
-                        <strong>DP</strong>
-                    </td>
-                    <td style="text-align: right;">
-                        {{ number_format($penjualan->dp, 0, ',', '.') }}
+                    <td>Subtotal</td>
+                    <td>
+                        Rp {{ number_format($subtotal, 0, ',', '.') }}
                     </td>
                 </tr>
-            @endif
+                <tr>
+                    <td>Total Diskon</td>
+                    <td>
+                        {{ $totalDiskon > 0
+                            ? 'Rp ' . number_format($totalDiskon, 0, ',', '.')
+                            : '-' }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Ongkos Kirim</td>
+                    <td>
+                        Rp {{ number_format($penjualan->ongkir ?? 0, 0, ',', '.') }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="grand-total">
             <tr>
-                <td colspan="5" style="text-align: right;">
-                    <strong>Sisa Pembayaran</strong>
-                </td>
-                <td style="text-align: right;">
-                    {{ number_format($penjualan->sisabayar ?? 0, 0, ',', '.') }}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5" style="text-align: right;">
-                    <strong>Status Pembayaran</strong>
-                </td>
-                <td style="text-align: right;">
-                    {{ $penjualan->statuspembayaran ?? '-' }}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5" style="text-align: right;">
-                    <strong>Uang Pembeli</strong>
-                </td>
-                <td style="text-align: right;">
-                    {{ number_format($penjualan->bayar ?? 0, 0, ',', '.') }}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5" style="text-align: right;">
-                    <strong>Kembalian</strong>
-                </td>
-                <td style="text-align: right;">
-                    {{ number_format($penjualan->kembali ?? 0, 0, ',', '.') }}
+                <td>GRAND TOTAL</td>
+                <td>
+                    Rp {{ number_format($penjualan->grandtotal ?? 0, 0, ',', '.') }}
                 </td>
             </tr>
         </table>
 
-        <table style="margin-top: 40px; border: none;">
+        <div class="payment-section">
+            <div class="section-title">
+                INFORMASI PEMBAYARAN
+            </div>
+
+            <table class="summary-table">
+                <tbody>
+                    @if ((float) ($penjualan->dp ?? 0) > 0)
+                        <tr>
+                            <td>DP</td>
+                            <td>
+                                Rp {{ number_format($penjualan->dp, 0, ',', '.') }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Sisa Pembayaran</td>
+                            <td>
+                                Rp {{ number_format($penjualan->sisabayar ?? 0, 0, ',', '.') }}
+                            </td>
+                        </tr>
+                    @endif
+
+                    <tr>
+                        <td>Uang Pembeli</td>
+                        <td>
+                            Rp {{ number_format($penjualan->bayar ?? 0, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Kembalian</td>
+                        <td>
+                            {{ ($penjualan->kembali ?? 0) > 0
+                                ? 'Rp ' . number_format($penjualan->kembali, 0, ',', '.')
+                                : '-' }}
+                        </td>
+                    </tr>
+                    <tr class="payment-status">
+                        <td>Status Pembayaran</td>
+                        <td>
+                            {{ $penjualan->statuspembayaran ?? '-' }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <table class="signature-table">
             <tr>
-                <td class="no-border" style="text-align: center;">
-                    <br><br>Penerima<br><br><br><br>(.....................)
+                <td>
+                    Penerima
+                    <div class="signature-space"></div>
+                    (................................)
                 </td>
-                <td class="no-border" style="text-align: center;">
-                    <br><br>Hormat Kami<br><br><br><br>(.....................)
+                <td>
+                    Hormat Kami,
+                    <div class="signature-space"></div>
+                    (................................)
                 </td>
             </tr>
         </table>
 
-        <div class="no-print" style="margin-top: 20px; text-align: center;">
-            <button onclick="window.print()" style="padding: 8px 15px; font-size: 12pt;">Cetak</button>
-            <a href="{{ url('admin/penjualandaftar') }}" style="padding: 8px 15px; font-size: 12pt;">Kembali</a>
+        <div class="no-print">
+            <button
+                onclick="location.href='{{ url('admin/penjualandaftar') }}'"
+                class="btn btn-back">
+                Kembali
+            </button>
+            <button
+                onclick="window.print()"
+                class="btn btn-print">
+                Cetak Faktur
+            </button>
         </div>
     </div>
 
     <script>
-        window.print();
+        window.onload = function() {
+            window.print();
+        };
     </script>
+
 </body>
 </html>

@@ -297,7 +297,7 @@
                                             </td>
 
                                             <td class="text-center text-nowrap">
-                                                {{ rupiah($item->dp ?? 0) }}
+                                                {{ $formatTabel($item->dp ?? 0) }}
                                             </td>
 
                                             <td class="text-center text-nowrap">
@@ -753,5 +753,5 @@
             background-color: #fff3cd !important;
             background-image: none !important;
         }
-</style>
+    </style>
 @endsection

@@ -123,6 +123,7 @@
                                     <th width="35%" class="text-center">Daftar Produk</th>
                                     <th class="text-center">Subtotal</th>
                                     <th class="text-center">Total Diskon</th>
+                                    <th class="text-center">Ongkir</th>
                                     <th class="text-center">Grand Total</th>
                                     <th class="text-center">DP</th>
                                     <th class="text-center">Bayar</th>
@@ -140,6 +141,7 @@
                                     @php
                                         $subtotalTransaksi = 0;
                                         $totalDiskonTransaksi = 0;
+                                        $ongkirTransaksi = (float) ($item->ongkir ?? 0);
                                     @endphp
 
                                     @foreach ($item->penjualandetail ?? [] as $detail)
@@ -242,15 +244,22 @@
                                             {{ rupiah($subtotalTransaksi) }}
                                         </td>
                                         <td class="text-center text-nowrap">
-                                            {{ rupiah($totalDiskonTransaksi) }}
+                                            {{ $totalDiskonTransaksi > 0
+                                                ? rupiah($totalDiskonTransaksi)
+                                                : '-' }}
+                                        </td>
+                                        <td class="text-center text-nowrap">
+                                            {{ $ongkirTransaksi > 0
+                                                ? rupiah($ongkirTransaksi)
+                                                : '-' }}
                                         </td>
                                         <td class="text-center text-nowrap font-weight-bold">
                                             {{ rupiah($grandTotalTransaksi) }}
                                         </td>
-                                        <td class="text-center">{{ rupiah($item->dp ?? 0) }}</td>
+                                        <td class="text-center">{{ ($item->dp ?? 0) > 0 ? rupiah($item->dp) : '-' }}</td>
                                         <td class="text-center">{{ rupiah($item->bayar ?? 0) }}</td>
                                         <td class="text-center">{{ rupiah($item->sisabayar ?? 0) }}</td>
-                                        <td class="text-center">{{ rupiah($item->kembali ?? 0) }}</td>
+                                        <td class="text-center">{{ ($item->kembali ?? 0) > 0 ? rupiah($item->kembali) : '-' }}</td>
                                         <td class="text-center">{{ $item->metodepembayaran }}</td>
                                         <td class="text-center">{{ $item->statuspembayaran }}</td>
                                         <td class="text-center">
@@ -484,4 +493,27 @@
     });
 
 </script>
+
+<style>
+        #table > thead > tr > th {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            background-image: none !important;
+        }
+
+        #table > tbody > tr > td,
+        #table > tfoot > tr > th {
+            background: #fff3cd !important;
+            background-color: #fff3cd !important;
+            background-image: none !important;
+        }
+
+        #table table th,
+        #table table td {
+            background: #fff3cd !important;
+            background-color: #fff3cd !important;
+            background-image: none !important;
+        }
+    </style>
+
 @endsection

@@ -166,7 +166,9 @@ public function penjualandaftar(Request $request)
     return view('owner.penjualandaftar', $data);
 }
 
+
 // EDIT ONGKIR PENJUALAN
+
 public function penjualanUpdateOngkir(Request $request, $id)
 {
     if (!auth()->check() || auth()->user()->role !== 'Owner') {
@@ -175,9 +177,6 @@ public function penjualanUpdateOngkir(Request $request, $id)
 
     $request->validate([
         'ongkir' => 'required|regex:/^[0-9.]+$/',
-    ], [
-        'ongkir.required' => 'Nominal ongkir wajib diisi.',
-        'ongkir.regex' => 'Nominal ongkir harus berupa angka.',
     ]);
 
     DB::beginTransaction();
@@ -188,37 +187,40 @@ public function penjualanUpdateOngkir(Request $request, $id)
 
         $ongkir = (int) str_replace('.', '', $request->ongkir);
 
-        if ($ongkir < 0) {
-            throw new \Exception('Ongkir tidak boleh negatif.');
-        }
-
-        // Hitung total seluruh produk setelah diskon
-        $totalProduk = PenjualanDetailModel::where(
+        // Hitung total produk setelah diskon
+        $totalProduk = (int) PenjualanDetailModel::where(
             'idpenjualan',
             $penjualan->idpenjualan
         )->sum('total');
 
-        // Grand Total = Total Produk Setelah Diskon + Ongkir
-        $grandtotal = (int) $totalProduk + $ongkir;
+        // Hitung Grand Total terbaru
+        $grandtotal = $totalProduk + $ongkir;
 
-        // Hitung ulang sisa pembayaran berdasarkan DP
-        $sisabayar = max(
-            0,
-            $grandtotal - (int) ($penjualan->dp ?? 0)
-        );
+        $dp = (int) ($penjualan->dp ?? 0);
+        $bayar = (int) ($penjualan->bayar ?? 0);
+        $kembali = (int) ($penjualan->kembali ?? 0);
+
+        // Hitung total pembayaran bersih
+        $totalDibayar = max(0, $dp + $bayar - $kembali);
+
+        // Hitung sisa pembayaran
+        $sisabayar = max(0, $grandtotal - $totalDibayar);
+
+        // Tentukan status pembayaran
+        $statusPembayaran = $sisabayar > 0 ? 'DP' : 'Lunas';
 
         $penjualan->update([
             'ongkir' => $ongkir,
             'grandtotal' => $grandtotal,
             'sisabayar' => $sisabayar,
+            'statuspembayaran' => $statusPembayaran,
         ]);
 
         DB::commit();
 
-        return redirect()->back()->with(
+        return back()->with(
             'success',
-            'Ongkir transaksi ' . $penjualan->notajual .
-            ' berhasil diperbarui.'
+            'Ongkir dan total pembayaran berhasil diperbarui.'
         );
 
     } catch (\Throwable $e) {
@@ -226,7 +228,7 @@ public function penjualanUpdateOngkir(Request $request, $id)
 
         report($e);
 
-        return redirect()->back()->with(
+        return back()->with(
             'error',
             'Gagal memperbarui ongkir: ' . $e->getMessage()
         );
