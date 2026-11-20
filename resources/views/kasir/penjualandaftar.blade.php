@@ -528,25 +528,25 @@
                                                         <div style="border: 1px solid #e5e5e5; border-radius: 6px; padding: 16px; height: 100%;">
                                                             <h6 class="font-weight-bold mb-3" style="color: #444;">
                                                                 Informasi Transaksi
-                                                            </h6>
+                                                            </h6>                                           
                                                             <div class="row mb-2">
-                                                                <div class="col-5 text-muted">Tanggal</div>
-                                                                <div class="col-7 text-right">
-                                                                    {{ $item->tanggalpenjualan
-                                                                        ? date('d-m-Y H:i', strtotime($item->tanggalpenjualan))
+                                                                <div class="col-5 text-dark">Tanggal dan Jam</div>
+                                                                <div class="col-7 text-right text-dark">
+                                                                    {{ $item->created_at
+                                                                        ? \Carbon\Carbon::parse($item->created_at)
+                                                                            ->timezone('Asia/Jakarta')
+                                                                            ->format('d-m-Y, H.i') . ' WIB'
                                                                         : '-' }}
                                                                 </div>
                                                             </div>
-
                                                             <div class="row mb-2">
-                                                                <div class="col-5 text-muted">Nama Pembeli</div>
-                                                                <div class="col-7 text-right">
+                                                                <div class="col-5 text-dark">Nama Pembeli</div>
+                                                                <div class="col-7 text-right text-dark">
                                                                     {{ $item->namapembeli ?? '-' }}
                                                                 </div>
                                                             </div>
-
                                                             <div class="row">
-                                                                <div class="col-5 text-muted">Status</div>
+                                                                <div class="col-5 text-dark">Status</div>
                                                                 <div class="col-7 text-right">
                                                                     {{ $item->statustransaksi ?? '-' }}
                                                                 </div>
