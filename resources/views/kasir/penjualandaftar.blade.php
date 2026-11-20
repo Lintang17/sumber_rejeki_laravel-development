@@ -140,6 +140,13 @@
                                     @php
                                         $nomor = 1;
                                         $totalpemasukan = 0;
+
+                                        // Nominal 0 ditampilkan sebagai tanda -
+                                        $formatTabel = function ($nilai) {
+                                            return (float) ($nilai ?? 0) == 0
+                                                ? '-'
+                                                : rupiah($nilai);
+                                        };
                                     @endphp
 
                                     @foreach ($penjualan as $item)
@@ -276,12 +283,12 @@
 
                                             {{-- TOTAL DISKON --}}
                                             <td class="text-center text-nowrap">
-                                                {{ rupiah($totalDiskonTransaksi) }}
+                                               {{ $formatTabel($totalDiskonTransaksi) }}
                                             </td>
 
                                             {{-- ONGKIR --}}
                                             <td class="text-center text-nowrap">
-                                                {{ rupiah($item->ongkir ?? 0) }}
+                                               {{ $formatTabel($item->ongkir ?? 0) }}
                                             </td>
 
                                             {{-- GRAND TOTAL SETELAH DISKON --}}
@@ -298,11 +305,11 @@
                                             </td>
 
                                             <td class="text-center text-nowrap">
-                                                {{ rupiah($item->sisabayar ?? 0) }}
+                                               {{ $formatTabel($item->sisabayar ?? 0) }}
                                             </td>
 
                                             <td class="text-center text-nowrap">
-                                                {{ rupiah($item->kembali ?? 0) }}
+                                               {{ $formatTabel($item->kembali ?? 0) }}
                                             </td>
 
                                             <td class="text-center">
@@ -407,6 +414,13 @@
                                                 $no = 1;
                                                 $subtotalModal = 0;
                                                 $totalDiskonModal = 0;
+
+                                                // Nilai 0 ditampilkan sebagai tanda -
+                                                $formatModal = function ($nilai) {
+                                                    return (float) ($nilai ?? 0) == 0
+                                                        ? '-'
+                                                        : rupiah($nilai);
+                                                };
                                             @endphp
                         
                                             <h6 class="font-weight-bold mb-3" style="color: #444;">
@@ -480,11 +494,11 @@
                                                                     </td>
 
                                                                     <td class="text-right align-middle text-nowrap">
-                                                                        {{ rupiah($harga) }}
+                                                                        {{ $formatModal($harga) }}
                                                                     </td>
 
                                                                     <td class="text-center align-middle">
-                                                                        {{ $jumlah }}
+                                                                        {{ $jumlah == 0 ? '-' : $jumlah }}
                                                                     </td>
 
                                                                     <td class="text-center align-middle">
@@ -492,15 +506,17 @@
                                                                     </td>
 
                                                                     <td class="text-center align-middle text-nowrap">
-                                                                        {{ rtrim(rtrim(number_format($persenDiskon, 2, ',', '.'), '0'), ',') }}%
+                                                                        {{ $persenDiskon == 0
+                                                                            ? '-'
+                                                                            : rtrim(rtrim(number_format($persenDiskon, 2, ',', '.'), '0'), ',') . '%' }}
                                                                     </td>
 
                                                                     <td class="text-right align-middle text-nowrap">
-                                                                        {{ rupiah($diskonBaris) }}
+                                                                        {{ $formatModal($diskonBaris) }}
                                                                     </td>
 
                                                                     <td class="text-right align-middle text-nowrap font-weight-bold">
-                                                                        {{ rupiah($totalBaris) }}
+                                                                        {{ $formatModal($totalBaris) }}
                                                                     </td>
                                                                 </tr>
                                                             @empty
@@ -570,14 +586,14 @@
                                                             <div class="d-flex justify-content-between mb-2">
                                                                 <span class="text-dark">Total Diskon</span>
                                                                 <span class="text-nowrap ml-2">
-                                                                    {{ rupiah($totalDiskonModal) }}
+                                                                    {{ $formatModal($totalDiskonModal) }}
                                                                 </span>
                                                             </div>
 
                                                             <div class="d-flex justify-content-between mb-2">
                                                                 <span class="text-dark">Ongkir</span>
                                                                 <span class="text-nowrap ml-2">
-                                                                    {{ rupiah($item->ongkir ?? 0) }}
+                                                                    {{ $formatModal($item->ongkir ?? 0) }}
                                                                 </span>
                                                             </div>
 
