@@ -110,6 +110,14 @@
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
 
+                    @php
+                        $formatTabel = function ($nilai) {
+                            return (float) ($nilai ?? 0) == 0
+                                ? '-'
+                                : rupiah($nilai);
+                        };
+                    @endphp
+
                     <div class="table-responsive">
                         <table class="table" id="table">
                             <thead>
@@ -123,6 +131,7 @@
                                     <th width="35%" class="text-center">Daftar Produk</th>
                                     <th class="text-center">Subtotal</th>
                                     <th class="text-center">Total Diskon</th>
+                                    <th class="text-center">Ongkir</th>
                                     <th class="text-center">Grand Total</th>
                                     <th class="text-center">DP</th>
                                     <th class="text-center">Bayar</th>
@@ -242,15 +251,18 @@
                                             {{ rupiah($subtotalTransaksi) }}
                                         </td>
                                         <td class="text-center text-nowrap">
-                                            {{ rupiah($totalDiskonTransaksi) }}
+                                            {{ $formatTabel($totalDiskonTransaksi) }}
+                                        </td>
+                                        <td class="text-center text-nowrap">
+                                            {{ $formatTabel($item->ongkir ?? 0) }}
                                         </td>
                                         <td class="text-center text-nowrap font-weight-bold">
                                             {{ rupiah($grandTotalTransaksi) }}
                                         </td>
-                                        <td class="text-center">{{ rupiah($item->dp ?? 0) }}</td>
+                                        <td class="text-center">{{ $formatTabel($item->bayar ?? 0) }}</td>
                                         <td class="text-center">{{ rupiah($item->bayar ?? 0) }}</td>
-                                        <td class="text-center">{{ rupiah($item->sisabayar ?? 0) }}</td>
-                                        <td class="text-center">{{ rupiah($item->kembali ?? 0) }}</td>
+                                        <td class="text-center">{{ $formatTabel($item->sisabayar ?? 0) }}</td>
+                                        <td class="text-center">{{ $formatTabel($item->kembali ?? 0) }}</td>
                                         <td class="text-center">{{ $item->metodepembayaran }}</td>
                                         <td class="text-center">{{ $item->statuspembayaran }}</td>
                                         <td class="text-center">
@@ -409,4 +421,26 @@
     });
 
 </script>
+
+<style>
+        #table > thead > tr > th {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            background-image: none !important;
+        }
+
+        #table > tbody > tr > td,
+        #table > tfoot > tr > th {
+            background: #fff3cd !important;
+            background-color: #fff3cd !important;
+            background-image: none !important;
+        }
+
+        #table table th,
+        #table table td {
+            background: #fff3cd !important;
+            background-color: #fff3cd !important;
+            background-image: none !important;
+        }
+</style>
 @endsection

@@ -514,6 +514,6 @@
             background-color: #fff3cd !important;
             background-image: none !important;
         }
-    </style>
+</style>
 
 @endsection
