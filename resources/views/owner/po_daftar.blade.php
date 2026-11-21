@@ -48,10 +48,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row mb-4 align-items-end">
-                            <div class="col-md-3">
+                        <div class="row mb-4 align-items-end" style="row-gap:12px;">
+                            <div class="col-12 col-md-3">
                                 <label class="font-weight-bold text-secondary mb-1">Status</label>
-                                <select id="filterStatus" class="form-control" style="height:38px !important; padding:0 12px !important;">                                
+                                <select id="filterStatus" class="form-control" style="height:38px; padding:0 12px; width:100%;">                             
                                     <option value="">-- Semua Status --</option>
                                     <option value="Pending">Pending</option>
                                     <option value="Disetujui">Disetujui</option>
@@ -84,15 +84,15 @@
                                 ];
                             @endphp
 
-                            <div class="col-md-3">
+                            <div class="col-12 col-md-3">
                                 <label class="font-weight-bold text-secondary mb-1">Periode</label>
-                                <div class="d-flex" style="gap:10px; width:100%;">
-                                    <div class="dropdown" style="flex:1; min-width:0;">
+                                <div class="d-flex" style="gap:8px; width:100%;">
+                                    <div class="dropdown" style="width:50%; min-width:0;">
                                         <button type="button"
                                                 class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
                                                 data-toggle="dropdown"
-                                                style="white-space:nowrap; height:38px; width:100%;">
-                                            Bulan: {{ substr($daftarBulan[$bulanDipilih], 0, 3) }}
+                                                style="height:38px; width:100%; padding:8px; font-size:12px; overflow:hidden; white-space:nowrap;">
+                                            {{ substr($daftarBulan[$bulanDipilih], 0, 3) }}
                                         </button>
 
                                         <div class="dropdown-menu p-2" style="width:220px;">
@@ -116,12 +116,12 @@
                                         </div>
                                     </div>
 
-                                    <div class="dropdown" style="flex:1; min-width:0;">
+                                    <div class="dropdown" style="width:50%; min-width:0;">
                                         <button type="button"
                                                 class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
                                                 data-toggle="dropdown"
-                                                style="white-space:nowrap; height:38px; width:100%;">
-                                            Tahun: {{ $tahunDipilih }}
+                                                style="height:38px; width:100%; padding:0 8px; font-size:13px; overflow:hidden; white-space:nowrap;">
+                                            {{ $tahunDipilih }}
                                         </button>
                                         <div class="dropdown-menu p-2" style="width:220px;">
                                             <div class="row no-gutters">
@@ -145,9 +145,9 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-12 col-sm-8 col-md-4">
                                 <label class="font-weight-bold text-secondary mb-1">Pencarian</label>
-                                <div class="input-group" style="height:38px;">
+                                <div class="input-group" style="height:38px; width:100%;">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text bg-white" style="height:38px;">
                                             <i class="fas fa-search text-muted"></i>
@@ -160,10 +160,11 @@
                                           placeholder="Cari kode PO atau customer...">
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-12 col-sm-4 col-md-2">
                                 <label class="font-weight-bold text-secondary mb-1">&nbsp;</label>
                                 <button id="resetFilter"
-                                        class="btn btn-primary btn-block" style="height:38px;">
+                                    class="btn btn-primary btn-block"
+                                    style="height:38px; width:100%;">
                                     Reset
                                 </button>
                             </div>
@@ -198,16 +199,25 @@
                                 </thead>
                                 <tbody>
                                     @forelse($po as $index => $item)
+                                    @php
+                                        $totalHargaJual = $item->detail->sum(function ($detail) {
+                                            return $detail->qty * ($detail->harga_jual ?? 0);
+                                        });
+
+                                        $pemasukanPO = $item->status_pembayaran === 'Lunas'
+                                            ? $totalHargaJual
+                                            : (float) ($item->dp ?? 0);
+                                    @endphp
                                     <tr data-status="{{ $item->status }}"
                                         data-date="{{ \Carbon\Carbon::parse($item->tanggal)->format('Y-m') }}"
-                                        data-search="{{ $item->kode_po }} {{ $item->customer }}">
+                                        data-search="{{ $item->kode_po }} {{ $item->customer }}"
+                                        data-pemasukan="{{ $pemasukanPO }}">
                                         
                                         <td class="text-center font-weight-bold">{{ $index + 1 }}</td>
-                                        
                                         <td>
                                             <span class="font-weight-bold" style="font-size: 14px;">{{ $item->kode_po }}</span>
                                             <br>
-                                            <small class="text-muted" style="font-size: 12px;">
+                                            <small class="text-dark" style="font-size: 12px;">
                                                 <i class="far fa-calendar-alt mr-1"></i>
                                                 {{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}
                                             </small>
@@ -335,6 +345,32 @@
                                     </tr>
                                     @endforelse
                                 </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="15" style="padding:15px 20px; background:#f8f9fa;">
+                                            <div class="d-flex justify-content-center">
+                                                <div class="d-flex align-items-center justify-content-between"
+                                                    style="
+                                                        width:380px;
+                                                        max-width:100%;
+                                                        padding:12px 20px;
+                                                        background:#EAF7EF;
+                                                        gap:25px;">
+
+                                                    <span class="font-weight-bold text-dark"
+                                                        style="font-size:16px; white-space:nowrap;">
+                                                        Total Pemasukan
+                                                    </span>
+                                                    <span class="font-weight-bold text-success"
+                                                        id="totalPemasukanPO"
+                                                        style="font-size:17px; white-space:nowrap;">
+                                                        Rp 0
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
@@ -734,7 +770,7 @@ $(document).ready(function() {
 
     let table = $('#table').DataTable({
         pageLength: 10,
-        scrollX: true,
+        scrollX: false,
         autoWidth: false,
         ordering: false,
 
@@ -763,6 +799,26 @@ $(document).ready(function() {
             }
         ]
     });
+    
+    function hitungTotalPemasukanPO() {
+        let total = 0;
+        table.rows({ search: 'applied' }).every(function() {
+            let row = this.node();
+            let pemasukan = parseFloat(
+                row.getAttribute('data-pemasukan') || 0
+            );
+
+            total += pemasukan;
+        });
+
+        $('#totalPemasukanPO').text(
+            new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                maximumFractionDigits: 0
+            }).format(total)
+        );
+    }
 
     let selectedMonth = String({{ (int) date('n') }});
     let selectedYear = String({{ (int) date('Y') }});
@@ -812,6 +868,10 @@ $(document).ready(function() {
         table.draw();
     }
 
+    table.on('draw', function() {
+        hitungTotalPemasukanPO();   
+    });
+
     function updateMonthStyle() {
         $('input[name="pilihBulan"]').each(function() {
 
@@ -859,7 +919,7 @@ $(document).ready(function() {
 
         $(this).closest('.dropdown')
             .find('.dropdown-toggle')
-            .text('Bulan: ' + namaBulan);
+            .text(namaBulan.substring(0, 3));
 
         updateMonthStyle();
         filterTable();
@@ -869,7 +929,7 @@ $(document).ready(function() {
         selectedYear = String($(this).val());
         $(this).closest('.dropdown')
             .find('.dropdown-toggle')
-            .text('Tahun: ' + selectedYear);
+            .text(selectedYear);
 
         updateYearStyle();
         filterTable();
@@ -892,16 +952,17 @@ $(document).ready(function() {
             .prop('checked', true);
 
         let namaBulanAwal = '{{ substr($daftarBulan[(int) date("n")], 0, 3) }}';
+
         $('input[name="pilihBulan"]')
             .closest('.dropdown')
             .find('.dropdown-toggle')
-            .text('Bulan: ' + namaBulanAwal);
+            .text(namaBulanAwal);
 
         $('input[name="pilihTahun"]')
             .closest('.dropdown')
             .find('.dropdown-toggle')
-            .text('Tahun: ' + selectedYear);
-
+            .text(selectedYear);
+            
         updateMonthStyle();
         updateYearStyle();
         filterTable();
