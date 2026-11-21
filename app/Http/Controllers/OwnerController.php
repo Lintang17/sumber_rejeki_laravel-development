@@ -31,7 +31,28 @@ class OwnerController extends Controller
     {
         $data['jumlahproduk'] = ProduksiModel::count();
         $data['totalstokopname'] = StokOpnameModel::count();
-        $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
+        $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))
+            ->whereYear('tanggalpenjualan', date('Y'))
+            ->sum('grandtotal');
+        // Total Pemasukan PO Bulan Ini
+        $poBulanIni = Po::with('detail')
+            ->whereMonth('created_at', date('m'))
+            ->whereYear('created_at', date('Y'))
+            ->get();
+            
+        $data['totalpemasukanpo'] = $poBulanIni->sum(function ($po) {
+            if ($po->status_pembayaran === 'DP') {
+                return (int) ($po->dp ?? 0);
+            }
+            if ($po->status_pembayaran === 'Lunas') {
+                return $po->detail->sum(function ($detail) {
+                    return (int) $detail->qty * (int) $detail->harga_jual;
+                });
+            }
+
+            return 0;
+        });
+
         $data['poBaru'] = Po::whereIn('status', [
                 'Pending',
                 'Disetujui',
@@ -57,7 +78,6 @@ class OwnerController extends Controller
 
         return view('owner.dashboard', $data);
     }
-
     
     public function produksidaftar()
 {

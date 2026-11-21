@@ -319,9 +319,32 @@
                         0
                     </div>
                     <div class="dashboard-title">
-                        Pemasukan Bulan Ini
+                        Pemasukan Penjualan Bulan Ini
                     </div>
                     <a href="{{ url('owner/penjualandaftar') }}"
+                        class="btn btn-light">
+                        <i class="mdi mdi-arrow-right-circle-outline"></i>
+                        Lihat Detail
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 grid-margin stretch-card">
+            <div class="card stats-card"
+                style="background:linear-gradient(135deg,#A1887F,#6D4C41);">
+                <div class="card-body">
+                    <div class="dashboard-icon">
+                        <i class="mdi mdi-cart"></i>
+                    </div>
+                    <div class="count-number count-uang"
+                        data-target="{{ $totalpemasukanpo }}">
+                        0
+                    </div>  
+                    <div class="dashboard-title">
+                        Pemasukan PO Bulan Ini
+                    </div>
+                    <a href="{{ url('owner/po') }}"
                         class="btn btn-light">
                         <i class="mdi mdi-arrow-right-circle-outline"></i>
                         Lihat Detail
