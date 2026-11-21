@@ -167,17 +167,21 @@ public function showroomhapus($id)
 
 public function penjualandaftar(Request $request)
 {
-    // $data['penjualan'] = PenjualanModel::with('penjualandetail')->orderBy('tanggalpenjualan', 'desc')->get();
-    // return view('owner.penjualandaftar', $data);
-     $query = PenjualanModel::with('penjualandetail');
+    // Validasi pilihan filter
+    $request->validate([
+        'bulan' => 'nullable|integer|min:1|max:12',
+        'tahun' => 'nullable|integer|min:2025|max:' . (now()->year + 5),
+    ]);
 
-    if ($request->filled('bulan')) {
-        $query->whereMonth('tanggalpenjualan', $request->bulan);
-    }
+    // Jika belum memilih, otomatis gunakan bulan dan tahun sekarang
+    $bulan = (int) $request->input('bulan', now()->month);
+    $tahun = (int) $request->input('tahun', now()->year);
 
-    if ($request->filled('tahun')) {
-        $query->whereYear('tanggalpenjualan', $request->tahun);
-    }
+    // Ambil data penjualan
+    $query = PenjualanModel::with('penjualandetail');
+
+    $query->whereMonth('tanggalpenjualan', $bulan)
+          ->whereYear('tanggalpenjualan', $tahun);
 
     $data['penjualan'] = $query
         ->orderBy('tanggalpenjualan', 'desc')
@@ -185,7 +189,6 @@ public function penjualandaftar(Request $request)
 
     return view('owner.penjualandaftar', $data);
 }
-
 
 // EDIT ONGKIR PENJUALAN
 

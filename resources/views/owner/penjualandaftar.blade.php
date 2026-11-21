@@ -5,94 +5,99 @@
     <div class="row">
         <div class="col-lg-12 grid-margin stretch-card">
             <div class="card">
-                <div class="card-body"> 
-                    <h4 class="card-title font-weight-bold mb-3">Daftar Penjualan</h4>
-                    @php
-                        $tahunSekarang = (int) date('Y');
-                        $tahunAwal = 2025;
-                        $tahunAkhir = $tahunSekarang + 5;
-                        $tahunDipilih = request('tahun', $tahunSekarang);
-                        $daftarBulan = [
-                            1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
-                            4 => 'April', 5 => 'Mei', 6 => 'Juni',
-                            7 => 'Juli', 8 => 'Agustus', 9 => 'September',
-                            10 => 'Oktober', 11 => 'November', 12 => 'Desember',
-                        ];
-                        
-                        $bulanDipilih = (int) request('bulan', 0);
-                    @endphp
+                <div class="card-body">              
+                    <div class="header-penjualan">
+                        <h4 class="card-title font-weight-bold mb-0">
+                            Daftar Penjualan
+                        </h4>               
+                        @php
+                            $tahunSekarang = (int) date('Y');
+                            $bulanSekarang = (int) date('n');
+                            $tahunAwal = 2025;
+                            $tahunAkhir = $tahunSekarang + 5;
+                            $tahunDipilih = (int) request('tahun', date('Y'));
+                            $bulanDipilih = (int) request('bulan', date('n'));
+                            $daftarBulan = [
+                                1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
+                                4 => 'April', 5 => 'Mei', 6 => 'Juni',
+                                7 => 'Juli', 8 => 'Agustus', 9 => 'September',
+                                10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+                            ];
+                        @endphp
 
-                    <form method="GET"
-                          action="{{ url()->current() }}"
-                          id="formFilterPeriode"
-                          class="d-flex align-items-center flex-wrap mb-2 mr-2">
+                        <form method="GET"
+                            action="{{ url()->current() }}"
+                            id="formFilterPeriode"
+                            class="filter-penjualan">
 
-                        {{-- FILTER BULAN --}}
-                        <div class="dropdown mr-2 mb-2">
-                            <button type="button"
-                                    class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
-                                    data-toggle="dropdown"
-                                    aria-haspopup="true"
-                                    aria-expanded="false">
-                                <i class="mdi mdi-calendar-month"></i>
-                                Bulan{{ isset($daftarBulan[$bulanDipilih]) ? ': ' . substr($daftarBulan[$bulanDipilih], 0, 3) : '' }}
-                            </button>
-
-                            <div class="dropdown-menu p-2">
-                                <div class="row no-gutters" style="width: 180px; max-width: 80vw;">
-                                    @foreach($daftarBulan as $angka => $nama)
-                                        <div class="col-4 p-1">
-                                            <label class="btn btn-sm btn-block mb-0 font-weight-bold
-                                                {{ $bulanDipilih === $angka ? 'btn-primary' : 'btn-outline-secondary' }}">
-                                                <input type="radio"
+                            {{-- FILTER BULAN --}}
+                            <div class="dropdown">
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
+                                        data-toggle="dropdown"
+                                        aria-haspopup="true"
+                                        aria-expanded="false">
+                                    <i class="mdi mdi-calendar-month"></i>
+                                    Bulan: {{ substr($daftarBulan[$bulanDipilih], 0, 3) }}
+                                </button>
+                                <div class="dropdown-menu p-2"
+                                    style="width:220px; max-width:90vw;">
+                                    <div class="row no-gutters">
+                                        @foreach($daftarBulan as $angka => $nama)
+                                            <div class="col-4 p-1">
+                                                <label class="btn btn-sm btn-block mb-0 font-weight-bold
+                                                    {{ $bulanDipilih === $angka ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                                    <input type="radio"
                                                         name="bulan"
                                                         value="{{ $angka }}"
                                                         class="d-none"
                                                         {{ $bulanDipilih === $angka ? 'checked' : '' }}>
-                                                {{ substr($nama, 0, 3) }}
-                                            </label>
-                                        </div>
-                                    @endforeach
+                                                    {{ substr($nama, 0, 3) }}
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {{-- FILTER TAHUN --}}
-                        <div class="dropdown mr-2 mb-2">
-                            <button type="button"
-                                    class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
-                                    data-toggle="dropdown"
-                                    aria-haspopup="true"
-                                    aria-expanded="false">
-                                <i class="mdi mdi-calendar"></i>
-                                Tahun: {{ $tahunDipilih }}
-                            </button>
-
-                            <div class="dropdown-menu p-2">
-                                <div class="row no-gutters" style="width: 180px; max-width: 80vw;">
-                                    @for($tahun = $tahunAwal; $tahun <= $tahunAkhir; $tahun++)
-                                        <div class="col-4 p-1">
+                            {{-- FILTER TAHUN --}}
+                            <div class="dropdown">
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm font-weight-bold text-dark dropdown-toggle"
+                                        data-toggle="dropdown"
+                                        aria-haspopup="true"
+                                        aria-expanded="false">
+                                    <i class="mdi mdi-calendar"></i>
+                                    Tahun: {{ $tahunDipilih }}
+                                </button>
+                                <div class="dropdown-menu p-2"
+                                    style="width:220px; max-width:90vw;">
+                                    <div class="row no-gutters">
+                                        @for($tahun = $tahunAwal; $tahun <= $tahunAkhir; $tahun++)
+                                            <div class="col-4 p-1">
                                                 <label class="btn btn-sm btn-block mb-0 font-weight-bold
-                                                {{ (string) $tahunDipilih === (string) $tahun
-                                                    ? 'btn-primary'
-                                                    : 'btn-outline-secondary' }}">
-                                                <input type="radio"
-                                                    name="tahun"
-                                                    value="{{ $tahun }}"
-                                                    class="d-none"
-                                                    {{ (string) $tahunDipilih === (string) $tahun ? 'checked' : '' }}>
-                                                {{ $tahun }}
-                                            </label>
-                                        </div>
-                                    @endfor
+                                                    {{ (string) $tahunDipilih === (string) $tahun
+                                                        ? 'btn-primary'
+                                                        : 'btn-outline-secondary' }}">
+                                                    <input type="radio"
+                                                        name="tahun"
+                                                       value="{{ $tahun }}"
+                                                       class="d-none"
+                                                       {{ (string) $tahunDipilih === (string) $tahun ? 'checked' : '' }}>
+                                                    {{ $tahun }}
+                                                </label>
+                                            </div>
+                                        @endfor
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <a href="{{ url()->current() }}"
-                            class="btn btn-light btn-sm font-weight-bold mb-2">
-                            <i class="mdi mdi-refresh"></i> Reset
-                        </a>
-                    </form>
+                            {{-- RESET --}}
+                            <a href="{{ url()->current() }}"
+                                class="btn btn-light btn-sm font-weight-bold">
+                                <i class="mdi mdi-refresh"></i> Reset
+                            </a>
+                        </form>
+                    </div>
                     
                     @if(session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
@@ -103,7 +108,7 @@
                     @endif
 
                     <div class="table-responsive">
-                        <table class="table font-weight-bold" id="table">
+                        <table class="table font-weight-dark" id="table">
                             <thead class="font-weight-bold">
                                 <tr>
                                     <th class="text-center">No</th>
@@ -129,8 +134,8 @@
                             </thead>
                             <tbody>
                                 @php 
-                                $no = 1;         
-                                $totalpemasukan = 0;
+                                    $no = 1;         
+                                    $totalpemasukan = 0;
                                 @endphp
 
                                 @foreach ($penjualan as $item)
@@ -158,10 +163,16 @@
                                             ($subtotalTransaksi - $totalDiskonTransaksi + ($item->ongkir ?? 0))
                                         );
 
-                                        // Total pemasukan = DP + Sisa Bayar
-                                        $totalpemasukan +=
-                                            (float) ($item->dp ?? 0) +
-                                            (float) ($item->sisabayar ?? 0);
+                                        // Hitung pemasukan berdasarkan pembayaran yang sudah diterima
+                                        $statusPembayaran = strtolower(trim((string) $item->statuspembayaran));
+                                        $dp = (float) ($item->dp ?? 0);
+                                        $bayar = (float) ($item->bayar ?? 0);
+                                        $kembali = (float) ($item->kembali ?? 0);
+                                        if ($statusPembayaran === 'dp') {
+                                            $totalpemasukan += max(0, $dp) + max(0, $bayar - $kembali);
+                                        } elseif ($statusPembayaran === 'lunas') {
+                                            $totalpemasukan += max(0, $dp) + max(0, $bayar - $kembali);
+                                        }
                                     @endphp
 
                                     <tr class="{{ $item->sisabayar > 0 ? 'table-warning' : '' }}">
@@ -245,18 +256,18 @@
                                             {{ rupiah($subtotalTransaksi) }}
                                         </td>
                                         <td class="text-center text-nowrap">
-                                            {{ rupiah($totalDiskonTransaksi) }}
+                                            {{ $totalDiskonTransaksi == 0 ? '-' : rupiah($totalDiskonTransaksi) }}
                                         </td>
                                         <td class="text-center text-nowrap">
-                                            {{ rupiah($item->ongkir ?? 0) }}
+                                            {{ (float) ($item->ongkir ?? 0) == 0 ? '-' : rupiah($item->ongkir) }}
                                         </td>
                                         <td class="text-center text-nowrap font-weight-bold">
                                             {{ rupiah($grandTotalTransaksi) }}
                                         </td>
-                                        <td class="text-center">{{ rupiah($item->dp ?? 0) }}</td>
-                                        <td class="text-center">{{ rupiah($item->bayar ?? 0) }}</td>
-                                        <td class="text-center">{{ rupiah($item->sisabayar ?? 0) }}</td>
-                                        <td class="text-center">{{ rupiah($item->kembali ?? 0) }}</td>
+                                        <td class="text-center">{{ (float) ($item->dp ?? 0) == 0 ? '-' : rupiah($item->dp) }}</td>
+                                        <td class="text-center">{{ (float) ($item->bayar ?? 0) == 0 ? '-' : rupiah($item->bayar) }}</td>
+                                        <td class="text-center">{{ (float) ($item->sisabayar ?? 0) == 0 ? '-' : rupiah($item->sisabayar) }}</td>
+                                        <td class="text-center">{{ (float) ($item->kembali ?? 0) == 0 ? '-' : rupiah($item->kembali) }}</td>
                                         <td class="text-center">{{ $item->metodepembayaran }}</td>
                                         <td class="text-center">{{ $item->statuspembayaran }}</td>
                                         <td class="text-center">
@@ -457,7 +468,6 @@
                             </div>
                         </div>
                     @endforeach
-
                 </div>
             </div>
         </div>
@@ -467,22 +477,54 @@
 <style>
     #table > thead > tr > th {
         background: #ffffff !important;
-        background-color: #ffffff !important;
-        background-image: none !important;
     }
 
     #table > tbody > tr > td,
-    #table > tfoot > tr > th {
-        background: #fff3cd !important;
-        background-color: #fff3cd !important;
-        background-image: none !important;
-    }
-
+    #table > tfoot > tr > th,
     #table table th,
     #table table td {
         background: #fff3cd !important;
-        background-color: #fff3cd !important;
-        background-image: none !important;
+    }
+    .header-penjualan {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .filter-penjualan {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0;
+    }
+    #table_wrapper > .row:first-child {
+        display: flex;
+        align-items: center;
+    }
+    #table_wrapper .dataTables_filter {
+        text-align: right;
+    }
+    #table_wrapper .dataTables_filter input {
+        width: 180px;
+    }
+    @media (max-width: 767px) {
+        .header-penjualan {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        #table_wrapper > .row:first-child {
+            display: block;
+        }
+        #table_wrapper .dataTables_filter {
+            text-align: left;
+        }
+        #table_wrapper .dataTables_filter input {
+            width: 150px;
+            max-width: 60%;
+        }
     }
 </style>
 
@@ -511,75 +553,6 @@
     function formatUang(input) {
         let value = input.value.replace(/\D/g, '');
         input.value = new Intl.NumberFormat('id-ID').format(value);
-    }
-
-    // Menandai kotak bulan dan tahun yang dipilih
-    function rapikanFilterPeriode() {
-        const searchBox = document.querySelector('#table_filter');
-        const filterForm = document.querySelector('#formFilterPeriode');
-        if (!searchBox || !filterForm) return;
-
-        if (filterForm.parentElement !== searchBox) {
-            const searchLabel = searchBox.querySelector('label');
-            searchBox.insertBefore(filterForm, searchLabel || searchBox.firstChild);
-        }
-
-        const searchLabel = searchBox.querySelector('label');
-        const searchInput = searchLabel
-            ? searchLabel.querySelector('input')
-            : null;
-
-        function aturResponsif() {
-            const layarKecil = window.matchMedia('(max-width: 767.98px)').matches;
-
-            searchBox.classList.add('d-flex', 'flex-wrap');
-            searchBox.style.gap = '8px';
-            searchBox.style.width = '100%';
-            searchBox.style.boxSizing = 'border-box';
-
-            //Responsif
-            searchBox.style.flexDirection = layarKecil ? 'column' : 'row';
-            searchBox.style.alignItems = layarKecil ? 'stretch' : 'center';
-            searchBox.style.justifyContent = layarKecil ? 'flex-start' : 'flex-end';
-
-            filterForm.classList.add('d-flex', 'flex-wrap', 'mb-0');
-            filterForm.style.width = layarKecil ? '100%' : 'auto';
-            filterForm.style.maxWidth = '100%';
-            filterForm.style.gap = '6px';
-            filterForm.style.marginRight = '0';
-
-            if (searchLabel) {
-                searchLabel.classList.add('font-weight-bold', 'mb-0');
-                searchLabel.style.display = 'flex';
-                searchLabel.style.alignItems = 'center';
-                searchLabel.style.flexWrap = 'wrap';
-                searchLabel.style.gap = '6px';
-                searchLabel.style.width = layarKecil ? '100%' : 'auto';
-                searchLabel.style.maxWidth = '100%';
-            }
-
-            if (searchInput) {
-                searchInput.classList.add('font-weight-bold');
-                searchInput.style.maxWidth = '100%';
-                searchInput.style.width = layarKecil ? '100%' : 'auto';
-                searchInput.style.minWidth = '0';
-                searchInput.style.boxSizing = 'border-box';
-            }
-
-            filterForm.querySelectorAll('.dropdown').forEach(function (dropdown) {
-                dropdown.style.maxWidth = '100%';
-            });
-        }
-
-        aturResponsif();
-
-        if (!window._filterPeriodeResizeTerpasang) {
-            window.addEventListener('resize', function () {
-                rapikanFilterPeriode();
-            });
-
-            window._filterPeriodeResizeTerpasang = true;
-        }
     }
 
     function tandaiPilihanFilter() {
@@ -611,23 +584,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        rapikanFilterPeriode();
         tandaiPilihanFilter();
     });
-
-    if (window.jQuery) {
-        jQuery(document).on('init.dt', function (event, settings) {
-            if (settings.nTable && settings.nTable.id === 'table') {
-                rapikanFilterPeriode();
-            }
-        });
-
-        jQuery(document).on('draw.dt', function (event, settings) {
-            if (settings.nTable && settings.nTable.id === 'table') {
-                rapikanFilterPeriode();
-            }
-        });
-    }
 
     // Konfirmasi hapus transaksi penjualan Owner
     document.addEventListener('DOMContentLoaded', function() {
