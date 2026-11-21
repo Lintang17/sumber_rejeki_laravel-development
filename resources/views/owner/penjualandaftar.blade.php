@@ -276,33 +276,47 @@
                                             </button>
                                         </td>
                                         <td class="text-center">
-                                            <button type="button"
-                                                class="btn btn-info btn-sm mb-2"
-                                                style="min-width:90px;"
-                                                data-toggle="modal" data-target="#editOngkir{{ $item->idpenjualan }}">
-                                                Edit Ongkir
-                                            </button>
-                                            @if($item->statuspembayaran == 'DP' && $item->sisabayar > 0)
-                                                <button class="btn btn-warning btn-sm" style="min-width:90px;" data-toggle="modal" data-target="#edit{{ $item->idpenjualan }}">Pelunasan</button>
-                                            @else
-                                                <button class="btn btn-success btn-sm" style="min-width:90px;" disabled> Tuntas</span>
-                                            @endif
-                                            <!-- Hapus  -->
-                                            <form action="{{ route('owner.penjualan.hapus', $item->idpenjualan) }}"
-                                                method="POST"
-                                                class="form-hapus-penjualan mt-2"
-                                                data-nota="{{ $item->notajual }}">
-                                                @csrf
-                                                @method('DELETE')
-
-                                                <button type="submit" class="btn btn-danger btn-sm">
-                                                    <i class="mdi mdi-delete"></i> Hapus
+                                            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 110px;">
+                                                {{-- EDIT ONGKIR --}}
+                                                <button type="button"
+                                                    class="btn btn-sm"  
+                                                    style="width: 110px; height: 34px; background: #4285a8 !important; color: #ffffff !important; border: none !important; border-radius: 5px; font-size: 12px; font-weight: 600;"
+                                                    data-toggle="modal"
+                                                    data-target="#editOngkir{{ $item->idpenjualan }}">
+                                                    Edit Ongkir
                                                 </button>
-                                            </form>
-                                            {{-- <div class="mt-2">
-                                                <a href="{{ url('owner/nota', $item->notajual) }}" target="_blank" class="btn btn-info btn-sm mr-1 mb-1">Nota</a>
-                                                <a href="{{ url('owner/faktur', $item->notajual) }}" target="_blank" class="btn btn-primary btn-sm mb-1">Faktur</a>
-                                            </div> --}}
+                                                {{-- PELUNASAN / TUNTAS --}}
+                                                @if($item->statuspembayaran == 'DP' && $item->sisabayar > 0)
+                                                    <button type="button"
+                                                        class="btn btn-sm"
+                                                        style="width: 110px; height: 34px; background: #ffaf03 !important; color: #000000 !important; border: none !important; border-radius: 5px; font-size: 12px; font-weight: 600;"
+                                                        data-toggle="modal"
+                                                        data-target="#edit{{ $item->idpenjualan }}">
+                                                        Pelunasan
+                                                    </button>
+                                                @else
+                                                    <button type="button"
+                                                        class="btn btn-sm"
+                                                        style="width: 110px; height: 34px; background: #0470ec !important; color: #ffffff !important; border: none !important; border-radius: 5px; font-size: 12px; font-weight: 600;"
+                                                        disabled>
+                                                        Tuntas
+                                                    </button>
+                                                @endif
+                                                {{-- HAPUS --}}
+                                                <form action="{{ route('owner.penjualan.hapus', $item->idpenjualan) }}"
+                                                    method="POST"
+                                                    class="form-hapus-penjualan"
+                                                    data-nota="{{ $item->notajual }}"
+                                                    style="width: 110px; margin: 0;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                        class="btn btn-sm"
+                                                        style="width: 110px; height: 34px; background: #ff4254 !important; color: #ffffff !important; border: none !important; border-radius: 5px; font-size: 12px; font-weight: 600;">
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -458,7 +472,8 @@
                                                 Simpan Ongkir
                                             </button>
                                             <button type="button"
-                                                class="btn btn-secondary"
+                                                class="btn text-white"
+                                                style="background-color: #6c757d; border: none; font-weight: 600; padding: 10px 24px; min-height: 47px;"
                                                 data-dismiss="modal">
                                                 Batal
                                             </button>

@@ -151,29 +151,36 @@
                                         </td>
                                         <td class="text-center">
                                             @if (!$sudahDipulihkan && !$sudahPermanen)
-                                                {{-- Tombol Pulihkan hanya tersedia selama 30 hari --}}
-                                                @if (!$melewatiBatas)
-                                                    <form action="{{ route('owner.historyhapus.pulihkan', $item->id) }}"
-                                                          method="POST"
-                                                          class="d-inline form-pulihkan">
+                                                <div style="display:flex; align-items:center; justify-content:center; gap:8px; min-width:190px;">
+                                                    @if (!$melewatiBatas)
+                                                        <form action="{{ route('owner.historyhapus.pulihkan', $item->id) }}"
+                                                            method="POST"
+                                                            class="form-pulihkan"
+                                                            style="margin:0; flex:1;">
+                                                            @csrf
+                                                            <button type="submit"
+                                                                class="btn btn-sm btn-restore"
+                                                                style="width:100%; min-width:105px; min-height:36px; padding:7px 10px; background:#25975a; color:#fff; border:none; border-radius:5px; font-size:11px; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:5px;">
+                                                                <i class="mdi mdi-restore" style="font-size:15px;"></i>
+                                                                Pulihkan
+                                                            </button>
+                                                        </form>
+                                                    @endif
+
+                                                    <form action="{{ route('owner.historyhapus.permanen', $item->id) }}"
+                                                        method="POST"
+                                                        class="form-hapus-permanen"
+                                                        style="margin:0; flex:1;">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-restore btn-sm">
-                                                            <i class="mdi mdi-restore"></i> Pulihkan
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="btn btn-sm btn-permanent"
+                                                            style="width:100%; min-width:105px; min-height:36px; padding:7px 10px; background:#c94343; color:#fff; border:none; border-radius:5px; font-size:11px; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:5px;">
+                                                            <i class="mdi mdi-delete-forever" style="font-size:15px;"></i>
+                                                            Hapus Permanen
                                                         </button>
                                                     </form>
-                                                @endif
-
-                                                {{-- Owner boleh menghapus permanen kapan saja --}}
-                                                <form action="{{ route('owner.historyhapus.permanen', $item->id) }}"
-                                                      method="POST"
-                                                      class="d-inline form-hapus-permanen">
-                                                    @csrf
-                                                    @method('DELETE')
-
-                                                    <button type="submit" class="btn btn-permanent btn-sm">
-                                                        <i class="mdi mdi-delete-forever"></i> Hapus Permanen
-                                                    </button>
-                                                </form>
+                                                </div>
                                             @else
                                                 <span class="text-muted">—</span>
                                             @endif
