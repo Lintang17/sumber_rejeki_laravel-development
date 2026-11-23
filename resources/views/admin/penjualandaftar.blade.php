@@ -12,11 +12,9 @@
                             Daftar Penjualan
                         </h4>
                         @php
-                            $tahunSekarang = (int) date('Y');
+                            $tahunSekarang = now()->year;
                             $tahunAwal = 2025;
                             $tahunAkhir = $tahunSekarang + 5;
-                            $tahunDipilih = request('tahun', $tahunSekarang);
-
                             $daftarBulan = [
                                 1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
                                 4 => 'April', 5 => 'Mei', 6 => 'Juni',
@@ -24,7 +22,9 @@
                                 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
                             ];
 
-                            $bulanDipilih = (int) request('bulan', 0);
+                            $bulanDipilih = (int) $bulanDipilih;
+                            $tahunDipilih = (int) $tahunDipilih;
+
                         @endphp
 
                         <form method="GET"
@@ -98,7 +98,7 @@
                             </div>
 
                             {{-- RESET --}}
-                            <a href="{{ url()->current() }}"
+                            <a href="{{ url()->current() }}?bulan={{ now()->month }}&tahun={{ now()->year }}"
                                 class="btn btn-light btn-sm font-weight-bold">
                                 <i class="mdi mdi-refresh"></i>
                                 Reset
@@ -500,14 +500,12 @@
             background-color: #ffffff !important;
             background-image: none !important;
         }
-
         #table > tbody > tr > td,
         #table > tfoot > tr > th {
             background: #fff3cd !important;
             background-color: #fff3cd !important;
             background-image: none !important;
         }
-
         #table table th,
         #table table td {
             background: #fff3cd !important;

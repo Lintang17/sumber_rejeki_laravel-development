@@ -280,21 +280,23 @@ public function showroomhapus($id)
 
 public function penjualandaftar(Request $request)
 {
-    // $data['penjualan'] = PenjualanModel::with('penjualandetail')->orderBy('tanggalpenjualan', 'desc')->get();
-    // return view('admin.penjualandaftar', $data);
-     $query = PenjualanModel::with('penjualandetail');
+    $bulan = (int) $request->input('bulan', now()->month);
+    $tahun = (int) $request->input('tahun', now()->year);
 
-    if ($request->filled('bulan')) {
-        $query->whereMonth('tanggalpenjualan', $request->bulan);
-    }
+    $request->validate([
+        'bulan' => 'nullable|integer|between:1,12',
+        'tahun' => 'nullable|integer|min:2025|max:' . (now()->year + 5),
+    ]);
 
-    if ($request->filled('tahun')) {
-        $query->whereYear('tanggalpenjualan', $request->tahun);
-    }
-
+    $query = PenjualanModel::with('penjualandetail')
+        ->whereMonth('tanggalpenjualan', $bulan)
+        ->whereYear('tanggalpenjualan', $tahun);
     $data['penjualan'] = $query
         ->orderBy('tanggalpenjualan', 'desc')
         ->get();
+
+    $data['bulanDipilih'] = $bulan;
+    $data['tahunDipilih'] = $tahun;
 
     return view('admin.penjualandaftar', $data);
 }
