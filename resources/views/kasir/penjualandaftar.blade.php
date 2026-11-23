@@ -16,7 +16,7 @@
                                 $tahunSekarang = (int) date('Y');
                                 $tahunAwal = 2025;
                                 $tahunAkhir = $tahunSekarang + 5;
-                                $tahunDipilih = request('tahun', $tahunSekarang);
+                                $tahunDipilih = (int) ($tahun ?? $tahunSekarang);
 
                                 $daftarBulan = [
                                     1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
@@ -25,7 +25,7 @@
                                     10 => 'Oktober', 11 => 'November', 12 => 'Desember',
                                 ];
 
-                                $bulanDipilih = (int) request('bulan', 0);
+                                $bulanDipilih = (int) ($bulan ?? date('n'));
                             @endphp
 
                             <form method="GET"
@@ -170,9 +170,12 @@
 
                                             $grandTotalTransaksi = (float) ($item->grandtotal ?? 0);
 
-                                            $totalpemasukan +=
-                                                (float) ($item->dp ?? 0) +
-                                                (float) ($item->sisabayar ?? 0);
+                                            // Hitung uang yang benar-benar diterima.
+                                            $totalpemasukan += max(
+                                                0,
+                                                (float) ($item->bayar ?? 0) -
+                                                (float) ($item->kembali ?? 0)
+                                            );
 
                                             $belumLunas = ($item->sisabayar ?? 0) > 0;
                                         @endphp
@@ -562,9 +565,11 @@
                                                                 </div>
                                                             </div>
                                                             <div class="row">
-                                                                <div class="col-5 text-dark">Status</div>
+                                                                <div class="col-5 text-dark">Status Pembayaran</div>
                                                                 <div class="col-7 text-right">
-                                                                    {{ $item->statustransaksi ?? '-' }}
+                                                                    <span class="badge {{ $item->statuspembayaran == 'Lunas' ? 'badge-success' : 'badge-warning' }}">
+                                                                        {{ $item->statuspembayaran ?? '-' }}
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         </div>

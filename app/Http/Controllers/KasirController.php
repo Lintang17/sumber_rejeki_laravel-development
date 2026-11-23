@@ -105,22 +105,31 @@ class KasirController extends Controller
 
 public function penjualandaftar(Request $request)
 {
-    // $data['penjualan'] = PenjualanModel::with('penjualandetail')->orderBy('tanggalpenjualan', 'desc')->get();
-    // return view('kasir.penjualandaftar', $data);
+    // Default bulan dan tahun adalah periode sekarang.
+    $bulan = $request->filled('bulan')
+        ? (int) $request->bulan
+        : now()->month;
 
-    $query = PenjualanModel::with('penjualandetail.showroom');
+    $tahun = $request->filled('tahun')
+        ? (int) $request->tahun
+        : now()->year;
 
-    if ($request->filled('bulan')) {
-        $query->whereMonth('tanggalpenjualan', $request->bulan);
+    // Validasi filter.
+    if ($bulan < 1 || $bulan > 12) {
+        $bulan = now()->month;
+    }
+    if ($tahun < 2025 || $tahun > now()->year + 5) {
+        $tahun = now()->year;
     }
 
-    if ($request->filled('tahun')) {
-        $query->whereYear('tanggalpenjualan', $request->tahun);
-    }
-
-    $data['penjualan'] = $query
+    $data['penjualan'] = PenjualanModel::with('penjualandetail.showroom')
+        ->whereMonth('tanggalpenjualan', $bulan)
+        ->whereYear('tanggalpenjualan', $tahun)
         ->orderBy('tanggalpenjualan', 'desc')
         ->get();
+
+    $data['bulan'] = $bulan;
+    $data['tahun'] = $tahun;
 
     return view('kasir.penjualandaftar', $data);
 }
