@@ -15,7 +15,8 @@
                             $tahunSekarang = (int) date('Y');
                             $tahunAwal = 2025;
                             $tahunAkhir = $tahunSekarang + 5;
-                            $tahunDipilih = request('tahun', $tahunSekarang);
+                            $tahunDipilih = (int) request('tahun', $tahunSekarang);
+                            $bulanDipilih = (int) request('bulan', date('n'));
 
                             $daftarBulan = [
                                 1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
@@ -23,8 +24,6 @@
                                 7 => 'Juli', 8 => 'Agustus', 9 => 'September',
                                 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
                             ];
-
-                            $bulanDipilih = (int) request('bulan', 0);
                         @endphp
 
                         <form method="GET"
@@ -392,26 +391,9 @@
         document.querySelectorAll(
             '#formFilterPeriode input[type="radio"]'
         ).forEach(function (input) {
+
             input.addEventListener('change', function () {
-                const form = this.form;
-                const nama = this.name;
-
-                document.querySelectorAll(
-                    '#formFilterPeriode input[name="' + nama + '"]'
-                ).forEach(function (radio) {
-                    const label = radio.closest('label');
-                    if (!label) return;
-
-                    label.classList.toggle('btn-primary', radio.checked);
-                    label.classList.toggle(
-                        'btn-outline-secondary',
-                        !radio.checked
-                    );
-                });
-
-                if (form) {
-                    form.submit();
-                }
+                document.getElementById('formFilterPeriode').submit();
             });
         });
     }
@@ -419,7 +401,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         tandaiPilihanFilter();
     });
-
 </script>
 
 <style>
@@ -428,14 +409,12 @@
             background-color: #ffffff !important;
             background-image: none !important;
         }
-
         #table > tbody > tr > td,
         #table > tfoot > tr > th {
             background: #fff3cd !important;
             background-color: #fff3cd !important;
             background-image: none !important;
         }
-
         #table table th,
         #table table td {
             background: #fff3cd !important;

@@ -31,7 +31,6 @@
                     @if($poDisetujui > 0)
                     <div class="alert alert-info alert-dismissible fade show mb-4" role="alert"
                          style="border-left:5px solid #17a2b8;">
-                        <i class="fas fa-info-circle mr-2"></i>
                         <strong>Informasi:</strong>
                         Terdapat <strong>{{ $poDisetujui }} Purchase Order</strong> yang telah berstatus
                         <strong>Disetujui</strong>.
@@ -57,11 +56,12 @@
                         </div>
                         
                         @php
-                            $tahunSekarang = (int) date('Y');
+                            $tahunSekarang = (int) now()->year;
                             $tahunAwal = 2025;
                             $tahunAkhir = $tahunSekarang + 5;
                             $tahunDipilih = (int) request('tahun', $tahunSekarang);
-                            $bulanDipilih = (int) request('bulan', 0);
+                            $bulanDipilih = (int) request('bulan', now()->month);
+                            
                             $daftarBulan = [
                                 1 => 'Januari',
                                 2 => 'Februari',
@@ -192,7 +192,7 @@
                                     <td>
                                         <strong>{{ $item->kode_po }}</strong>
                                         <br>
-                                        <small class="text-muted">
+                                        <small class="text-dark">
                                             <i class="far fa-calendar-alt mr-1"></i>
                                             {{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}
                                         </small>
@@ -759,8 +759,8 @@ $(document).ready(function () {
         dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>tip'
     });
 
-    let selectedMonth = @json((string) request('bulan', ''));
-    let selectedYear = @json((string) request('tahun', date('Y')));
+    let selectedMonth = @json((string) request('bulan', now()->month));
+    let selectedYear = @json((string) request('tahun', now()->year));
 
     function filterPO(settings, data, dataIndex) {
         if (settings.nTable.id !== 'table') {
@@ -807,7 +807,6 @@ $(document).ready(function () {
     }
 
     $.fn.dataTable.ext.search.push(filterPO);
-
     function refreshFilter() {
         table.draw();
     }
@@ -836,7 +835,6 @@ $(document).ready(function () {
 
     $('input[name="pilihTahun"]').on('change', function () {
         let tahun = $(this).val();
-
         let url = new URL(window.location.href);
         url.searchParams.set('tahun', tahun);
 
@@ -849,12 +847,12 @@ $(document).ready(function () {
         window.location.href = url.toString();
     });
 
-   // Reset filter ke bulan dan tahun sekarang
+    // Reset filter ke bulan dan tahun sekarang
     $('#resetFilter').on('click', function () {
         let url = new URL("{{ url()->current() }}");
-        url.searchParams.set('bulan', '{{ date('n') }}');
-        url.searchParams.set('tahun', '{{ date('Y') }}');
-        window.location.href = url.toString();  
+        url.searchParams.set('bulan', '{{ now()->month }}');
+        url.searchParams.set('tahun', '{{ now()->year }}');
+        window.location.href = url.toString();
     });
 
     // Konfirmasi proses PO

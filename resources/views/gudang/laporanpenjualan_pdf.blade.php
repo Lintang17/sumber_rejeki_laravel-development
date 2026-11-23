@@ -7,29 +7,30 @@
     <style>
         body {
             font-family: sans-serif;
-            font-size: 12px;
+            font-size: 11px;
         }
-
         .header {
             text-align: center;
             margin-bottom: 20px;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
         }
-
         th, td {
             border: 1px solid #000;
             padding: 6px;
-            text-align: left;
         }
-
         th {
             background-color: #eee;
             text-align: center;
+        }
+        td.center {
+            text-align: center;
+        }
+        td.right {
+            text-align: right;
         }
     </style>
 </head>
@@ -39,69 +40,80 @@
         <h2 style="margin: 0;">Laporan Penjualan Gudang</h2>
         <h3 style="margin: 0; font-weight: normal;">UD Sumber Rejeki</h3>
         <p style="margin: 0;">Jl. Gajah Mada No.197, Rambipuji, Jember</p>
-
         <p style="margin-top: 5px;">
-            Periode:
-            @if (request('bulan') && request('tahun'))
-                {{ \Carbon\Carbon::createFromDate(request('tahun'), request('bulan'), 1)->translatedFormat('F Y') }}
-            @elseif (request('tahun'))
-                Tahun {{ request('tahun') }}
-            @elseif (request('bulan'))
-                {{ \Carbon\Carbon::createFromDate(now()->year, request('bulan'), 1)->translatedFormat('F') }}
-            @else
-                Semua Periode
-            @endif
+            Periode: {{ $periode }}
         </p>
     </div>
+
+    @php
+        $totalPemasukan = collect($data)->sum(function ($item) {
+            return (float) ($item['total'] ?? 0);
+        });
+    @endphp
 
     <table>
         <thead>
             <tr>
                 <th>No</th>
-                <th>Tanggal Penjualan</th>
-                <th>No Nota</th>
+                <th>Tanggal</th>
+                <th>No Referensi</th>
+                <th>Referensi</th>
                 <th>Nama Produk</th>
-                <th>Jumlah Terjual</th>
+                <th>Jumlah</th>
                 <th>Harga Satuan</th>
-                <th>Total Penjualan</th>
-                <th>Status Pengiriman</th>
+                <th>Total</th>
+                <th>Status</th>
             </tr>
         </thead>
 
         <tbody>
-            @php $nomor = 1; @endphp
-
-            @foreach ($data as $item)
-                @foreach ($item->penjualandetail as $detail)
-                    <tr>
-                        <td>{{ $nomor++ }}</td>
-                        <td>
-                            {{ $item->tanggalpenjualan
-                                ? \Carbon\Carbon::parse($item->tanggalpenjualan)->format('d-m-Y')
-                                : '-' }}
-                        </td>
-                        <td>{{ $item->notajual ?? '-' }}</td>
-                        <td>{{ $detail->namaproduk ?? '-' }}</td>
-                        <td>{{ $detail->jumlah_pembelian ?? 0 }}</td>
-                        <td>
-                            Rp {{ number_format($detail->harga ?? 0, 0, ',', '.') }}
-                        </td>
-                        <td>
-                            Rp {{ number_format($detail->total ?? 0, 0, ',', '.') }}
-                        </td>
-                        <td>{{ $item->statuspengiriman ?? '-' }}</td>
-                    </tr>
-                @endforeach
-            @endforeach
-
-            @if ($nomor === 1)
+            @forelse ($data as $item)
                 <tr>
-                    <td colspan="8" style="text-align: center;">
+                    <td class="center">{{ $loop->iteration }}</td>
+                    <td class="center">
+                        {{ !empty($item['tanggal'])
+                            ? \Carbon\Carbon::parse($item['tanggal'])->format('d-m-Y')
+                            : '-' }}
+                    </td>
+                    <td class="center">
+                        {{ $item['nomor_referensi'] ?? '-' }}
+                    </td>
+                    <td class="center">
+                        {{ $item['referensi'] ?? '-' }}
+                    </td>
+                    <td>{{ $item['nama_produk'] ?? '-' }}</td>
+                    <td class="center">
+                        {{ $item['jumlah'] ?? 0 }}
+                    </td>
+                    <td class="right">
+                        Rp {{ number_format((float) ($item['harga'] ?? 0), 0, ',', '.') }}
+                    </td>
+                    <td class="right">
+                        Rp {{ number_format((float) ($item['total'] ?? 0), 0, ',', '.') }}
+                    </td>
+                    <td class="center">
+                        {{ $item['status'] ?? '-' }}
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="9" style="text-align: center;">
                         Belum ada data penjualan.
                     </td>
                 </tr>
-            @endif
+            @endforelse
         </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background-color: #e8f0fe;">
+                <td colspan="7" style="text-align: right;">
+                    TOTAL KESELURUHAN
+                </td>
+                <td class="right">
+                    Rp {{ number_format($totalPemasukan, 0, ',', '.') }}
+                </td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 </body>
 </html>

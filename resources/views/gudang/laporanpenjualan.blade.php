@@ -12,10 +12,8 @@
                         $tahunSekarang = (int) date('Y');
                         $tahunAwal = 2025;
                         $tahunAkhir = $tahunSekarang + 5;
-
                         $tahunDipilih = (int) request('tahun', $tahunSekarang);
                         $bulanDipilih = (int) request('bulan', 0);
-
                         $daftarBulan = [
                             1 => 'Januari',
                             2 => 'Februari',
@@ -173,74 +171,84 @@
                         </div>
                     </div>
 
+                    @php
+                        $totalPemasukan = collect($data)->sum(function ($item) {
+                            return (float) ($item['total'] ?? 0);
+                        });
+                    @endphp
+
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped"
                                id="table"
-                               style="width:100%; min-width:850px;">
+                               style="width:100%; min-width:1050px;">
 
                             <thead class="thead-light">
                                 <tr>
                                     <th class="text-center">No</th>
-                                    <th class="text-center">Tanggal Penjualan</th>
+                                    <th class="text-center">Tanggal</th>
                                     <th class="text-center">No Nota</th>
+                                    <th class="text-center">Referensi</th>
                                     <th class="text-center">Nama Produk</th>
                                     <th class="text-center">Jumlah Terjual</th>
                                     <th class="text-center">Harga Satuan</th>
-                                    <th class="text-center">Total Penjualan</th>
-                                    <th class="text-center">Status Pengiriman</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Status</th>
                                 </tr>
                             </thead>
-
                             <tbody>
-                                @php $nomor = 1; @endphp
-
-                                @foreach ($data as $item)
-                                    @foreach ($item->penjualandetail as $detail)
-                                        <tr>
-                                            <td class="text-center">{{ $nomor++ }}</td>
-
-                                            <td class="text-center">
-                                                {{ $item->tanggalpenjualan
-                                                    ? \Carbon\Carbon::parse($item->tanggalpenjualan)->format('d-m-Y')
-                                                    : '-' }}
-                                            </td>
-
-                                            <td class="text-center">
-                                                {{ $item->notajual ?? '-' }}
-                                            </td>
-
-                                            <td>{{ $detail->namaproduk ?? '-' }}</td>
-
-                                            <td class="text-center">
-                                                {{ $detail->jumlah_pembelian ?? 0 }}
-                                            </td>
-
-                                            <td class="text-right text-nowrap">
-                                                Rp {{ number_format($detail->harga ?? 0, 0, ',', '.') }}
-                                            </td>
-
-                                            <td class="text-right text-nowrap">
-                                                Rp {{ number_format($detail->total ?? 0, 0, ',', '.') }}
-                                            </td>
-
-                                            <td class="text-center">
-                                                {{ $item->statuspengiriman ?? '-' }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @endforeach
-
-                                @if ($nomor === 1)
+                                @forelse ($data as $item)
                                     <tr>
-                                        <td colspan="8" class="text-center">
-                                            Belum ada data penjualan.
+                                        <td class="text-center">{{ $loop->iteration }}</td>
+                                        <td class="text-center">
+                                            {{ !empty($item['tanggal'])
+                                                ? \Carbon\Carbon::parse($item['tanggal'])->format('d-m-Y')
+                                                : '-' }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ $item['nomor_referensi'] ?? '-' }}
+                                        </td>
+                                        <td class="text-center">
+                                            @if (($item['referensi'] ?? '') === 'PO')
+                                                <span class="badge badge-info">PO</span>
+                                            @else
+                                                <span class="badge badge-primary">Penjualan</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $item['nama_produk'] ?? '-' }}</td>
+                                        <td class="text-center">
+                                            {{ $item['jumlah'] ?? 0 }}
+                                        </td>
+                                        <td class="text-right text-nowrap">
+                                            Rp {{ number_format((float) ($item['harga'] ?? 0), 0, ',', '.') }}
+                                        </td>
+                                        <td class="text-right text-nowrap">
+                                            Rp {{ number_format((float) ($item['total'] ?? 0), 0, ',', '.') }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ $item['status'] ?? '-' }}
                                         </td>
                                     </tr>
-                                @endif
+                                @empty
+                                    <tr>
+                                        <td colspan="9" class="text-center">
+                                            Belum ada data.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
+                            <tfoot>
+                                <tr class="font-weight-bold" style="background-color: #e8f0fe;">
+                                    <td colspan="7" class="text-right">
+                                        TOTAL KESELURUHAN
+                                    </td>
+                                    <td class="text-right text-nowrap text-bold">
+                                        Rp {{ number_format($totalPemasukan, 0, ',', '.') }}
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
-
                 </div>
             </div>
         </div>
