@@ -29,7 +29,7 @@ class GudangController extends Controller
     public function dashboard()
     {
         $data['jumlahproduk'] = ProduksiModel::count();
-        $data['totalstokopname'] = StokOpnameModel::count();
+        $data['totalstokopname'] = StokOpnameModel::whereHas('showroom.produksi')->count();
         $data['menungguKonfirmasi'] = PenjualanModel::where('statuspengiriman','Menunggu Konfirmasi')->distinct('notajual')->count('notajual');
         $data['poBaru'] = Po::whereIn('status', [
                 'Pending',
@@ -331,35 +331,46 @@ public function opnametambah($id)
 public function opnamesimpan(Request $request)
 {
     $request->validate([
-        'showroom_id' => 'required|exists:showroom,idshowroom',
+        'showroom_id' => 'required|integer',
         'tanggal_opname' => 'required|date',
         'stok_fisik' => 'required|integer|min:0',
         'keterangan' => 'nullable|string',
     ]);
 
-    $showroom = ShowroomModel::findOrFail($request->showroom_id);
-    $stok_sistem = $showroom->stok_sisa;
-    $stok_fisik = $request->stok_fisik;
-    $selisih = $stok_fisik - $stok_sistem;
+    return DB::transaction(function () use ($request) {
 
-    StokOpnameModel::create([
-        'showroom_id'     => $request->showroom_id,
-        'tanggal_opname'  => $request->tanggal_opname,
-        'stok_sistem'     => $stok_sistem,
-        'stok_fisik'      => $stok_fisik,
-        'selisih'         => $selisih,
-        'keterangan'      => $request->keterangan,
-    ]);
+        // Pastikan barang showroom dan produksinya masih aktif
+        $showroom = ShowroomModel::whereHas('produksi')
+            ->lockForUpdate()
+            ->findOrFail($request->showroom_id);
 
-    return redirect()->route('stokopname.daftar')->with('success', 'Stok opname berhasil disimpan.');
+        $stok_sistem = $showroom->stok_sisa;
+        $stok_fisik = $request->stok_fisik;
+        $selisih = $stok_fisik - $stok_sistem;
+
+        StokOpnameModel::create([
+            'showroom_id' => $showroom->idshowroom,
+            'tanggal_opname' => $request->tanggal_opname,
+            'stok_sistem' => $stok_sistem,
+            'stok_fisik' => $stok_fisik,
+            'selisih' => $selisih,
+            'keterangan' => $request->keterangan,
+        ]);
+
+        return redirect()
+            ->route('stokopname.daftar')
+            ->with('success', 'Stok opname berhasil disimpan.');
+    });
 }
 
 public function opnameriwayat()
 {
-    $data = StokOpnameModel::with('showroom.produksi')
-        ->whereHas('showroom.produksi')
-        ->latest()
-        ->get();
+    $data = StokOpnameModel::with([
+        'showroom.produksi'
+    ])
+    ->whereHas('showroom.produksi')
+    ->orderByDesc('tanggal_opname')
+    ->get();
 
     return view('gudang.stokopnameriwayat', compact('data'));
 }

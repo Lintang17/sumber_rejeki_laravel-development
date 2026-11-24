@@ -6,15 +6,12 @@
         <div class="col-lg-12 stretch-card">
             <div class="card">
                 <div class="card-body">
-
                     <h4 class="card-title">Riwayat Hasil Stok Opname</h4>
-
                     @if(session('success'))
                         <div class="alert alert-success">
                             {{ session('success') }}
                         </div>
                     @endif
-
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped" id="table">
                             <thead>
@@ -32,8 +29,14 @@
                                 @forelse ($data as $index => $item)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
-                                        <td>{{ $item->showroom->produksi->namaproduk ?? '-' }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($item->tanggal_opname)->format('d-m-Y') }}</td>
+                                        <td>
+                                            {{ $item->showroom?->produksi?->namaproduk ?? '-' }}
+                                        </td>
+                                        <td>
+                                            {{ $item->tanggal_opname
+                                                ? \Carbon\Carbon::parse($item->tanggal_opname)->format('d-m-Y')
+                                                : '-' }}
+                                        </td>
                                         <td>{{ $item->stok_sistem }}</td>
                                         <td>{{ $item->stok_fisik }}</td>
                                         <td class="{{ $item->selisih < 0 ? 'text-danger' : ($item->selisih > 0 ? 'text-success' : '') }}">
@@ -43,13 +46,14 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted">Belum ada data stok opname.</td>
+                                        <td colspan="7" class="text-center text-muted">
+                                            Belum ada data stok opname.
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -60,7 +64,7 @@
 @push('scripts')
 <script>
     $(document).ready(function () {
-        $('#tabelStokOpname').DataTable({
+        $('#table').DataTable({
             language: {
                 search: "Cari:",
                 lengthMenu: "Tampilkan _MENU_ entri",
@@ -75,4 +79,3 @@
     });
 </script>
 @endpush
-
