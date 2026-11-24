@@ -77,7 +77,6 @@
                                                 @endif
                                             </div>
                                         </td>
-
                                         <td>
                                             @if($item->produksi && $item->produksi->fotoproduk)
                                                 <button type="button" class="btn btn-link p-0" data-toggle="modal" data-target="#fotoModal{{ $item->idshowroom }}">

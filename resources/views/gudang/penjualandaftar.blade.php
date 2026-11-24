@@ -115,6 +115,14 @@
                                 ? '-'
                                 : rupiah($nilai);
                         };
+
+                        $formatDiskon = function ($nilai) {
+                            $nilai = (float) ($nilai ?? 0); 
+                            return rtrim(
+                                rtrim(number_format($nilai, 4, ',', '.'), '0'),
+                                ','
+                            );
+                        };
                     @endphp
 
                     <div class="table-responsive">
@@ -230,7 +238,7 @@
                                                                 {{ $jenisDiskon }}
                                                             </td>
                                                             <td class="text-center text-nowrap">
-                                                                {{ rtrim(rtrim(number_format($persenDiskon, 2, ',', '.'), '0'), ',') }}%
+                                                                {{ $persenDiskon > 0 ? $formatDiskon($persenDiskon) . '%' : '-' }}
                                                             </td>
                                                             <td class="text-right text-nowrap">
                                                                 {{ rupiah($totalBaris) }}
