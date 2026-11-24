@@ -33,11 +33,12 @@
                         </div>
 
                         @php
-                            $tahunSekarang = (int) date('Y');
+                            $tahunSekarang = (int) now()->year;
+                            $bulanSekarang = (int) now()->month;
                             $tahunAwal = 2025;
                             $tahunAkhir = $tahunSekarang + 5;
                             $tahunDipilih = (int) request('tahun', $tahunSekarang);
-                            $bulanDipilih = (int) request('bulan', 0);
+                            $bulanDipilih = (int) request('bulan', $bulanSekarang);
                             $daftarBulan = [
                                 1 => 'Januari',
                                 2 => 'Februari',
@@ -207,14 +208,20 @@
                             </thead>
                             <tbody>
                                 @foreach($po as $index => $item)
+                                @php
+                                    $totalHargaJualPO = $item->detail->sum(function ($detail) {
+                                        return (float) ($detail->qty ?? 0) * (float) ($detail->harga_jual ?? 0);
+                                    });
+                                @endphp
                                 <tr data-status="{{ $item->status }}" 
                                     data-date="{{ \Carbon\Carbon::parse($item->tanggal)->format('Y-m') }}"
-                                    data-search="{{ $item->kode_po }} {{ $item->customer }}">
+                                    data-search="{{ $item->kode_po }} {{ $item->customer }}"
+                                    data-total-harga-jual="{{ $totalHargaJualPO }}">
                                     <td class="text-center">{{ $index + 1 }}</td>
                                     <td>
                                         <strong>{{ $item->kode_po }}</strong>
                                         <br>
-                                        <small class="text-muted">
+                                        <small class="text-dark">
                                             <i class="far fa-calendar-alt mr-1"></i>
                                             {{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}
                                         </small>
@@ -223,7 +230,7 @@
                                         <strong>{{ $item->customer }}</strong>
                                         <br>
                                         <a href="#" class="text-primary" data-toggle="modal" data-target="#customer{{ $item->id }}">
-                                            <i class="fas fa-eye mr-1"></i> Lihat Detail
+                                        Lihat Detail
                                         </a>
                                     </td>
                                     <td>
@@ -384,6 +391,31 @@
                                 </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="14" style="padding:15px 20px; background:#f8f9fa;">
+                                        <div class="d-flex justify-content-center">
+                                            <div class="d-flex align-items-center justify-content-between"
+                                                style="
+                                                    width:380px;
+                                                    max-width:100%;
+                                                    padding:12px 20px;
+                                                    background:#EAF7EF;
+                                                    gap:25px;">
+
+                                                <span class="font-weight-bold text-dark"    
+                                                    style="font-size:16px; white-space:nowrap;">
+                                                    Total Keseluruhan
+                                                </span>
+                                                <span class="font-weight-bold text-dark totalHargaJualPO"
+                                                    style="font-size:17px; white-space:nowrap;">
+                                                    Rp 0
+                                                </span>         
+                                            </div>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -862,8 +894,33 @@ $(document).ready(function () {
         dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>tip'
     });
 
-    let selectedMonth = @json((string) request('bulan', ''));
-    let selectedYear = @json((string) request('tahun', date('Y')));
+    // Hitung total keseluruhan harga jual PO
+    function hitungTotalHargaJualPO() {
+        let total = 0;
+        table.rows({ search: 'applied' }).every(function () {
+            let row = this.node();
+            if (!row) return;
+            let harga = parseFloat(
+                row.getAttribute('data-total-harga-jual')
+            ) || 0;
+            total += harga;
+        });
+
+        let hasil = new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            maximumFractionDigits: 0
+        }).format(total);
+        $('.totalHargaJualPO').text(hasil);
+        console.log('Total Harga Jual PO:', total);
+    }
+
+    table.on('draw.dt', function () {
+        hitungTotalHargaJualPO();
+    });
+
+    let selectedMonth = @json((string) request('bulan', now()->month));
+    let selectedYear = @json((string) request('tahun', now()->year));
 
     // Filter khusus tabel PO Admin
     function filterPO(settings, data, dataIndex) {
@@ -918,6 +975,7 @@ $(document).ready(function () {
     }
 
     refreshFilter();
+    hitungTotalHargaJualPO();
 
     // Filter status
     $('#filterStatus').on('change', function () {
@@ -962,15 +1020,11 @@ $(document).ready(function () {
 
     // Reset filter
     $('#resetFilter').on('click', function () {
-
         let url = new URL("{{ url()->current() }}");
-
-        url.searchParams.set('bulan', '{{ date('n') }}');
-        url.searchParams.set('tahun', '{{ date('Y') }}');
-
+        url.searchParams.set('bulan', '{{ now()->month }}');
+        url.searchParams.set('tahun', '{{ now()->year }}');
         window.location.href = url.toString();
     });
-
 });
 
 function hapusPo(id, kode, status) {

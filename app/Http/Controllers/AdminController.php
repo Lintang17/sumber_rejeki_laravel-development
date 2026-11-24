@@ -1330,13 +1330,29 @@ public function barangmasukupdate(Request $request, $id)
     }
 
     // Sistem PO 
-    public function detailPo()
+  
+    public function detailPo(Request $request)
     {
+        // Default bulan dan tahun adalah sekarang
+        $bulan = (int) $request->input('bulan', now()->month);
+        $tahun = (int) $request->input('tahun', now()->year);
+        $request->validate([
+            'bulan' => 'nullable|integer|between:1,12',
+            'tahun' => 'nullable|integer|min:2025|max:' . (now()->year + 5),
+        ]);
+
+        // Ambil PO berdasarkan bulan dan tahun
         $po = Po::with('detail')
+            ->whereMonth('tanggal', $bulan)
+            ->whereYear('tanggal', $tahun)
             ->latest()
             ->get();
 
-        return view('admin.detail_po', compact('po'));
+        return view('admin.detail_po', compact(
+            'po',
+            'bulan',
+            'tahun'
+        ));
     }
 
     public function poTambah()
