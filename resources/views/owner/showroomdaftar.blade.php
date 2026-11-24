@@ -53,72 +53,46 @@
                                             @else
                                                 -
                                             @endif
-                                        </td>                                             
-                                        
+                                        </td>                                                                          
+
                                         <td class="align-middle">
                                             @if(auth()->check() && auth()->user()->role === 'Owner')
-                                                <form id="formDiskon{{ $item->idshowroom }}"
-                                                      action="{{ route('showroom.discount', $item->idshowroom) }}"
-                                                      method="POST">
-                                                      @csrf
-
+                                                <form action="{{ route('showroom.discount', $item->idshowroom) }}"
+                                                    method="POST">
+                                                    @csrf
                                                     <div class="mb-2">
-                                                        <label class="font-weight-bold mb-1">Jenis Diskon</label>
-                                                        <select name="jenis_diskon"
-                                                            class="form-control form-control-sm pilih-jenis-diskon"
-                                                            required>
-                                                            <option value="">-- Pilih Jenis --</option>
-                                                            <option value="non_partai">Non-Partai</option>
-                                                            <option value="partai">Partai</option>
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="d-flex align-items-center mb-2">
-                                                        <label class="font-weight-bold mb-0 mr-2"
-                                                            style="width:90px; min-width:90px;">
-                                                            Non-Partai
-                                                        </label>
-
-                                                        <div class="input-group input-group-sm"
-                                                            style="width:110px; flex-shrink:0;">
+                                                        <label class="font-weight-bold mb-1">Non-Partai</label>
+                                                        <div class="input-group input-group-sm" style="max-width:130px;">
                                                             <input type="text"
                                                                 name="discount"
-                                                                class="form-control text-center input-diskon"
-                                                                inputmode="numeric"
-                                                                pattern="[0-9]{1,3}"
-                                                                maxlength="3"
-                                                                value="{{ ($item->discount ?? 0) == 0 ? '' : $item->discount }}"
-                                                                placeholder="-"
-                                                                disabled>
+                                                                class="form-control text-center"
+                                                                inputmode="decimal"
+                                                                pattern="[0-9]+([,.][0-9]{1,4})?"
+                                                                maxlength="9"
+                                                                value="{{ old('discount', ($item->discount ?? 0) == 0 ? '' : rtrim(rtrim(number_format((float) $item->discount, 4, ',', ''), '0'), ',')) }}"
+                                                                placeholder="">
                                                             <div class="input-group-append">
                                                                 <span class="input-group-text">%</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <div class="d-flex align-items-center mb-3">
-                                                        <label class="font-weight-bold mb-0 mr-2"
-                                                            style="width:90px; min-width:90px;">
-                                                            Partai
-                                                        </label>
-
-                                                        <div class="input-group input-group-sm"
-                                                            style="width:110px; flex-shrink:0;">
+                                                    <div class="mb-3">
+                                                        <label class="font-weight-bold mb-1">Partai</label>
+                                                        <div class="input-group input-group-sm" style="max-width:130px;">
                                                             <input type="text"
                                                                 name="discount_partai"
-                                                                class="form-control text-center input-diskon"
-                                                                inputmode="numeric"
-                                                                pattern="[0-9]{1,3}"
-                                                                maxlength="3"
-                                                                value="{{ ($item->discount_partai ?? 0) == 0 ? '' : $item->discount_partai }}"
-                                                                placeholder="-"
-                                                                disabled>
+                                                                class="form-control text-center"
+                                                                inputmode="decimal"
+                                                                pattern="[0-9]+([,.][0-9]{1,4})?"
+                                                                maxlength="9"
+                                                                value="{{ old('discount_partai', ($item->discount_partai ?? 0) == 0 ? '' : rtrim(rtrim(number_format((float) $item->discount_partai, 4, ',', ''), '0'), ',')) }}"
+                                                                placeholder="">
                                                             <div class="input-group-append">
                                                                 <span class="input-group-text">%</span>
                                                             </div>
                                                         </div>
                                                     </div>
-
                                                     <button type="submit" class="btn btn-sm btn-primary px-3">
                                                         <i class="mdi mdi-content-save-outline"></i>
                                                         Simpan
@@ -126,35 +100,31 @@
                                                 </form>
                                             @else
                                                 @php
-                                                    $diskonNonPartai = (int) ($item->discount ?? 0);
-                                                    $diskonPartai = (int) ($item->discount_partai ?? 0);
-
-                                                    if ($diskonNonPartai > 0 && $diskonPartai > 0) {
-                                                        $jenisTampilan = 'Keduanya';
-                                                    } elseif ($diskonNonPartai > 0) {
-                                                        $jenisTampilan = 'Non-Partai';
-                                                    } elseif ($diskonPartai > 0) {
-                                                        $jenisTampilan = 'Partai';
-                                                    } else {
-                                                        $jenisTampilan = '-';
-                                                    }
+                                                    $diskonNonPartai = (float) ($item->discount ?? 0);
+                                                    $diskonPartai = (float) ($item->discount_partai ?? 0);
+                                                    $formatDiskon = function ($nilai) {
+                                                        return rtrim(
+                                                            rtrim(number_format($nilai, 4, ',', '.'), '0'),
+                                                            ','
+                                                        );
+                                                    };
                                                 @endphp
-
-                                                <div class="d-flex flex-column">
-                                                    <strong>{{ $jenisTampilan }}</strong>
-
-                                                    @if($diskonNonPartai > 0)
-                                                        <span class="mt-1">Non-Partai: {{ $diskonNonPartai }} %</span>
-                                                    @endif
-
-                                                    @if($diskonPartai > 0)
-                                                        <span class="mt-1">Partai: {{ $diskonPartai }} %</span>
-                                                    @endif
-
-                                                    @if($diskonNonPartai <= 0 && $diskonPartai <= 0)
-                                                        <span class="mt-1">-</span>
-                                                    @endif
-                                                </div>
+                                                @if($diskonNonPartai > 0 || $diskonPartai > 0)
+                                                    <div class="d-flex flex-column">
+                                                        @if($diskonNonPartai > 0)
+                                                            <span>
+                                                                Non-Partai: {{ $formatDiskon($diskonNonPartai) }}%
+                                                            </span>
+                                                        @endif
+                                                        @if($diskonPartai > 0)
+                                                            <span class="mt-1">
+                                                                Partai: {{ $formatDiskon($diskonPartai) }}%
+                                                            </span>
+                                                         @endif
+                                                    </div>
+                                                @else
+                                                    -
+                                                @endif
                                             @endif
                                         </td>
 
@@ -222,32 +192,11 @@
                             </tbody>
                         </table>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-(function () {
-    document.querySelectorAll('.pilih-jenis-diskon').forEach(function (select) {
-        var form = select.closest('form');
-        if (!form) return;
-
-        var nonPartai = form.querySelector('[name="discount"]');
-        var partai = form.querySelector('[name="discount_partai"]');
-
-        function aturInputDiskon() {
-            nonPartai.disabled = select.value !== 'non_partai';
-            partai.disabled = select.value !== 'partai';
-        }
-
-        select.addEventListener('change', aturInputDiskon);
-        aturInputDiskon();
-    });
-})();
-</script>
 
 <script>
 document.addEventListener('click', function (e) {

@@ -30,7 +30,7 @@ class OwnerController extends Controller
     public function dashboard()
     {
         $data['jumlahproduk'] = ProduksiModel::count();
-        $data['totalstokopname'] = StokOpnameModel::count();
+        $data['totalstokopname'] = StokOpnameModel::whereHas('showroom.produksi')->count();
         $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))
             ->whereYear('tanggalpenjualan', date('Y'))
             ->sum('grandtotal');
@@ -350,16 +350,25 @@ public function penjualanhapus($id)
 
 public function opnamedaftar()
 {
-    $data = ShowroomModel::with('produksi')->get();
+    $data = ShowroomModel::whereHas('produksi')
+        ->with('produksi')
+        ->orderBy('tanggalmasuk', 'desc')
+        ->get();
+
     return view('owner.stokopnamedaftar', compact('data'));
 }
 
 public function opnameriwayat()
 {
-    $data = StokOpnameModel::with('showroom.produksi')->latest()->get();
+    $data = StokOpnameModel::with([
+        'showroom.produksi'
+    ])
+    ->whereHas('showroom.produksi')
+    ->orderByDesc('tanggal_opname')
+    ->get();
+
     return view('owner.stokopnameriwayat', compact('data'));
 }
-
 
 //public function produksireviewlist()
 //{
@@ -1053,38 +1062,66 @@ public function opnameriwayat()
             abort(403, 'Anda tidak memiliki akses.');
         }
 
+        $discount = str_replace(
+            ',',
+            '.',
+            trim((string) $request->input('discount', ''))
+        );
+
+        $discountPartai = str_replace(
+            ',',
+            '.',
+            trim((string) $request->input('discount_partai', ''))
+        );
+
+        if ($discount === '' && $discountPartai === '') {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'discount' => 'Isi minimal salah satu diskon, Non-Partai atau Partai.'
+                ]);
+        }
+
+        $request->merge([
+            'discount' => $discount === '' ? '0' : $discount,
+            'discount_partai' => $discountPartai === '' ? '0' : $discountPartai,
+        ]);
+
         $request->validate([
-            'jenis_diskon' => 'required|in:non_partai,partai',
+            'discount' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:100',
+                'regex:/^\d+(\.\d{1,4})?$/',
+            ],
+            'discount_partai' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:100',
+                'regex:/^\d+(\.\d{1,4})?$/',
+            ],
+        ], [
+            'discount.numeric' => 'Diskon Non-Partai harus berupa angka.',
+            'discount.min' => 'Diskon Non-Partai minimal 0%.',
+            'discount.max' => 'Diskon Non-Partai maksimal 100%.',
+            'discount.regex' => 'Diskon Non-Partai maksimal 4 angka di belakang koma.',
+
+            'discount_partai.numeric' => 'Diskon Partai harus berupa angka.',
+            'discount_partai.min' => 'Diskon Partai minimal 0%.',
+            'discount_partai.max' => 'Diskon Partai maksimal 100%.',
+            'discount_partai.regex' => 'Diskon Partai maksimal 4 angka di belakang koma.',
         ]);
 
         $item = ShowroomModel::findOrFail($id);
-
-        $jenisDiskon = $request->input('jenis_diskon');
-
-        $kolomDiskon = $jenisDiskon === 'partai'
-            ? 'discount_partai'
-            : 'discount';
-
-        $request->validate([
-            $kolomDiskon => 'present|nullable|integer|min:0|max:100',
-        ], [
-            $kolomDiskon . '.integer' => 'Diskon harus berupa bilangan bulat.',
-            $kolomDiskon . '.min' => 'Diskon minimal 0%.',
-            $kolomDiskon . '.max' => 'Diskon maksimal 100%.',
-        ]);
-
-        $nilaiDiskon = $request->input($kolomDiskon);
-
-        $item->{$kolomDiskon} = ($nilaiDiskon === null || $nilaiDiskon === '')
-            ? 0
-            : (int) $nilaiDiskon;
-
+        $item->discount = $request->discount;
+        $item->discount_partai = $request->discount_partai;
         $item->save();
 
-        return redirect()->back()->with(
+        return back()->with(
             'success',
-            'Diskon ' . ($jenisDiskon === 'partai' ? 'Partai' : 'Non-Partai')
-            . ' berhasil disimpan.'
+            'Diskon berhasil disimpan.'
         );
     }
 

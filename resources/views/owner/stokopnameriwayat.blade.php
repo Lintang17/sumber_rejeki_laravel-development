@@ -8,7 +8,6 @@
                 <div class="card-body">
 
                     <h4 class="card-title">Riwayat Hasil Stok Opname</h4>
-
                     @if(session('success'))
                         <div class="alert alert-success">
                             {{ session('success') }}
@@ -32,7 +31,7 @@
                                 @forelse ($data as $index => $item)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
-                                        <td>{{ $item->showroom->produksi->namaproduk ?? '-' }}</td>
+                                        <td>{{ $item->showroom?->produksi?->namaproduk ?? '-' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($item->tanggal_opname)->format('d-m-Y') }}</td>
                                         <td>{{ $item->stok_sistem }}</td>
                                         <td>{{ $item->stok_fisik }}</td>
@@ -49,7 +48,6 @@
                             </tbody>
                         </table>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -60,7 +58,7 @@
 @push('scripts')
 <script>
     $(document).ready(function () {
-        $('#tabelStokOpname').DataTable({
+        $('#table').DataTable({
             language: {
                 search: "Cari:",
                 lengthMenu: "Tampilkan _MENU_ entri",
@@ -75,4 +73,3 @@
     });
 </script>
 @endpush
-
