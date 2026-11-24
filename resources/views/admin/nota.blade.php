@@ -168,6 +168,12 @@
         @php
             $subtotal = 0;
             $totalDiskon = 0;
+            $formatDiskon = function ($nilai) {
+                return rtrim(
+                    rtrim(number_format((float) $nilai, 4, ',', '.'), '0'),
+                    ','
+                );
+            };  
         @endphp
 
         <!-- Daftar produk -->
@@ -204,9 +210,9 @@
                 </tr>
                 <tr>
                     <td colspan="2" class="diskon">
-                        Diskon:
+                       Diskon:
                         {{ $persenDiskon > 0
-                            ? number_format($persenDiskon, 0, ',', '.') . '%'
+                            ? $formatDiskon($persenDiskon) . '%'
                             : '-' }}
                     </td>
                 </tr>

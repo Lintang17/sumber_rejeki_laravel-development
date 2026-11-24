@@ -214,6 +214,12 @@
         $no = 1;
         $totalDiskon = 0;
         $subtotal = 0;
+        $formatDiskon = function ($nilai) {
+            return rtrim(
+                rtrim(number_format((float) $nilai, 4, ',', '.'), '0'),
+                ','
+            );
+        };
     @endphp
 
     <div class="invoice">
@@ -306,7 +312,7 @@
                         </td>
                         <td class="text-center">
                             {{ $persenDiskon > 0
-                                ? number_format($persenDiskon, 2, ',', '.') . '%'
+                                ? $formatDiskon($persenDiskon) . '%'
                                 : '-' }}
                         </td>
                         <td class="text-right">

@@ -47,29 +47,37 @@
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
-                                        </td>
+                                        </td>                    
                                         <td class="text-center align-middle">
+                                            @php
+                                                $diskonNonPartai = (float) ($item->discount ?? 0);
+                                                $diskonPartai = (float) ($item->discount_partai ?? 0);
+                                                $formatDiskon = function ($nilai) {
+                                                    return rtrim(
+                                                        rtrim(number_format($nilai, 4, ',', '.'), '0'),
+                                                        ','
+                                                    );
+                                                };
+                                            @endphp
                                             <div class="d-flex flex-column align-items-center">
-                                                @if((int) ($item->discount ?? 0) > 0)
+                                                @if($diskonNonPartai > 0)
                                                     <div class="mb-2">
                                                         <strong>Non-Partai</strong>
-                                                        <div>{{ $item->discount }}%</div>
+                                                        <div>{{ $formatDiskon($diskonNonPartai) }}%</div>
                                                     </div>
                                                 @endif
-
-                                                @if((int) ($item->discount_partai ?? 0) > 0)
+                                                @if($diskonPartai > 0)
                                                     <div>
                                                         <strong>Partai</strong>
-                                                        <div>{{ $item->discount_partai }}%</div>
+                                                        <div>{{ $formatDiskon($diskonPartai) }}%</div>
                                                     </div>
                                                 @endif
-
-                                                @if((int) ($item->discount ?? 0) === 0
-                                                    && (int) ($item->discount_partai ?? 0) === 0)
+                                                @if($diskonNonPartai <= 0 && $diskonPartai <= 0)
                                                     <span>-</span>
                                                 @endif
                                             </div>
                                         </td>
+
                                         <td>
                                             @if($item->produksi && $item->produksi->fotoproduk)
                                                 <button type="button" class="btn btn-link p-0" data-toggle="modal" data-target="#fotoModal{{ $item->idshowroom }}">

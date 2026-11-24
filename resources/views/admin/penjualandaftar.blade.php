@@ -222,9 +222,13 @@
                                                         </td>
                                                         <td class="text-center text-nowrap">
                                                             {{ $jenisDiskon }}
-                                                        </td>
+                                                        </td>                                              
                                                         <td class="text-center text-nowrap">
-                                                            {{ rtrim(rtrim(number_format($persenDiskon, 2, ',', '.'), '0'), ',') }}%
+                                                            @if($persenDiskon > 0)
+                                                                {{ rtrim(rtrim(number_format($persenDiskon, 4, ',', '.'), '0'), ',') }}%
+                                                            @else
+                                                                -
+                                                            @endif
                                                         </td>
                                                         <td class="text-right text-nowrap">
                                                             {{ rupiah($totalBaris) }}
