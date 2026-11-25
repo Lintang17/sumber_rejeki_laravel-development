@@ -172,14 +172,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const produk = row.querySelector('.produkselect');
         const selected = produk.selectedOptions[0];
         const jenisDiskon = row.querySelector('.jenis-diskon').value;
-
         if (!selected || !selected.value) return 0;
 
         const nilai = jenisDiskon === 'partai'
             ? selected.dataset.discountPartai
             : selected.dataset.discount;
 
-        return Math.max(0, Math.min(100, parseFloat(nilai) || 0));
+        const discount = parseFloat(
+            String(nilai ?? '0').replace(',', '.')
+        ) || 0;
+
+        return Math.max(0, Math.min(100, discount));
     }
 
     const dpInput = document.getElementById('dp');
@@ -200,7 +203,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const jumlah = parseInt(row.querySelector('.jumlah').value) || 0;
             const discount = getDiscountForRow(row);
 
-            row.querySelector('.discount').value = discount + '%';
+            const formatDiskon = parseFloat(discount.toFixed(4))
+                .toString()
+                .replace('.', ',');
+            row.querySelector('.discount').value = formatDiskon + '%';
 
             // Harga seluruh barang sebelum diskon
             const subtotalBaris = harga * jumlah;

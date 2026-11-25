@@ -47,22 +47,31 @@
                                         </td>
                                         <td class="text-center align-middle">
                                             <div class="d-flex flex-column align-items-center">
-                                                @if((int) ($item->discount ?? 0) > 0)
+                                                @php
+                                                    $diskonNonPartai = (float) ($item->discount ?? 0);
+                                                    $diskonPartai = (float) ($item->discount_partai ?? 0);
+                                                    $formatNonPartai = rtrim(
+                                                        rtrim(number_format($diskonNonPartai, 4, ',', '.'), '0'),
+                                                        ','
+                                                    );
+                                                    $formatPartai = rtrim(
+                                                        rtrim(number_format($diskonPartai, 4, ',', '.'), '0'),
+                                                        ','
+                                                    );
+                                                @endphp
+                                                @if($diskonNonPartai > 0)
                                                     <div class="mb-2">
                                                         <strong>Non-Partai</strong>
-                                                        <div>{{ $item->discount }}%</div>
+                                                        <div>{{ $formatNonPartai }}%</div>
                                                     </div>
                                                 @endif
-
-                                                @if((int) ($item->discount_partai ?? 0) > 0)
+                                                @if($diskonPartai > 0)
                                                     <div>
                                                         <strong>Partai</strong>
-                                                        <div>{{ $item->discount_partai }}%</div>
+                                                        <div>{{ $formatPartai }}%</div>
                                                     </div>
                                                 @endif
-
-                                                @if((int) ($item->discount ?? 0) === 0
-                                                    && (int) ($item->discount_partai ?? 0) === 0)
+                                                @if($diskonNonPartai <= 0 && $diskonPartai <= 0)
                                                     <span>-</span>
                                                 @endif
                                             </div>

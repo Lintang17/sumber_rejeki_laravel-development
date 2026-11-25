@@ -217,50 +217,33 @@
                                                  
                                                                     <td class="text-center">
                                                                         {{ $detail->jumlah_pembelian ?? 0 }}
-                                                                    </td>
-
-                                                                    @php
-                                                                        $showroom = $detail->showroom;
-
-                                                                        $subtotalBaris = (float) ($detail->harga ?? 0)
-                                                                            * (int) ($detail->jumlah_pembelian ?? 0);
-
-                                                                        $totalBaris = (float) ($detail->total ?? 0);
-                                                                        $persenDiskon = $subtotalBaris > 0
-                                                                            ? (int) round(
-                                                                                (($subtotalBaris - $totalBaris) / $subtotalBaris) * 100
-                                                                            )
-                                                                            : 0;
-
-                                                                        $diskonNonPartai = (int) ($showroom->discount ?? 0);
-                                                                        $diskonPartai = (int) ($showroom->discount_partai ?? 0);
-
-                                                                        // Tentukan jenis diskon berdasarkan diskon yang paling sesuai.
+                                                                   </td>
+                                         
+                                                                @php
+                                                                    $persenDiskon = (float) ($detail->discount ?? 0);
+                                                                    $jenisDiskon = strtolower(
+                                                                        trim((string) ($detail->jenis_diskon ?? ''))
+                                                                    );
+                                                                    if ($jenisDiskon === 'non_partai') {
+                                                                        $jenisDiskon = 'Non-Partai';
+                                                                    } elseif ($jenisDiskon === 'partai') {
+                                                                        $jenisDiskon = 'Partai';
+                                                                    } else {
                                                                         $jenisDiskon = '-';
+                                                                    }
 
-                                                                        if ($persenDiskon > 0) {
-                                                                            if ($diskonPartai > 0 && $diskonNonPartai > 0) {
-                                                                                if ($persenDiskon === $diskonPartai) {
-                                                                                    $jenisDiskon = 'Partai';
-                                                                                } elseif ($persenDiskon === $diskonNonPartai) {
-                                                                                    $jenisDiskon = 'Non-Partai';
-                                                                                } else {
-                                                                                    $jenisDiskon = 'Non-Partai';
-                                                                                }
-                                                                            } elseif ($diskonPartai > 0) {
-                                                                                $jenisDiskon = 'Partai';
-                                                                            } elseif ($diskonNonPartai > 0) {
-                                                                                $jenisDiskon = 'Non-Partai';
-                                                                            }
-                                                                        }
-                                                                    @endphp
-
+                                                                    // Format desimal dengan koma, maksimal 4 angka di belakang koma.
+                                                                    $formatPersen = rtrim(
+                                                                        rtrim(number_format($persenDiskon, 4, ',', '.'), '0'),
+                                                                        ','
+                                                                    );
+                                                                @endphp
                                                                     <td class="font-weight-bold">
                                                                         {{ $jenisDiskon }}
                                                                     </td>
 
                                                                     <td class="text-center text-nowrap">
-                                                                        {{ $persenDiskon }} %
+                                                                        {{ $persenDiskon > 0 ? $formatPersen . '%' : '-' }}
                                                                     </td>           
                                                                     
                                                                     <td class="text-nowrap">
@@ -462,9 +445,7 @@
                                                                     $diskonBaris = max(0, $subtotalBaris - $totalBaris);
 
                                                                     // Persentase diskon aktual
-                                                                    $persenDiskon = $subtotalBaris > 0
-                                                                        ? round(($diskonBaris / $subtotalBaris) * 100, 2)
-                                                                        : 0;
+                                                                    $persenDiskon = (float) ($detail->discount ?? 0);
 
                                                                     // Jenis diskon dari detail transaksi
                                                                     $jenisDiskon = strtolower(
@@ -511,7 +492,7 @@
                                                                     <td class="text-center align-middle text-nowrap">
                                                                         {{ $persenDiskon == 0
                                                                             ? '-'
-                                                                            : rtrim(rtrim(number_format($persenDiskon, 2, ',', '.'), '0'), ',') . '%' }}
+                                                                            : rtrim(rtrim(number_format($persenDiskon, 4, ',', '.'), '0'), ',') . '%' }}
                                                                     </td>
 
                                                                     <td class="text-right align-middle text-nowrap">

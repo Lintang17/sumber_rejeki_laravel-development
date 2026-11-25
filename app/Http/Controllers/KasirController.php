@@ -242,11 +242,20 @@ public function penjualansimpan(Request $request)
             $jenisDiskon = $request->jenis_diskon[$i];
 
             if ($jenisDiskon === 'partai') {
-                $persenDiskon = (int) ($showroom->discount_partai ?? 0);
+                $persenDiskon = (float) str_replace(
+                    ',',
+                    '.',
+                    (string) ($showroom->discount_partai ?? 0)
+                );
             } else {
-                $persenDiskon = (int) ($showroom->discount ?? 0);
+                $persenDiskon = (float) str_replace(
+                    ',',
+                    '.',
+                    (string) ($showroom->discount ?? 0)
+                );
             }
 
+            $persenDiskon = max(0, min(100, $persenDiskon));
             $harga = (int) $showroom->produksi->hargajual;
 
             // Hitung diskon berdasarkan jenis pilihan kasir.
