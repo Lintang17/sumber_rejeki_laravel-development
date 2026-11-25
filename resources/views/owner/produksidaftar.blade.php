@@ -71,11 +71,15 @@
                                         <td>{{ $item->tanggalselesai ? \Carbon\Carbon::parse($item->tanggalselesai)->format('d-m-Y H:i') : '-' }}</td>
                                         <td>
                                             @if($item->status == 'Menunggu')
-                                                <a href="{{ url('owner/produksireview/' . $item->idproduksi) }}" class="btn btn-sm btn-success" data-toggle="tooltip" title="Review Produksi">
-                                                    <i class="bi bi-check-circle"></i> Review
+                                                <a href="{{ url('owner/produksireview/' . $item->idproduksi) }}"
+                                                    class="btn btn-sm btn-success">
+                                                    <i class="bi bi-pencil-square"></i> Review
                                                 </a>
                                             @else
-                                                <span class="text-muted">-</span>
+                                                <a href="{{ url('owner/produksireview/' . $item->idproduksi) }}"
+                                                    class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-pencil-square"></i> Edit
+                                                </a>
                                             @endif
                                         </td>
                                     </tr>

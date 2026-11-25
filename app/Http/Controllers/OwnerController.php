@@ -18,6 +18,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -93,18 +94,130 @@ class OwnerController extends Controller
     return view('owner.produksidaftar', compact('produksi'));
 }
 
+// public function produksireview($id)
+// {
+//     $produksi = ProduksiModel::findOrFail($id);
+
+//     // Hanya status "Menunggu" yang bisa direview
+//     if ($produksi->status !== 'Menunggu') {
+//         return redirect()->back()->with('error', 'Produksi sudah diproses atau belum siap direview.');
+//     }
+
+//     return view('owner.produksireview', compact('produksi'));
+// }
+
 public function produksireview($id)
 {
     $produksi = ProduksiModel::findOrFail($id);
 
-    // Hanya status "Menunggu" yang bisa direview
-    if ($produksi->status !== 'Menunggu') {
-        return redirect()->back()->with('error', 'Produksi sudah diproses atau belum siap diriview.');
-    }
-
     return view('owner.produksireview', compact('produksi'));
 }
 
+public function produksiupdate(Request $request, $id)
+{
+    $produksi = ProduksiModel::findOrFail($id);
+    // Hilangkan titik pemisah ribuan dari input Rupiah
+    $request->merge([
+        'hppfinal' => str_replace('.', '', (string) $request->input('hppfinal')),
+        'hargajual' => str_replace('.', '', (string) $request->input('hargajual')),
+    ]);
+    
+    if ($produksi->status === 'Selesai') {
+        $request->validate([
+            'namaproduk' => 'required|string|max:255',
+            'hppfinal' => 'nullable|numeric|min:0',
+            'hargajual' => 'required|numeric|min:1000',
+            'deskripsiproduk' => 'nullable|string',
+            'fotoproduk' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        $produksi->namaproduk = $request->namaproduk;
+        $produksi->hppfinal = $request->hppfinal ?? 0;
+        $produksi->hargajual = $request->hargajual;
+        $produksi->deskripsiproduk = $request->deskripsiproduk ?? '';
+
+    } else {
+
+        $request->validate([
+            'namaproduk' => 'required|string|max:255',
+            'stok' => 'nullable|integer|min:0',
+            'stok_awal' => 'nullable|integer|min:0',
+            'stok_tambahan' => 'nullable|integer|min:0',
+            'hppestimasi' => 'nullable|numeric|min:0',
+            'hppfinal' => 'nullable|numeric|min:0',
+            'hargajual' => 'nullable|numeric|min:0',
+            'tanggalproduksi' => 'nullable|date',
+            'tanggalselesai' => 'nullable|date',
+            'status' => 'required|in:Menunggu,Selesai',
+            'deskripsiproduk' => 'nullable|string',
+            'fotoproduk' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        $produksi->namaproduk = $request->namaproduk;
+        $produksi->stok = $request->stok ?? 0;
+        $produksi->stok_awal = $request->stok_awal ?? 0;
+        $produksi->stok_tambahan = $request->stok_tambahan ?? 0;
+        $produksi->hppestimasi = $request->hppestimasi ?? 0;
+        $produksi->hppfinal = $request->hppfinal ?? 0;
+        $produksi->hargajual = $request->hargajual ?? 0;
+        $produksi->tanggalproduksi = $request->tanggalproduksi;
+        $produksi->status = $request->status;
+        $produksi->deskripsiproduk = $request->deskripsiproduk ?? '';
+
+        if ($request->status === 'Selesai') {
+            $produksi->tanggalselesai = $request->tanggalselesai
+                ? $request->tanggalselesai
+                : now();
+        } else {
+            $produksi->tanggalselesai = $request->tanggalselesai;
+        }
+    }
+
+    $fotoLama = $produksi->fotoproduk;
+    $fotoBaru = null;
+
+    try {
+
+        if ($request->hasFile('fotoproduk')) {
+            $folder = public_path('uploads/foto_produk');
+
+            if (!is_dir($folder)) {
+                mkdir($folder, 0755, true);
+            }
+
+            $file = $request->file('fotoproduk');
+            $namaFoto = Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $file->move($folder, $namaFoto);
+            $fotoBaru = $namaFoto;
+            $produksi->fotoproduk = $fotoBaru;
+        }
+
+        $produksi->tanggal_update = now();
+        $produksi->save();
+
+        if ($fotoBaru && $fotoLama) {
+            $pathFotoLama = public_path('uploads/foto_produk/' . $fotoLama);
+
+            if (file_exists($pathFotoLama)) {
+                unlink($pathFotoLama);
+            }
+        }
+
+        return redirect('owner/produksidaftar')
+            ->with('success', 'Data produksi berhasil diperbarui.');
+
+    } catch (\Throwable $e) {
+
+        if ($fotoBaru) {
+            $pathFotoBaru = public_path('uploads/foto_produk/' . $fotoBaru);
+
+            if (file_exists($pathFotoBaru)) {
+                unlink($pathFotoBaru);
+            }
+        }
+        throw $e;
+    }
+}
 
 public function produksireviewproses(Request $request, $id)
 {

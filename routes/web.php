@@ -154,13 +154,12 @@ Route::middleware(['auth'])->controller(OwnerController::class)->group(function 
     Route::get('owner', 'dashboard');
 
     
-
-
     // barang produksi
     Route::get('owner/produksidaftar', [OwnerController::class, 'produksidaftar']);
     Route::get('owner/produksireview/{id}', [OwnerController::class, 'produksireview']); // Review satuan
     Route::post('owner/produksireview/{id}', [OwnerController::class, 'produksireviewproses']);
     //Route::get('owner/produksireview', [OwnerController::class, 'produksireviewlist']);
+    Route::put('owner/produksireview/{id}', [OwnerController::class, 'produksiupdate']);
 
     // showroom
     Route::get('owner/showroomdaftar', [OwnerController::class, 'showroomdaftar']);
@@ -249,10 +248,10 @@ Route::middleware(['auth'])->controller(OwnerController::class)->group(function 
     // History Hapus
     Route::get('owner/historyhapus', 'historyhapus')
         ->name('owner.historyhapus');
-    // Pulihkan data produksi
+    // Pulihkan data 
     Route::post('owner/historyhapus/pulihkan/{id}', 'historyhapusPulihkan')
         ->name('owner.historyhapus.pulihkan');
-    // Hapus permanen data produksi
+    // Hapus permanen data 
     Route::delete('owner/historyhapus/permanen/{id}', 'historyhapusPermanen')
         ->name('owner.historyhapus.permanen');
     });
