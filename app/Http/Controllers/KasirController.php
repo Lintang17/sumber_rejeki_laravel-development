@@ -23,15 +23,21 @@ class KasirController extends Controller
 {
     public function dashboard()
     {
-        //$data['jumlahproduk'] = ProdukModel::count();
-        //$data['totalpembelian'] = PembelianModel::whereMonth('tanggalpembelian', date('m'))->sum('grandtotal');
-        $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))->sum('grandtotal');
-        $data['jumlahbarangshowroom'] = ShowroomModel::count();
+        $penjualanBulanIni = PenjualanModel::whereMonth('tanggalpenjualan', now()->month)
+            ->whereYear('tanggalpenjualan', now()->year)
+            ->get(['bayar', 'kembali']);
+        $data['totalpenjualan'] = $penjualanBulanIni->sum(function ($item) {
+            $bayar = max(0, (float) ($item->bayar ?? 0));
+            $kembali = max(0, (float) ($item->kembali ?? 0));
+            return max(0, $bayar - $kembali);
+        });
+
+        $data['jumlahbarangshowroom'] = ShowroomModel::whereHas('produksi')->count();
         $data['jumlahpenjualan'] = PenjualanModel::count();
-        // Notifikasi transaksi penjualan terbaru
-        $data['penjualanTerbaru'] = PenjualanModel::orderBy('tanggalpenjualan', 'desc')
-            ->take(5)
-            ->get();
+        $data['penjualanTerbaru'] = PenjualanModel::orderBy(
+            'tanggalpenjualan',
+            'desc'
+        )->take(5)->get();
 
         return view('kasir.dashboard', $data);
     }

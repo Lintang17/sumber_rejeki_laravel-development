@@ -163,16 +163,10 @@
                                             ($subtotalTransaksi - $totalDiskonTransaksi + ($item->ongkir ?? 0))
                                         );
 
-                                        // Hitung pemasukan berdasarkan pembayaran yang sudah diterima
-                                        $statusPembayaran = strtolower(trim((string) $item->statuspembayaran));
-                                        $dp = (float) ($item->dp ?? 0);
-                                        $bayar = (float) ($item->bayar ?? 0);
-                                        $kembali = (float) ($item->kembali ?? 0);
-                                        if ($statusPembayaran === 'dp') {
-                                            $totalpemasukan += max(0, $dp) + max(0, $bayar - $kembali);
-                                        } elseif ($statusPembayaran === 'lunas') {
-                                            $totalpemasukan += max(0, $dp) + max(0, $bayar - $kembali);
-                                        }
+                                        // Hitung pemasukan 
+                                        $bayar = max(0, (float) ($item->bayar ?? 0));
+                                        $kembali = max(0, (float) ($item->kembali ?? 0));
+                                        $totalpemasukan += max(0, $bayar - $kembali);
                                     @endphp
 
                                     <tr class="{{ $item->sisabayar > 0 ? 'table-warning' : '' }}">

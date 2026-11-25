@@ -31,9 +31,17 @@ class OwnerController extends Controller
     {
         $data['jumlahproduk'] = ProduksiModel::count();
         $data['totalstokopname'] = StokOpnameModel::whereHas('showroom.produksi')->count();
-        $data['totalpenjualan'] = PenjualanModel::whereMonth('tanggalpenjualan', date('m'))
-            ->whereYear('tanggalpenjualan', date('Y'))
-            ->sum('grandtotal');
+        // Total Pemasukan Penjualan Bulan Ini
+        $penjualanBulanIni = PenjualanModel::whereMonth('tanggalpenjualan', now()->month)
+            ->whereYear('tanggalpenjualan', now()->year)
+            ->get(['bayar', 'kembali']);
+
+        $data['totalpenjualan'] = $penjualanBulanIni->sum(function ($item) {
+            $bayar = max(0, (float) ($item->bayar ?? 0));
+            $kembali = max(0, (float) ($item->kembali ?? 0));
+
+            return max(0, $bayar - $kembali);
+        });
         // Total Pemasukan PO Bulan Ini
         $poBulanIni = Po::with('detail')
             ->whereMonth('created_at', date('m'))
