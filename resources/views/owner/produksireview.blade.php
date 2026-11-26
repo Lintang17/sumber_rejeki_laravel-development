@@ -45,16 +45,11 @@
                         @if ($produksi->status != 'Selesai')
                             <div class="form-group">
                                 <label>Status Produksi</label>
-                                <select name="status" class="form-control">
-                                    <option value="Menunggu"
-                                        {{ old('status', $produksi->status) == 'Menunggu' ? 'selected' : '' }}>
-                                        Menunggu
-                                    </option>
-                                    <option value="Selesai"
-                                        {{ old('status', $produksi->status) == 'Selesai' ? 'selected' : '' }}>
-                                        Selesai
-                                    </option>
-                                </select>
+                                <input type="text" class="form-control"
+                                    value="Menunggu" readonly>
+                                <small class="text-muted">
+                                    Status akan berubah menjadi Selesai setelah Owner melakukan review.
+                                </small>
                             </div>
                             <div class="form-group">
                                 <label>Tanggal Produksi</label>
@@ -208,6 +203,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const hppEstimasiInput = document.getElementById('hppestimasi');
     const hppInput = document.getElementById('hppfinal');
     const jualInput = document.getElementById('hargajual');
     const form = document.querySelector('form');
@@ -221,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return angka.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 
-    [hppInput, jualInput].forEach(function (input) {
+    [hppEstimasiInput, hppInput, jualInput].forEach(function (input) {
         if (!input) return;
         input.value = formatRupiah(input.value);
         input.addEventListener('input', function () {
@@ -259,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     form.addEventListener('submit', function () {
-        [hppInput, jualInput].forEach(function (input) {
+        [hppEstimasiInput, hppInput, jualInput].forEach(function (input) {
             if (input) {
                 input.value = input.value.replace(/\./g, '');
             }

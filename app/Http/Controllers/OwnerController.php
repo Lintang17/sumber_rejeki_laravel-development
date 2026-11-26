@@ -116,23 +116,29 @@ public function produksireview($id)
 public function produksiupdate(Request $request, $id)
 {
     $produksi = ProduksiModel::findOrFail($id);
-    // Hilangkan titik pemisah ribuan dari input Rupiah
     $request->merge([
-        'hppfinal' => str_replace('.', '', (string) $request->input('hppfinal')),
-        'hargajual' => str_replace('.', '', (string) $request->input('hargajual')),
+        'hppestimasi' => preg_replace('/\D/', '', (string) $request->input('hppestimasi')),
+        'hppfinal'    => preg_replace('/\D/', '', (string) $request->input('hppfinal')),
+        'hargajual'   => preg_replace('/\D/', '', (string) $request->input('hargajual')),
     ]);
-    
+
+    $fotoLama = $produksi->fotoproduk;
+    $fotoBaru = null;
+
     if ($produksi->status === 'Selesai') {
         $request->validate([
             'namaproduk' => 'required|string|max:255',
-            'hppfinal' => 'nullable|numeric|min:0',
-            'hargajual' => 'required|numeric|min:1000',
+            'hppfinal' => 'nullable|integer|min:0',
+            'hargajual' => 'required|integer|min:1000',
             'deskripsiproduk' => 'nullable|string',
             'fotoproduk' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ], [
+            'hargajual.required' => 'Harga Jual wajib diisi.',
+            'hargajual.min' => 'Harga Jual minimal Rp1.000.',
         ]);
 
         $produksi->namaproduk = $request->namaproduk;
-        $produksi->hppfinal = $request->hppfinal ?? 0;
+        $produksi->hppfinal = $request->hppfinal !== '' ? $request->hppfinal : 0;
         $produksi->hargajual = $request->hargajual;
         $produksi->deskripsiproduk = $request->deskripsiproduk ?? '';
 
@@ -143,12 +149,11 @@ public function produksiupdate(Request $request, $id)
             'stok' => 'nullable|integer|min:0',
             'stok_awal' => 'nullable|integer|min:0',
             'stok_tambahan' => 'nullable|integer|min:0',
-            'hppestimasi' => 'nullable|numeric|min:0',
-            'hppfinal' => 'nullable|numeric|min:0',
-            'hargajual' => 'nullable|numeric|min:0',
+            'hppestimasi' => 'required|integer|min:0',
+            'hppfinal' => 'nullable|integer|min:0',
+            'hargajual' => 'nullable|integer|min:0',
             'tanggalproduksi' => 'nullable|date',
             'tanggalselesai' => 'nullable|date',
-            'status' => 'required|in:Menunggu,Selesai',
             'deskripsiproduk' => 'nullable|string',
             'fotoproduk' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
@@ -158,29 +163,33 @@ public function produksiupdate(Request $request, $id)
         $produksi->stok_awal = $request->stok_awal ?? 0;
         $produksi->stok_tambahan = $request->stok_tambahan ?? 0;
         $produksi->hppestimasi = $request->hppestimasi ?? 0;
-        $produksi->hppfinal = $request->hppfinal ?? 0;
-        $produksi->hargajual = $request->hargajual ?? 0;
+        $produksi->hppfinal = $request->hppfinal !== '' ? $request->hppfinal : 0;
         $produksi->tanggalproduksi = $request->tanggalproduksi;
-        $produksi->status = $request->status;
         $produksi->deskripsiproduk = $request->deskripsiproduk ?? '';
 
-        if ($request->status === 'Selesai') {
-            $produksi->tanggalselesai = $request->tanggalselesai
-                ? $request->tanggalselesai
-                : now();
+        if ($request->filled('hargajual')) {
+            if ((int) $request->hargajual < 1000) {
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'hargajual' => 'Harga Jual minimal Rp1.000.'
+                    ]);
+            }
+
+            $produksi->hargajual = $request->hargajual;
+            $produksi->status = 'Selesai';
+            $produksi->tanggalselesai = now();
         } else {
-            $produksi->tanggalselesai = $request->tanggalselesai;
+            $produksi->hargajual = 0;
+            $produksi->status = 'Menunggu';
+            $produksi->tanggalselesai = null;
         }
     }
-
-    $fotoLama = $produksi->fotoproduk;
-    $fotoBaru = null;
 
     try {
 
         if ($request->hasFile('fotoproduk')) {
             $folder = public_path('uploads/foto_produk');
-
             if (!is_dir($folder)) {
                 mkdir($folder, 0755, true);
             }
